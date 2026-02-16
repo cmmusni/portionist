@@ -1,0 +1,8 @@
+[build]
+dependsOn = ["node"]
+
+[build.node]
+buildCommands = ["npm run build"]
+
+[start]
+cmd = "node dist/index.js"
