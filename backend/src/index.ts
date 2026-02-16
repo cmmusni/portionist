@@ -41,11 +41,11 @@ app.use((err: any, req: Request, res: Response, next: Function) => {
 app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
 
-  // Initialize database
+  // Initialize database (non-blocking - continue even if it fails)
   try {
     await initializeDatabase();
   } catch (error) {
-    console.error("Failed to initialize database:", error);
-    process.exit(1);
+    console.error("⚠️ Warning: Database schema initialization failed:", error);
+    console.error("Run 'npm run migrate' to manually initialize the database");
   }
 });
