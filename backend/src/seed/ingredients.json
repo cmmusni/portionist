@@ -1,0 +1,32 @@
+[
+  { "id": "1", "name": "Salt", "category": "Spices", "is_common": true },
+  { "id": "2", "name": "Sugar", "category": "Sweeteners", "is_common": true },
+  {
+    "id": "3",
+    "name": "Black Pepper",
+    "category": "Spices",
+    "is_common": true
+  },
+  { "id": "4", "name": "Olive Oil", "category": "Oils", "is_common": true },
+  { "id": "5", "name": "Butter", "category": "Dairy", "is_common": true },
+  { "id": "6", "name": "Garlic", "category": "Vegetables", "is_common": true },
+  { "id": "7", "name": "Onion", "category": "Vegetables", "is_common": true },
+  { "id": "8", "name": "Tomato", "category": "Vegetables", "is_common": true },
+  {
+    "id": "9",
+    "name": "Chicken Breast",
+    "category": "Meat",
+    "is_common": true
+  },
+  { "id": "10", "name": "Eggs", "category": "Dairy", "is_common": true },
+  { "id": "11", "name": "Milk", "category": "Dairy", "is_common": true },
+  { "id": "12", "name": "Flour", "category": "Baking", "is_common": true },
+  { "id": "13", "name": "Rice", "category": "Grains", "is_common": true },
+  { "id": "14", "name": "Pasta", "category": "Grains", "is_common": true },
+  { "id": "15", "name": "Beef", "category": "Meat", "is_common": true },
+  { "id": "16", "name": "Pork", "category": "Meat", "is_common": true },
+  { "id": "17", "name": "Fish", "category": "Seafood", "is_common": true },
+  { "id": "18", "name": "Shrimp", "category": "Seafood", "is_common": true },
+  { "id": "19", "name": "Carrot", "category": "Vegetables", "is_common": true },
+  { "id": "20", "name": "Potato", "category": "Vegetables", "is_common": true }
+]

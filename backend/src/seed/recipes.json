@@ -1,0 +1,208 @@
+[
+  {
+    "recipe_id": "grilled-chicken-rice",
+    "name": "Grilled Chicken with Rice",
+    "cuisine": "Filipino",
+    "meal_type": "Lunch",
+    "main_ingredient_id": "chicken_breast",
+    "portion_size": 450,
+    "portion_unit": "g",
+    "prep_time": 15,
+    "cook_time": 25,
+    "total_time": 40,
+    "servings": 1,
+    "instructions": [
+      "Marinate chicken in garlic and onion",
+      "Heat grill to medium-high heat",
+      "Grill chicken for 8-10 minutes per side",
+      "Cook rice separately",
+      "Serve hot with rice"
+    ],
+    "ingredients": [
+      {
+        "ingredient_id": "chicken_breast",
+        "name": "Chicken Breast",
+        "quantity": 300,
+        "unit": "g"
+      },
+      { "ingredient_id": "rice", "name": "Rice", "quantity": 150, "unit": "g" },
+      {
+        "ingredient_id": "garlic",
+        "name": "Garlic",
+        "quantity": 10,
+        "unit": "g"
+      },
+      { "ingredient_id": "onion", "name": "Onion", "quantity": 50, "unit": "g" }
+    ]
+  },
+  {
+    "recipe_id": "chicken-stir-fry",
+    "name": "Chicken Stir Fry",
+    "cuisine": "Asian",
+    "meal_type": "Lunch",
+    "main_ingredient_id": "chicken_breast",
+    "portion_size": 460,
+    "portion_unit": "g",
+    "prep_time": 10,
+    "cook_time": 15,
+    "total_time": 25,
+    "servings": 1,
+    "instructions": [
+      "Cut chicken and vegetables into bite-sized pieces",
+      "Heat wok or large pan over high heat",
+      "Stir fry chicken until cooked",
+      "Add vegetables and stir fry",
+      "Add soy sauce and serve hot"
+    ],
+    "ingredients": [
+      {
+        "ingredient_id": "chicken_breast",
+        "name": "Chicken Breast",
+        "quantity": 280,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "broccoli",
+        "name": "Broccoli",
+        "quantity": 100,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "bell_pepper",
+        "name": "Bell Pepper",
+        "quantity": 80,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "soy_sauce",
+        "name": "Soy Sauce",
+        "quantity": 15,
+        "unit": "ml"
+      }
+    ]
+  },
+  {
+    "recipe_id": "beef-pasta",
+    "name": "Beef Pasta",
+    "cuisine": "Italian",
+    "meal_type": "Lunch",
+    "main_ingredient_id": "ground_beef",
+    "portion_size": 500,
+    "portion_unit": "g",
+    "prep_time": 10,
+    "cook_time": 20,
+    "total_time": 30,
+    "servings": 1,
+    "instructions": [
+      "Cook pasta according to package instructions",
+      "Brown ground beef in a pan",
+      "Add tomato sauce and garlic",
+      "Simmer for 10 minutes",
+      "Combine with pasta and serve"
+    ],
+    "ingredients": [
+      {
+        "ingredient_id": "ground_beef",
+        "name": "Ground Beef",
+        "quantity": 250,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "pasta",
+        "name": "Pasta",
+        "quantity": 150,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "tomato",
+        "name": "Tomato",
+        "quantity": 100,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "garlic",
+        "name": "Garlic",
+        "quantity": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "recipe_id": "vegetable-stir-fry",
+    "name": "Vegetable Stir Fry",
+    "cuisine": "Asian",
+    "meal_type": "Dinner",
+    "main_ingredient_id": "broccoli",
+    "portion_size": 350,
+    "portion_unit": "g",
+    "prep_time": 10,
+    "cook_time": 10,
+    "total_time": 20,
+    "servings": 1,
+    "instructions": [
+      "Chop vegetables",
+      "Heat oil",
+      "Stir fry vegetables",
+      "Season and serve"
+    ],
+    "ingredients": [
+      {
+        "ingredient_id": "broccoli",
+        "name": "Broccoli",
+        "quantity": 120,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "carrot",
+        "name": "Carrot",
+        "quantity": 80,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "bell_pepper",
+        "name": "Bell Pepper",
+        "quantity": 60,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "recipe_id": "pancakes",
+    "name": "Classic Pancakes",
+    "cuisine": "American",
+    "meal_type": "Breakfast",
+    "main_ingredient_id": "flour",
+    "portion_size": 250,
+    "portion_unit": "g",
+    "prep_time": 10,
+    "cook_time": 10,
+    "total_time": 20,
+    "servings": 2,
+    "instructions": [
+      "Mix dry ingredients",
+      "Add milk and eggs",
+      "Cook on griddle until golden"
+    ],
+    "ingredients": [
+      {
+        "ingredient_id": "flour",
+        "name": "Flour",
+        "quantity": 200,
+        "unit": "g"
+      },
+      {
+        "ingredient_id": "milk",
+        "name": "Milk",
+        "quantity": 250,
+        "unit": "ml"
+      },
+      { "ingredient_id": "egg", "name": "Egg", "quantity": 2, "unit": "pcs" },
+      {
+        "ingredient_id": "butter",
+        "name": "Butter",
+        "quantity": 20,
+        "unit": "g"
+      }
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "buildCommand": "expo export --platform web",
+  "outputDirectory": "dist",
+  "public": false,
+  "env": {
+    "EXPO_DEBUG": "false"
+  }
+}
