@@ -10,7 +10,40 @@ const execAsync = promisify(exec);
  */
 export async function reseedIngredientsWithCategories() {
   try {
-    console.log("🔄 Checking if ingredients need category update...");
+    console.log(
+      "🔄 Checking if ingredients need seeding or category update...",
+    );
+
+    // First check if ingredients table is empty
+    const totalResult = await query(
+      "SELECT COUNT(*) as count FROM ingredients",
+    );
+    const totalCount = parseInt(totalResult.rows[0]?.count || "0");
+
+    if (totalCount === 0) {
+      console.log("⚠️  No ingredients found. Seeding database...");
+      await execAsync("node dist/seed/seedIngredients.js");
+
+      const newResult = await query(
+        "SELECT COUNT(*) as count FROM ingredients",
+      );
+      const newCount = parseInt(newResult.rows[0]?.count || "0");
+      console.log(`✅ Seeded ${newCount} ingredients with correct categories`);
+
+      // Show category distribution
+      const categories = await query(`
+        SELECT category, COUNT(*) as count 
+        FROM ingredients 
+        GROUP BY category 
+        ORDER BY count DESC
+      `);
+
+      console.log("📊 Category distribution:");
+      categories.rows.forEach((row) => {
+        console.log(`  ${row.category}: ${row.count}`);
+      });
+      return;
+    }
 
     // Check if we have ingredients with "Other" category
     const result = await query(
