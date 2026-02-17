@@ -9,14 +9,18 @@ To enable Facebook Login on web (portionist.netlify.app), you need to configure 
 Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your App → Settings → Basic
 
 1. **Add Platform: Website**
-   - Click "Add Platform"
+   - Scroll down and click "Add Platform" button
    - Select "Website"
    - Site URL: `https://portionist.netlify.app`
    - Save changes
 
-2. **App Domains**
-   - Add: `portionist.netlify.app`
+2. **App Domains** (On the same Settings → Basic page, scroll up to find the "App Domains" field)
+   - In the "App Domains" text field, add: `portionist.netlify.app`
+   - Press Enter to add another domain
    - Add: `localhost` (for local testing)
+   - Click "Save Changes" button at the bottom
+
+   **Note:** This field is near the top of the Basic Settings page, above where you added the platform. Just type the domain name without `https://` or `http://`
 
 3. **Privacy Policy URL** (required for public apps)
    - Add your privacy policy URL
@@ -29,6 +33,7 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
 Go to Products → Facebook Login → Settings
 
 1. **Valid OAuth Redirect URIs:**
+
    ```
    https://portionist.netlify.app/
    http://localhost:19006/
@@ -47,6 +52,7 @@ Go to Products → Facebook Login → Settings
 ### 3. Make App Public (When Ready)
 
 For production use:
+
 1. Go to App Settings → Basic
 2. Turn on "App Mode" from Development to Live
 3. Complete App Review if needed (for email permission)
@@ -54,6 +60,7 @@ For production use:
 ### 4. Testing Locally
 
 For local web testing:
+
 ```bash
 npm run web
 ```
@@ -69,10 +76,13 @@ Access at: `http://localhost:19006`
 ## How It Works
 
 ### Mobile (iOS/Android)
+
 Uses `expo-facebook` native SDK
 
 ### Web
+
 Uses Facebook JavaScript SDK loaded dynamically:
+
 - SDK loaded from: `https://connect.facebook.net/en_US/sdk.js`
 - Initialized in `frontend/services/facebookAuth.ts`
 - Popup-based OAuth flow
@@ -80,6 +90,7 @@ Uses Facebook JavaScript SDK loaded dynamically:
 ## Implementation Details
 
 The code automatically detects the platform:
+
 - **Web:** Uses Facebook JS SDK with popup login
 - **Mobile:** Uses Expo Facebook native module
 
