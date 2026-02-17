@@ -66,6 +66,16 @@ const start = async () => {
     process.exit(1);
   }
 
+  // One-time migration: re-seed ingredients with correct categories
+  try {
+    const { reseedIngredientsWithCategories } =
+      await import("./migrations/reseed-ingredients.js");
+    await reseedIngredientsWithCategories();
+  } catch (error) {
+    console.error("⚠️ Warning: Ingredient re-seed migration failed:", error);
+    // Don't exit - this is a non-critical migration
+  }
+
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
   });
