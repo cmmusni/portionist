@@ -66,9 +66,28 @@ const start = async () => {
     process.exit(1);
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
+  });
+
+  server.on("error", (error: any) => {
+    console.error("❌ Server error:", error);
+    process.exit(1);
   });
 };
 
-start();
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+start().catch((error) => {
+  console.error("❌ Failed to start server:", error);
+  process.exit(1);
+});
