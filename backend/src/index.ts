@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import type { Express, Request, Response } from "express";
 import express from "express";
+import { ensureConnection } from "./db/connection.js";
 import { initializeDatabase } from "./db/schema.js";
 import authRouter from "./routes/auth.js";
 import favoritesRouter from "./routes/favorites.js";
@@ -37,15 +38,29 @@ app.use((err: any, req: Request, res: Response, next: Function) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Start server (bind to all interfaces so physical devices on the LAN can reach it)
-app.listen(PORT, "0.0.0.0", async () => {
-  console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
+// Start server only after DB is reachable and migrations have run
+const start = async () => {
+  try {
+    await ensureConnection(6, 2000);
+  } catch (err) {
+    console.error("❌ Could not connect to Postgres after retries:", err);
+    process.exit(1);
+  }
 
-  // Initialize database (non-blocking - continue even if it fails)
   try {
     await initializeDatabase();
   } catch (error) {
     console.error("⚠️ Warning: Database schema initialization failed:", error);
-    console.error("Run 'npm run migrate' to manually initialize the database");
+    console.error(
+      "You can run 'npm run migrate' to manually initialize the database",
+    );
+    // If schema initialization fails, exit so the platform shows a failed start
+    process.exit(1);
   }
-});
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);
+  });
+};
+
+start();
