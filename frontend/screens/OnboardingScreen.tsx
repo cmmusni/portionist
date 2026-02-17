@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
 
