@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
