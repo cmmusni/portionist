@@ -22,6 +22,12 @@ const DashboardScreen: React.FC = () => {
   const cuisine = useSelector(selectCuisine);
   const userAge = useSelector(selectUserAge);
 
+  React.useEffect(() => {
+    console.log("📊 Dashboard mounted");
+    console.log("User:", user);
+    console.log("Weight:", currentWeight, "Cuisine:", cuisine, "Age:", userAge);
+  }, []);
+
   const quickActions = [
     {
       id: "recipe-search",

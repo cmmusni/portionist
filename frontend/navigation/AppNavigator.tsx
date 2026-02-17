@@ -202,6 +202,11 @@ function OnboardingScreenWrapper() {
       );
       // Mark onboarding as completed
       dispatch(setOnboardingCompleted(true));
+      
+      console.log("✅ Onboarding completed, navigating to Dashboard...");
+      console.log("User data:", user);
+      console.log("Onboarding values:", values);
+      
       // Navigate to Dashboard after onboarding
       navigation.navigate("Dashboard" as never);
     } catch (error) {
