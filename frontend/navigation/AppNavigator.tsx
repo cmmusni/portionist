@@ -63,16 +63,55 @@ function SignInScreenWrapper() {
         }),
       );
 
-      // Check AsyncStorage directly for onboarding data
-      const onboardingData = await AsyncStorage.getItem(
-        "portionist_onboarding",
-      );
-      if (onboardingData) {
-        // Onboarding data exists, go to Dashboard
-        navigation.navigate("Dashboard" as never);
-      } else {
-        // No onboarding data, go to Onboarding
-        navigation.navigate("Onboarding" as never);
+      // Fetch onboarding data from backend
+      try {
+        const response = await fetch(
+          apiUrl(`/profile/${user.userId}/onboarding`),
+        );
+
+        if (response.ok) {
+          // Onboarding data exists on backend
+          const result = await response.json();
+          const onboardingData = result.data;
+
+          // Load into Redux
+          dispatch(
+            setOnboardingData({
+              userAge: onboardingData.userAge,
+              currentWeight: onboardingData.currentWeight,
+              targetWeight: onboardingData.targetWeight,
+              cuisine: onboardingData.cuisine,
+            }),
+          );
+          dispatch(setOnboardingCompleted(true));
+
+          // Save to local storage
+          await saveOnboardingToStorage({
+            userAge: onboardingData.userAge,
+            currentWeight: onboardingData.currentWeight,
+            targetWeight: onboardingData.targetWeight,
+            cuisine: onboardingData.cuisine,
+            savedAt: new Date().toISOString(),
+            onboardingCompleted: true,
+          });
+
+          // Navigate to Dashboard
+          navigation.navigate("Dashboard" as never);
+        } else {
+          // No onboarding data found, go to Onboarding
+          navigation.navigate("Onboarding" as never);
+        }
+      } catch (error) {
+        console.error("Error fetching onboarding data:", error);
+        // On error, check local storage as fallback
+        const localData = await AsyncStorage.getItem(
+          "portionist_onboarding",
+        );
+        if (localData) {
+          navigation.navigate("Dashboard" as never);
+        } else {
+          navigation.navigate("Onboarding" as never);
+        }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to sign in");
@@ -113,16 +152,55 @@ function SignUpScreenWrapper() {
         }),
       );
 
-      // Check AsyncStorage directly for onboarding data
-      const onboardingData = await AsyncStorage.getItem(
-        "portionist_onboarding",
-      );
-      if (onboardingData) {
-        // Onboarding data exists, go to Dashboard
-        navigation.navigate("Dashboard" as never);
-      } else {
-        // No onboarding data, go to Onboarding
-        navigation.navigate("Onboarding" as never);
+      // Fetch onboarding data from backend
+      try {
+        const response = await fetch(
+          apiUrl(`/profile/${user.userId}/onboarding`),
+        );
+
+        if (response.ok) {
+          // Onboarding data exists on backend
+          const result = await response.json();
+          const onboardingData = result.data;
+
+          // Load into Redux
+          dispatch(
+            setOnboardingData({
+              userAge: onboardingData.userAge,
+              currentWeight: onboardingData.currentWeight,
+              targetWeight: onboardingData.targetWeight,
+              cuisine: onboardingData.cuisine,
+            }),
+          );
+          dispatch(setOnboardingCompleted(true));
+
+          // Save to local storage
+          await saveOnboardingToStorage({
+            userAge: onboardingData.userAge,
+            currentWeight: onboardingData.currentWeight,
+            targetWeight: onboardingData.targetWeight,
+            cuisine: onboardingData.cuisine,
+            savedAt: new Date().toISOString(),
+            onboardingCompleted: true,
+          });
+
+          // Navigate to Dashboard
+          navigation.navigate("Dashboard" as never);
+        } else {
+          // No onboarding data found, go to Onboarding
+          navigation.navigate("Onboarding" as never);
+        }
+      } catch (error) {
+        console.error("Error fetching onboarding data:", error);
+        // On error, check local storage as fallback
+        const localData = await AsyncStorage.getItem(
+          "portionist_onboarding",
+        );
+        if (localData) {
+          navigation.navigate("Dashboard" as never);
+        } else {
+          navigation.navigate("Onboarding" as never);
+        }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to create account");
