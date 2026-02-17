@@ -1,0 +1,7 @@
+[build]
+  command = "npx expo export --platform web --output-dir dist"
+  publish = "dist"
+
+[[env]]
+  [env.production]
+    API_BASE_URL = "https://portionist.up.railway.app"
