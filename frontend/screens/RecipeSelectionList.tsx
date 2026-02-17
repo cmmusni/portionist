@@ -1,5 +1,13 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface Recipe {
   id: string;
@@ -20,111 +28,351 @@ const RecipeSelectionList: React.FC<RecipeSelectionListProps> = ({
   onSelectRecipe,
   onGoBack,
 }) => {
-  return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
+  const getSourceBadge = (source?: string) => {
+    switch (source) {
+      case "ai":
+        return {
+          icon: "✨",
+          text: "AI Generated",
+          colors: ["#a78bfa", "#8b5cf6"],
+        };
+      case "spoonacular":
+        return {
+          icon: "🍳",
+          text: "Spoonacular",
+          colors: ["#fbbf24", "#f59e0b"],
+        };
+      default:
+        return { icon: "📚", text: "Database", colors: ["#60a5fa", "#3b82f6"] };
+    }
+  };
+
+  const renderRecipeItem = ({ item }: { item: Recipe }) => {
+    const badge = getSourceBadge(item.source);
+
+    return (
+      <TouchableOpacity
+        style={styles.recipeCard}
+        onPress={() => onSelectRecipe(item)}
+        activeOpacity={0.7}
       >
-        <Text style={{ fontSize: 20, fontWeight: "700", flex: 1 }}>
-          Select a recipe
-        </Text>
-        <TouchableOpacity
-          style={{
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            backgroundColor: "#f3f4f6",
-            borderRadius: 6,
-          }}
-          onPress={onGoBack}
+        <LinearGradient
+          colors={["#ffffff", "#f9fafb"]}
+          style={styles.recipeCardGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         >
-          <Text style={{ fontSize: 12, color: "#6b7280", fontWeight: "500" }}>
-            ← Search
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={{ color: "#6b7280", marginBottom: 8 }}>
-        {`Fetched ${recipes.length} recipe(s)`}
-      </Text>
+          <View style={styles.recipeContent}>
+            {item.image ? (
+              <Image
+                source={{ uri: item.image }}
+                style={styles.recipeImage}
+                onError={() => console.log("Failed to load image")}
+              />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>🍽️</Text>
+              </View>
+            )}
+
+            <View style={styles.recipeInfo}>
+              <Text style={styles.recipeName} numberOfLines={2}>
+                {item.name}
+              </Text>
+
+              <LinearGradient
+                colors={badge.colors}
+                style={styles.sourceBadge}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.sourceBadgeText}>
+                  {badge.icon} {badge.text}
+                </Text>
+              </LinearGradient>
+
+              {typeof item.matchScore === "number" && (
+                <View style={styles.scoreContainer}>
+                  <LinearGradient
+                    colors={["#dcfce7", "#bbf7d0"]}
+                    style={styles.scoreBadge}
+                  >
+                    <Text style={styles.scoreText}>
+                      {item.matchScore.toFixed(0)}% Match
+                    </Text>
+                  </LinearGradient>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.arrowContainer}>
+              <Text style={styles.arrow}>→</Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <LinearGradient
+        colors={["#3b82f6", "#2563eb"]}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onGoBack}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerIcon}>🍴</Text>
+            <Text style={styles.headerTitle}>Recipe Selection</Text>
+          </View>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          {recipes.length} recipe{recipes.length !== 1 ? "s" : ""} found
+        </Text>
+      </LinearGradient>
+
+      {/* Recipe List */}
       <FlatList
         data={recipes}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{ padding: 12, borderBottomWidth: 1, borderColor: "#eee" }}
-            onPress={() => onSelectRecipe(item)}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 12,
-                alignItems: "flex-start",
-              }}
-            >
-              {item.image && (
-                <Image
-                  source={{ uri: item.image }}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 8,
-                    backgroundColor: "#e5e7eb",
-                  }}
-                  onError={() => console.log("Failed to load image")}
-                />
-              )}
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, fontWeight: "600" }}>
-                  {item.name}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color:
-                      item.source === "ai"
-                        ? "#8b5cf6"
-                        : item.source === "spoonacular"
-                          ? "#f59e0b"
-                          : "#6b7280",
-                  }}
-                >
-                  {item.source === "ai"
-                    ? "✨ AI Generated"
-                    : item.source === "spoonacular"
-                      ? "🍳 Spoonacular"
-                      : "📚 Database"}
-                </Text>
-              </View>
-              {typeof item.matchScore === "number" && (
-                <Text style={{ color: "#6b7280", fontWeight: "500" }}>
-                  {item.matchScore.toFixed(1)}%
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={renderRecipeItem}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🔍</Text>
+            <Text style={styles.emptyText}>No recipes found</Text>
+            <Text style={styles.emptySubtext}>
+              Try adjusting your search criteria
+            </Text>
+          </View>
+        }
       />
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#6b7280",
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          borderRadius: 8,
-          marginTop: 12,
-          alignItems: "center",
-        }}
-        onPress={onGoBack}
-      >
-        <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-          ← Back to search
-        </Text>
-      </TouchableOpacity>
+
+      {/* Bottom Action Button */}
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity
+          style={styles.searchButtonWrapper}
+          onPress={onGoBack}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={["#6b7280", "#4b5563"]}
+            style={styles.searchButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.searchButtonText}>← New Search</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    paddingTop: 48,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  headerTextContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerIcon: {
+    fontSize: 28,
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#ffffff",
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+  listContainer: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  recipeCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  recipeCardGradient: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  recipeContent: {
+    flexDirection: "row",
+    padding: 16,
+    alignItems: "center",
+  },
+  recipeImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: "#e5e7eb",
+  },
+  placeholderImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: "#e0e7ff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    fontSize: 40,
+  },
+  recipeInfo: {
+    flex: 1,
+    marginLeft: 16,
+    gap: 8,
+  },
+  recipeName: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#0f172a",
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  sourceBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sourceBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  scoreContainer: {
+    marginTop: 4,
+  },
+  scoreBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  scoreText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#166534",
+  },
+  arrowContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#dbeafe",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  arrow: {
+    fontSize: 20,
+    color: "#2563eb",
+    fontWeight: "bold",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 80,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 15,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  bottomContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: "#f8fafc",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+  },
+  searchButtonWrapper: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  searchButton: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchButtonText: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+});
 
 export default RecipeSelectionList;

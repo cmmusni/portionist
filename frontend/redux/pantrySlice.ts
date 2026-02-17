@@ -6,6 +6,20 @@ interface Ingredient {
   name: string;
 }
 
+interface Recipe {
+  id: string;
+  name: string;
+  image?: string;
+  source?: string;
+  mainIngredient?: { id: string; name: string };
+  mealType?: string;
+  cuisine?: string;
+  portionSize?: number;
+  portionUnit?: string;
+  ingredients?: any[];
+  instructions?: any[];
+}
+
 interface PantryState {
   mainIngredient: Ingredient | null;
   sideIngredients: Ingredient[];
@@ -14,7 +28,7 @@ interface PantryState {
   mealType: string | null;
   cuisine: string | null;
   userAge: number | null;
-  favorites: Ingredient[];
+  favorites: Recipe[];
   onboardingCompleted: boolean;
 }
 
@@ -82,9 +96,9 @@ export const pantrySlice = createSlice({
     setCuisine: (state, action: PayloadAction<string | null>) => {
       state.cuisine = action.payload;
     },
-    addFavorite: (state, action: PayloadAction<Ingredient>) => {
+    addFavorite: (state, action: PayloadAction<Recipe>) => {
       const exists = state.favorites.some(
-        (ing) => ing.id === action.payload.id,
+        (recipe) => recipe.id === action.payload.id,
       );
       if (!exists) {
         state.favorites.push(action.payload);
@@ -92,7 +106,7 @@ export const pantrySlice = createSlice({
     },
     removeFavorite: (state, action: PayloadAction<string>) => {
       state.favorites = state.favorites.filter(
-        (ing) => ing.id !== action.payload,
+        (recipe) => recipe.id !== action.payload,
       );
     },
     setOnboardingCompleted: (state, action: PayloadAction<boolean>) => {

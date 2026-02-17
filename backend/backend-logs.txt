@@ -1,0 +1,146 @@
+
+> backend@1.0.0 dev
+> nodemon --exec node --loader ts-node/esm src/index.ts
+
+[33m[nodemon] 3.1.11[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `node --loader ts-node/esm src/index.ts`[39m
+(node:45167) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("ts-node/esm", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+Attempting DB connection (attempt 1/6)...
+Postgres connection successful
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS users (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        user_id VARCHAR(255) UNIQUE NOT NULL,\n' +
+    '        email VARCHAR(255) UNIQUE,\n' +
+    '        password VARCHAR(255),\n' +
+    '        facebook_id VARCHAR(255) UNIQUE,\n' +
+    '        full_name VARCHAR(255) NOT NULL,\n' +
+    '        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n' +
+    '        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n' +
+    '      )\n' +
+    '    ',
+  duration: 2,
+  rows: null
+}
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS favorites (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        user_id VARCHAR(255) NOT NULL,\n' +
+    '        recipe_id VARCHAR(255) NOT NULL,\n' +
+    '        recipe_name VARCHAR(255) NOT NULL,\n' +
+    '        recipe_data JSONB,\n' +
+    '        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n' +
+    '        UNIQUE(user_id, recipe_id),\n' +
+    '        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE\n' +
+    '      )\n' +
+    '    ',
+  duration: 2,
+  rows: null
+}
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS onboarding_data (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        user_id VARCHAR(255) UNIQUE NOT NULL,\n' +
+    '        user_age INT,\n' +
+    '        target_weight FLOAT,\n' +
+    '        current_weight FLOAT,\n' +
+    '        cuisine VARCHAR(100),\n' +
+    '        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n' +
+    '        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n' +
+    '        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE\n' +
+    '      )\n' +
+    '    ',
+  duration: 1,
+  rows: null
+}
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS ingredients (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        ingredient_id VARCHAR(255) UNIQUE NOT NULL,\n' +
+    '        name VARCHAR(255) NOT NULL,\n' +
+    '        category VARCHAR(100),\n' +
+    '        is_common BOOLEAN DEFAULT false,\n' +
+    '        is_pantry BOOLEAN DEFAULT false,\n' +
+    '        is_main BOOLEAN DEFAULT false,\n' +
+    '        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n' +
+    '      )\n' +
+    '    ',
+  duration: 1,
+  rows: null
+}
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS recipes (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        recipe_id VARCHAR(255) UNIQUE NOT NULL,\n' +
+    '        name VARCHAR(255) NOT NULL,\n' +
+    '        cuisine VARCHAR(100),\n' +
+    '        meal_type VARCHAR(100),\n' +
+    '        main_ingredient_id VARCHAR(255),\n' +
+    '        portion_size FLOAT,\n' +
+    '        portion_unit VARCHAR(50),\n' +
+    '        prep_time INT,\n' +
+    '        cook_time INT,\n' +
+    '        total_time INT,\n' +
+    '        servings INT,\n' +
+    '        instructions JSONB,\n' +
+    '        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n' +
+    '        FOREIGN KEY (main_ingredient_id) REFERENCES ingredients(ingredient_id) ON DELETE SET NULL\n' +
+    '      )\n' +
+    '    ',
+  duration: 2,
+  rows: null
+}
+Executed query {
+  text: '\n' +
+    '      CREATE TABLE IF NOT EXISTS recipe_ingredients (\n' +
+    '        id SERIAL PRIMARY KEY,\n' +
+    '        recipe_id VARCHAR(255) NOT NULL,\n' +
+    '        ingredient_id VARCHAR(255) NOT NULL,\n' +
+    '        quantity FLOAT,\n' +
+    '        unit VARCHAR(50),\n' +
+    '        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) ON DELETE CASCADE,\n' +
+    '        FOREIGN KEY (ingredient_id) REFERENCES ingredients(ingredient_id) ON DELETE SET NULL\n' +
+    '      )\n' +
+    '    ',
+  duration: 1,
+  rows: null
+}
+✅ Database schema initialized successfully
+🔄 Checking if ingredients need seeding or category update...
+Executed query {
+  text: 'SELECT COUNT(*) as count FROM ingredients',
+  duration: 5,
+  rows: 1
+}
+Executed query {
+  text: "SELECT COUNT(*) as count FROM ingredients WHERE category = 'Other'",
+  duration: 3,
+  rows: 1
+}
+✅ No ingredients with 'Other' category found. Skipping re-seed.
+Server running on port 3000 and bound to 0.0.0.0
+❌ Server error: Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at doListen (node:net:2075:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `node --loader ts-node/esm src/index.ts`[39m

@@ -163,9 +163,39 @@ const MOCK_RECIPES: Recipe[] = [
 ];
 
 class RecipeController {
+  private foodImages = [
+    "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800",
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800",
+    "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800",
+    "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800",
+    "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800",
+    "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
+    "https://images.unsplash.com/photo-1529042410759-befb1204b468?w=800",
+    "https://images.unsplash.com/photo-1547637589-f54c34f5d7a4?w=800",
+    "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=800",
+    "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800",
+    "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800",
+    "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=800",
+    "https://images.unsplash.com/photo-1562967914-608f82629710?w=800",
+    "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800",
+    "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800",
+  ];
+
   private generateImageUrl(recipeName: string): string {
-    // Return a reliable static recipe image
-    return "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png";
+    console.log(`🖼️  Selecting random image for: "${recipeName}"`);
+    // Select a random image from the array
+    const randomIndex = Math.floor(Math.random() * this.foodImages.length);
+    const imageUrl =
+      this.foodImages[randomIndex] ??
+      this.foodImages[0] ??
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800";
+    console.log(`✅ Selected image: ${imageUrl}`);
+    return imageUrl;
   }
 
   private async fetchFromSpoonacular(
@@ -604,6 +634,174 @@ class RecipeController {
       res.status(500).json({
         success: false,
         message: "Failed to save recipes",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  async getSuggestedRecipes(req: Request, res: Response): Promise<void> {
+    try {
+      const cuisine = (req.query.cuisine as string) || "Filipino";
+      const limit = parseInt((req.query.limit as string) || "6", 10);
+      const currentWeight = parseFloat(
+        (req.query.currentWeight as string) || "70",
+      );
+      const targetWeight = parseFloat(
+        (req.query.targetWeight as string) || "70",
+      );
+
+      console.log("📊 Suggested Recipes Request:");
+      console.log(`   Cuisine: ${cuisine}`);
+      console.log(`   Current Weight: ${currentWeight}kg`);
+      console.log(`   Target Weight: ${targetWeight}kg`);
+      console.log(`   Weight Difference: ${targetWeight - currentWeight}kg`);
+      // Clean up recipes with invalid portions from database
+      try {
+        const deleteResult = await query(
+          `DELETE FROM recipes WHERE portion_size <= 0`,
+        );
+        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
+          console.log(
+            `🧹 Cleaned up ${deleteResult.rowCount} recipes with invalid portions`,
+          );
+        }
+      } catch (err) {
+        console.warn("Failed to clean up invalid recipes:", err);
+      }
+      // First try to get recipes from database
+      let recipes: Recipe[] = [];
+
+      try {
+        const rows = await query(
+          `SELECT DISTINCT r.recipe_id, r.name, r.cuisine, r.meal_type, 
+                  r.main_ingredient_id, r.portion_size, r.portion_unit,
+                  r.prep_time, r.cook_time, r.total_time, r.servings, r.instructions,
+                  ri.ingredient_id, ri.quantity as ing_quantity, ri.unit as ing_unit,
+                  ing.name as ingredient_name
+           FROM recipes r
+           LEFT JOIN recipe_ingredients ri ON r.recipe_id = ri.recipe_id
+           LEFT JOIN ingredients ing ON ri.ingredient_id = ing.ingredient_id
+           WHERE r.cuisine ILIKE $1
+           ORDER BY r.recipe_id
+           LIMIT $2`,
+          [`%${cuisine}%`, limit * 3], // Get more to filter later
+        );
+
+        const map: Record<string, Recipe> = {};
+        for (const row of rows.rows) {
+          const id = row.recipe_id;
+          if (!map[id]) {
+            map[id] = {
+              id,
+              name: row.name,
+              image: this.generateImageUrl(row.name),
+              source: "database",
+              mainIngredient: {
+                id: row.main_ingredient_id || "",
+                name: row.main_ingredient_id || "",
+              },
+              sideIngredients: [],
+              ingredients: [],
+              instructions: Array.isArray(row.instructions)
+                ? row.instructions
+                : [],
+              mealType: row.meal_type || "",
+              cuisine: row.cuisine || cuisine,
+              portionSize: row.portion_size || 0,
+              portionUnit: row.portion_unit || "g",
+              prepTime: row.prep_time || 0,
+              cookTime: row.cook_time || 0,
+              totalTime: row.total_time || 0,
+              servings: row.servings || 1,
+            };
+          }
+          if (row.ingredient_id) {
+            map[id].ingredients.push({
+              id: row.ingredient_id,
+              name: row.ingredient_name || row.ingredient_id,
+              quantity: row.ing_quantity || 0,
+              unit: row.ing_unit || "",
+            });
+          }
+        }
+
+        recipes = Object.values(map).slice(0, limit);
+      } catch (err) {
+        console.warn("DB query failed, using mock recipes:", err);
+      }
+
+      // Fallback to mock recipes if database is empty
+      if (recipes.length === 0) {
+        recipes = MOCK_RECIPES.filter(
+          (r) => r.cuisine.toLowerCase() === cuisine.toLowerCase(),
+        ).slice(0, limit);
+      }
+
+      // If still no recipes, return any mock recipes
+      if (recipes.length === 0) {
+        recipes = MOCK_RECIPES.slice(0, limit);
+      }
+
+      // Adjust portion sizes based on weight goals
+      const weightDifference = targetWeight - currentWeight;
+      let portionMultiplier = 1.0;
+
+      if (weightDifference < 0) {
+        // User wants to lose weight - reduce portions by 15%
+        portionMultiplier = 0.85;
+      } else if (weightDifference > 0) {
+        // User wants to gain weight - increase portions by 15%
+        portionMultiplier = 1.15;
+      }
+      // If weightDifference is 0, maintain current portions (1.0)
+
+      console.log(`🍽️  Portion Adjustment:`);
+      console.log(
+        `   Multiplier: ${portionMultiplier}x (${weightDifference < 0 ? "weight loss" : weightDifference > 0 ? "weight gain" : "maintenance"})`,
+      );
+      console.log(
+        `   Original portions: ${recipes.map((r) => `${r.name}: ${r.portionSize}g`).join(", ")}`,
+      );
+
+      // Apply portion adjustments to all recipes
+      const adjustedRecipes = recipes.map((recipe) => {
+        // Fix any negative or invalid portions from old data
+        let basePortionSize = recipe.portionSize;
+
+        // If portion is negative or zero, assign appropriate base portion
+        if (basePortionSize <= 0) {
+          const basePortions: Record<string, number> = {
+            Breakfast: 300,
+            Lunch: 400,
+            Dinner: 400,
+            Snack: 150,
+          };
+          basePortionSize = basePortions[recipe.mealType] || 350;
+          console.log(
+            `   ⚠️  Fixed invalid portion for ${recipe.name}: ${recipe.portionSize}g → ${basePortionSize}g`,
+          );
+        }
+
+        return {
+          ...recipe,
+          portionSize: Math.round(basePortionSize * portionMultiplier),
+        };
+      });
+
+      console.log(
+        `   Adjusted portions: ${adjustedRecipes.map((r) => `${r.name}: ${r.portionSize}g`).join(", ")}`,
+      );
+
+      res.status(200).json({
+        success: true,
+        data: adjustedRecipes,
+        message: `Retrieved ${adjustedRecipes.length} suggested recipes (portions adjusted for ${weightDifference < 0 ? "weight loss" : weightDifference > 0 ? "weight gain" : "maintenance"})`,
+      });
+    } catch (error) {
+      console.error("Error fetching suggested recipes:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch suggested recipes",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

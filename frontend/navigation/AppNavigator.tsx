@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createDrawerNavigator } from "@react-navigation/drawer";
 import {
   NavigationContainer,
   NavigationIndependentTree,
@@ -6,9 +7,16 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { saveAuthToStorage } from "../hooks/useAuthRestore";
+import { saveAuthToStorage, useAuthRestore } from "../hooks/useAuthRestore";
+import { useOnboardingRestore } from "../hooks/useOnboardingRestore";
 import { saveOnboardingToStorage } from "../hooks/useOnboardingStorage";
 import {
   selectAuthUser,
@@ -17,10 +25,13 @@ import {
   signUpSuccess,
 } from "../redux/authSlice";
 import {
+  addFavorite,
+  removeFavorite,
   selectOnboardingCompleted,
   setOnboardingCompleted,
   setOnboardingData,
 } from "../redux/pantrySlice";
+import type { AppDispatch, RootState } from "../redux/store";
 import DashboardScreen from "../screens/DashboardScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
 import MenuScreen from "../screens/MenuScreen";
@@ -35,6 +46,82 @@ import { apiUrl } from "../services/config";
 import { loadOverride } from "../services/runtimeConfig";
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+
+// Main App Drawer Navigator
+function AppDrawer() {
+  return (
+    <Drawer.Navigator
+      initialRouteName="Dashboard"
+      screenOptions={{
+        drawerStyle: {
+          backgroundColor: "#ffffff",
+          width: 280,
+        },
+        drawerActiveBackgroundColor: "#eff6ff",
+        drawerActiveTintColor: "#3b82f6",
+        drawerInactiveTintColor: "#6b7280",
+        drawerLabelStyle: {
+          fontSize: 16,
+          fontWeight: "600",
+        },
+        headerStyle: {
+          backgroundColor: "#3b82f6",
+        },
+        headerTintColor: "#ffffff",
+        headerTitleStyle: {
+          fontWeight: "700",
+        },
+      }}
+    >
+      <Drawer.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          title: "Portionist",
+          drawerLabel: "Home",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
+        }}
+      />
+      <Drawer.Screen
+        name="RecipeInput"
+        component={RecipeInputScreenWrapper}
+        options={{
+          title: "Search Recipe",
+          drawerLabel: "Search Recipe",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>🔍</Text>,
+        }}
+      />
+      <Drawer.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{
+          title: "Favorites",
+          drawerLabel: "Favorites",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>❤️</Text>,
+        }}
+      />
+      <Drawer.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{
+          title: "Menu",
+          drawerLabel: "Menu",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: "Settings",
+          drawerLabel: "Settings",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>⚙️</Text>,
+        }}
+      />
+    </Drawer.Navigator>
+  );
+}
 
 // ============ AUTH SCREENS ============
 
@@ -106,7 +193,7 @@ function SignInScreenWrapper() {
         // On error, check local storage as fallback
         const localData = await AsyncStorage.getItem("portionist_onboarding");
         if (localData) {
-          navigation.navigate("Dashboard" as never);
+          navigation.navigate("AppDrawer" as never);
         } else {
           navigation.navigate("Onboarding" as never);
         }
@@ -183,7 +270,7 @@ function SignUpScreenWrapper() {
           });
 
           // Navigate to Dashboard
-          navigation.navigate("Dashboard" as never);
+          navigation.navigate("AppDrawer" as never);
         } else {
           // No onboarding data found, go to Onboarding
           navigation.navigate("Onboarding" as never);
@@ -193,7 +280,7 @@ function SignUpScreenWrapper() {
         // On error, check local storage as fallback
         const localData = await AsyncStorage.getItem("portionist_onboarding");
         if (localData) {
-          navigation.navigate("Dashboard" as never);
+          navigation.navigate("AppDrawer" as never);
         } else {
           navigation.navigate("Onboarding" as never);
         }
@@ -282,7 +369,7 @@ function OnboardingScreenWrapper() {
       console.log("Onboarding values:", values);
 
       // Navigate to Dashboard after onboarding
-      navigation.navigate("Dashboard" as never);
+      navigation.navigate("AppDrawer" as never);
     } catch (error) {
       console.error("Error saving onboarding data:", error);
       // Navigate anyway - data is saved locally
@@ -295,7 +382,7 @@ function OnboardingScreenWrapper() {
         }),
       );
       dispatch(setOnboardingCompleted(true));
-      navigation.navigate("Dashboard" as never);
+      navigation.navigate("AppDrawer" as never);
     }
   };
 
@@ -317,17 +404,25 @@ function RecipeInputScreenWrapper() {
 // Wrapper for RecipeDisplayScreen
 function RecipeDisplayScreenWrapper({ route }: any) {
   const navigation = useNavigation();
+  const dispatch = useDispatch<AppDispatch>();
+  const favorites = useSelector((state: RootState) => state.pantry.favorites);
 
-  const handleFavorite = (recipeId: string) => {
-    // Handle favorite logic
-    console.log("Favorite recipe:", recipeId);
-    // Navigate to Favorites after favoriting
-    navigation.navigate("Favorites" as never);
+  const handleFavorite = (recipe: any) => {
+    // Add full recipe to favorites
+    dispatch(addFavorite(recipe));
+    Alert.alert(
+      "Added to Favorites",
+      `${recipe.name} has been saved to your favorites!`,
+      [{ text: "OK" }],
+    );
   };
 
   const handleUnfavorite = (recipeId: string) => {
-    // Handle unfavorite logic
-    console.log("Unfavorite recipe:", recipeId);
+    // Remove from favorites
+    dispatch(removeFavorite(recipeId));
+    Alert.alert("Removed from Favorites", "Recipe has been removed.", [
+      { text: "OK" },
+    ]);
   };
 
   const [recipes, setRecipes] = React.useState<any[] | null>(null);
@@ -337,6 +432,13 @@ function RecipeDisplayScreenWrapper({ route }: any) {
   React.useEffect(() => {
     let mounted = true;
     async function loadRecipesFromAllSources() {
+      // If we have a direct recipe (from Dashboard), skip fetching
+      if (route?.params?.recipe) {
+        setSelectedRecipe(route.params.recipe);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const raw = await AsyncStorage.getItem("portionist_onboarding");
@@ -471,7 +573,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
     return () => {
       mounted = false;
     };
-  }, [route?.params?.searchParams, navigation]);
+  }, [route?.params?.searchParams, route?.params?.recipe, navigation]);
 
   // Show loading state
   if (loading) {
@@ -514,27 +616,45 @@ function RecipeDisplayScreenWrapper({ route }: any) {
 
   // Show detail view if recipe is selected
   if (selectedRecipe) {
+    // Check if recipe is favorited
+    const isFavorited = favorites.some((fav) => fav.id === selectedRecipe.id);
+
     return (
       <View style={{ flex: 1 }}>
         <RecipeDisplayScreen
           recipe={selectedRecipe}
-          onFavorite={handleFavorite}
-          onUnfavorite={handleUnfavorite}
+          onFavorite={() => handleFavorite(selectedRecipe)}
+          onUnfavorite={() => handleUnfavorite(selectedRecipe.id)}
+          isFavorited={isFavorited}
         />
         <TouchableOpacity
           style={{
-            backgroundColor: "#ef4444",
-            paddingVertical: 12,
-            paddingHorizontal: 16,
-            marginHorizontal: 16,
-            marginBottom: 16,
-            borderRadius: 8,
+            backgroundColor: "#3b82f6",
+            paddingVertical: 14,
+            paddingHorizontal: 20,
+            marginHorizontal: 20,
+            marginBottom: 20,
+            borderRadius: 16,
             alignItems: "center",
+            shadowColor: "#3b82f6",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 6,
           }}
-          onPress={() => setSelectedRecipe(null)}
+          onPress={() => {
+            // If we came from Dashboard, go back to Dashboard
+            // If we came from search, go back to recipe list
+            if (route?.params?.recipe) {
+              navigation.goBack();
+            } else {
+              setSelectedRecipe(null);
+            }
+          }}
+          activeOpacity={0.8}
         >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-            ← Back to recipes
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
+            ← {route?.params?.recipe ? "Back to Dashboard" : "Back to recipes"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -558,6 +678,20 @@ function RecipeDisplayScreenWrapper({ route }: any) {
 // ============ MAIN NAVIGATOR ============
 
 export default function AppNavigator() {
+  const [isRestoring, setIsRestoring] = React.useState(true);
+
+  // Restore auth and onboarding data from storage
+  useAuthRestore();
+  useOnboardingRestore();
+
+  React.useEffect(() => {
+    // Give some time for restoration hooks to complete
+    const timer = setTimeout(() => {
+      setIsRestoring(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   React.useEffect(() => {
     // Load any runtime API_BASE_URL override stored in AsyncStorage
     loadOverride().catch((e) =>
@@ -593,13 +727,35 @@ export default function AppNavigator() {
   const onboardingCompleted = useSelector(selectOnboardingCompleted);
 
   // Determine initial route for App Stack
-  const appInitialRouteName = onboardingCompleted ? "Dashboard" : "Onboarding";
+  const appInitialRouteName = onboardingCompleted ? "AppDrawer" : "Onboarding";
+
+  // Show loading screen while restoring state
+  if (isRestoring) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f8fafc",
+        }}
+      >
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: "#6b7280" }}>
+          Loading...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <NavigationIndependentTree>
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName={!isAuthenticated ? "SignIn" : appInitialRouteName}
+          screenOptions={{
+            headerShown: false,
+          }}
         >
           {!isAuthenticated ? (
             // Auth Stack
@@ -608,63 +764,36 @@ export default function AppNavigator() {
                 name="SignIn"
                 component={SignInScreenWrapper}
                 options={{
-                  headerShown: false,
                   animationTypeForReplace: "push",
                 }}
               />
-              <Stack.Screen
-                name="SignUp"
-                component={SignUpScreenWrapper}
-                options={{
-                  headerShown: false,
-                }}
-              />
+              <Stack.Screen name="SignUp" component={SignUpScreenWrapper} />
             </>
           ) : (
-            // App Stack
+            // App Stack with Drawer
             <>
               <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreenWrapper}
                 options={{
-                  headerShown: false,
                   animationTypeForReplace: "push",
                 }}
               />
+              {/* Main App with Drawer Navigation */}
               <Stack.Screen
-                name="Dashboard"
-                component={DashboardScreen}
-                options={{
-                  headerShown: false,
-                  animationTypeForReplace: "push",
-                }}
-              />
-              <Stack.Screen
-                name="Menu"
-                component={MenuScreen}
+                name="AppDrawer"
+                component={AppDrawer}
                 options={{
                   headerShown: false,
                 }}
               />
-              <Stack.Screen
-                name="Settings"
-                component={SettingsScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="RecipeInput"
-                component={RecipeInputScreenWrapper}
-                options={{ headerShown: false }}
-              />
+              {/* Modal Screens (outside drawer) */}
               <Stack.Screen
                 name="RecipeDisplay"
                 component={RecipeDisplayScreenWrapper}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="Favorites"
-                component={FavoritesScreen}
-                options={{ headerShown: false }}
+                options={{
+                  presentation: "modal",
+                }}
               />
             </>
           )}

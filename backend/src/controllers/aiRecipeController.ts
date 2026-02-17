@@ -54,28 +54,45 @@ class AIRecipeController {
     return this.genAI;
   }
 
-  private async generateImageUrl(recipeName: string): Promise<string> {
-    try {
-      // Fetch a food image from the Foodish API
-      const response = await fetch(
-        "https://foodish-api.herokuapp.com/api/food",
-      );
-      const data = (await response.json()) as { image: string };
-      return (
-        data.image ||
-        "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png"
-      );
-    } catch (error) {
-      console.warn("Failed to fetch food image, using fallback:", error);
-      // Fallback to static image if API fails
-      return "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png";
-    }
+  private foodImages = [
+    "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800",
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800",
+    "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800",
+    "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800",
+    "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800",
+    "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
+    "https://images.unsplash.com/photo-1529042410759-befb1204b468?w=800",
+    "https://images.unsplash.com/photo-1547637589-f54c34f5d7a4?w=800",
+    "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=800",
+    "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800",
+    "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800",
+    "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=800",
+    "https://images.unsplash.com/photo-1562967914-608f82629710?w=800",
+    "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800",
+    "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800",
+  ];
+
+  private generateImageUrl(recipeName: string): string {
+    console.log(`🖼️  Selecting random image for: "${recipeName}"`);
+    // Select a random image from the array
+    const randomIndex = Math.floor(Math.random() * this.foodImages.length);
+    const imageUrl =
+      this.foodImages[randomIndex] ??
+      this.foodImages[0] ??
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800";
+    console.log(`✅ Selected image: ${imageUrl}`);
+    return imageUrl;
   }
 
   private async generateSingleRecipe(
     mainIngredient: Ingredient,
     sideIngredients: Ingredient[],
-    remainingWeight: number,
+    portionSize: number,
     mealType: string,
     cuisine: string,
     recipeIndex: number = 0,
@@ -98,7 +115,7 @@ class AIRecipeController {
     const selectedStyle = cookingStyles[recipeIndex % cookingStyles.length];
 
     const prompt = `Generate a ${mealType} recipe in JSON format using ${mainIngredient.name} as the main ingredient. ${sideIngredientsText}. 
-      The recipe should be for ${cuisine} cuisine and should serve 1 person with approximately ${remainingWeight}g portion size.
+      The recipe should be for ${cuisine} cuisine and should serve 1 person with approximately ${portionSize}g portion size.
       IMPORTANT: Create a unique ${selectedStyle?.style} version that is ${selectedStyle?.description}. Make this distinctly different from other versions.
       Use different preparation techniques, spices, and accompaniments than typical recipes.
       
@@ -112,7 +129,7 @@ class AIRecipeController {
         "instructions": ["Step 1", "Step 2", "Step 3"],
         "mealType": "${mealType}",
         "cuisine": "${cuisine}",
-        "portionSize": ${remainingWeight},
+        "portionSize": ${portionSize},
         "portionUnit": "g",
         "prepTime": 15,
         "cookTime": 20,
@@ -124,8 +141,12 @@ class AIRecipeController {
       model: "gemini-2.0-flash-lite",
     });
 
+    console.log(
+      `Generating recipe ${recipeIndex + 1} for ${mainIngredient.name} (${cuisine} ${mealType})`,
+    );
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
+    console.log("Gemini response received, length:", responseText.length);
 
     // Parse JSON from response (handle markdown code blocks)
     let jsonString = responseText;
@@ -139,7 +160,7 @@ class AIRecipeController {
     const recipeData = JSON.parse(jsonString);
 
     // Fetch a proper food image for the recipe
-    const imageUrl = await this.generateImageUrl(recipeData.name);
+    const imageUrl = this.generateImageUrl(recipeData.name);
 
     // Format recipe to match expected schema
     const generatedRecipe: Recipe = {
@@ -163,7 +184,7 @@ class AIRecipeController {
       ),
       mealType: recipeData.mealType || mealType,
       cuisine: recipeData.cuisine || cuisine,
-      portionSize: recipeData.portionSize || remainingWeight,
+      portionSize: recipeData.portionSize || portionSize,
       portionUnit: recipeData.portionUnit || "g",
       prepTime: recipeData.prepTime || 15,
       cookTime: recipeData.cookTime || 20,
@@ -214,7 +235,32 @@ class AIRecipeController {
         return;
       }
 
-      const remainingWeight = targetWeight - currentWeight;
+      // Calculate appropriate portion size based on meal type and goals
+      // Base portion sizes for different meal types
+      const basePortionSizes: Record<string, number> = {
+        Breakfast: 300,
+        Lunch: 400,
+        Dinner: 400,
+        Snack: 150,
+      };
+
+      let portionSize = basePortionSizes[mealType] || 350;
+
+      // Adjust portion size based on weight goals
+      const weightDifference = targetWeight - currentWeight;
+
+      if (weightDifference < 0) {
+        // User wants to lose weight - reduce portion by 10-15%
+        portionSize = Math.round(portionSize * 0.85);
+      } else if (weightDifference > 0) {
+        // User wants to gain weight - increase portion by 10-15%
+        portionSize = Math.round(portionSize * 1.15);
+      }
+      // If weightDifference is 0 (maintain weight), use base portion
+
+      console.log(
+        `Portion calculation: meal=${mealType}, current=${currentWeight}kg, target=${targetWeight}kg, portion=${portionSize}g`,
+      );
 
       // Generate 3 recipes in sequence with small delays
       const generatedRecipes: Recipe[] = [];
@@ -224,19 +270,23 @@ class AIRecipeController {
           const recipe = await this.generateSingleRecipe(
             mainIngredient,
             sideIngredients,
-            remainingWeight,
+            portionSize,
             mealType,
             cuisine,
             i, // Pass index for unique variations
           );
           generatedRecipes.push(recipe);
 
-          // Add small delay between requests (except after the last one)
+          // Add delay between requests to avoid rate limiting (except after the last one)
           if (i < 2) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased to 2 seconds
           }
         } catch (err) {
           console.error(`Failed to generate recipe ${i + 1}:`, err);
+          console.error(
+            "Error details:",
+            err instanceof Error ? err.stack : JSON.stringify(err),
+          );
           // Continue generating the remaining recipes even if one fails
         }
       }

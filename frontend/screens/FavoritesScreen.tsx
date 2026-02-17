@@ -1,96 +1,140 @@
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { removeFavorite, selectFavorites } from "../redux/pantrySlice";
 
-interface Recipe {
-  id: string;
-  name: string;
-  mainIngredient: {
-    id: string;
-    name: string;
+const getMealIcon = (mealType?: string) => {
+  const icons: Record<string, string> = {
+    Breakfast: "🍳",
+    Lunch: "🍱",
+    Dinner: "🍽️",
+    Snack: "🥨",
   };
-  mealType?: string;
-  cuisine: string;
-  portionSize?: number;
-  portionUnit?: string;
-}
+  return icons[mealType || ""] || "🍴";
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc",
   },
   header: {
     paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    paddingVertical: 32,
+    paddingTop: 48,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#ef4444",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerIcon: {
+    fontSize: 32,
+    marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1f2937",
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#ffffff",
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 4,
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.9)",
   },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+  listContentContainer: {
+    padding: 20,
+    paddingBottom: 32,
+  },
+  cardWrapper: {
+    marginBottom: 16,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
+    paddingTop: 60,
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+    shadowColor: "#ef4444",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  emptyIconText: {
+    fontSize: 64,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 24,
+    fontWeight: "700",
     color: "#1f2937",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#6b7280",
     textAlign: "center",
+    lineHeight: 22,
   },
   recipeCard: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 12,
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  mealIcon: {
+    fontSize: 24,
   },
   recipeInfo: {
     flex: 1,
-    marginRight: 12,
   },
   recipeName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 6,
+    color: "#0f172a",
+    marginBottom: 12,
+    lineHeight: 24,
   },
   recipeDetails: {
     flexDirection: "row",
@@ -98,36 +142,50 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailBadge: {
-    backgroundColor: "#f3f4f6",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  primaryBadge: {
+    backgroundColor: "#dbeafe",
+  },
+  cuisineBadge: {
+    backgroundColor: "#fef3c7",
+  },
+  portionBadge: {
+    backgroundColor: "#e0e7ff",
   },
   detailBadgeText: {
-    fontSize: 12,
+    fontSize: 13,
+    color: "#1e40af",
+    fontWeight: "600",
+  },
+  detailBadgeTextSecondary: {
+    fontSize: 13,
     color: "#374151",
     fontWeight: "500",
   },
   removeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#fee2e2",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#fecaca",
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  removeButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   removeButtonText: {
-    fontSize: 12,
+    fontSize: 20,
     color: "#991b1b",
     fontWeight: "600",
-  },
-  listContentContainer: {
-    paddingBottom: 24,
   },
 });
 
 export default function FavoritesScreen() {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const favorites = useSelector(selectFavorites);
 
   const handleRemoveFavorite = (recipeId: string) => {
@@ -151,85 +209,128 @@ export default function FavoritesScreen() {
     );
   };
 
-  const renderFavoriteItem = ({ item }: { item: any }) => (
-    <View style={styles.recipeCard}>
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
-
-        <View style={styles.recipeDetails}>
-          {item.mainIngredient && (
-            <View style={styles.detailBadge}>
-              <Text style={styles.detailBadgeText}>
-                {item.mainIngredient.name}
-              </Text>
-            </View>
-          )}
-
-          {item.mealType && (
-            <View style={styles.detailBadge}>
-              <Text style={styles.detailBadgeText}>{item.mealType}</Text>
-            </View>
-          )}
-
-          {item.cuisine && (
-            <View style={styles.detailBadge}>
-              <Text style={styles.detailBadgeText}>{item.cuisine}</Text>
-            </View>
-          )}
-
-          {item.portionSize && (
-            <View style={styles.detailBadge}>
-              <Text style={styles.detailBadgeText}>
-                {item.portionSize} {item.portionUnit || "g"}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveFavorite(item.id)}
-        activeOpacity={0.7}
+  const renderFavoriteItem = ({
+    item,
+    index,
+  }: {
+    item: any;
+    index: number;
+  }) => (
+    <TouchableOpacity
+      style={styles.cardWrapper}
+      onPress={() => {
+        // Navigate to RecipeDisplay with the favorite recipe
+        navigation.navigate(
+          "RecipeDisplay" as never,
+          { recipe: item } as never,
+        );
+      }}
+      activeOpacity={0.7}
+    >
+      <LinearGradient
+        colors={["#ffffff", "#f0f9ff"]}
+        style={styles.recipeCard}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.removeButtonText}>Remove</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.cardHeader}>
+          <View style={styles.iconCircle}>
+            <Text style={styles.mealIcon}>{getMealIcon(item.mealType)}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={(e) => {
+              // Prevent card click when tapping remove button
+              e.stopPropagation();
+              handleRemoveFavorite(item.id);
+            }}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={["#fee2e2", "#fecaca"]}
+              style={styles.removeButtonGradient}
+            >
+              <Text style={styles.removeButtonText}>✕</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.recipeInfo}>
+          <Text style={styles.recipeName} numberOfLines={2}>
+            {item.name}
+          </Text>
+
+          <View style={styles.recipeDetails}>
+            {item.mainIngredient && (
+              <View style={[styles.detailBadge, styles.primaryBadge]}>
+                <Text style={styles.detailBadgeText}>
+                  🥘 {item.mainIngredient.name}
+                </Text>
+              </View>
+            )}
+
+            {item.cuisine && (
+              <View style={[styles.detailBadge, styles.cuisineBadge]}>
+                <Text style={styles.detailBadgeTextSecondary}>
+                  🌍 {item.cuisine}
+                </Text>
+              </View>
+            )}
+
+            {item.portionSize && (
+              <View style={[styles.detailBadge, styles.portionBadge]}>
+                <Text style={styles.detailBadgeTextSecondary}>
+                  📏 {item.portionSize}
+                  {item.portionUnit || "g"}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>★</Text>
+      <LinearGradient colors={["#fef2f2", "#fee2e2"]} style={styles.emptyIcon}>
+        <Text style={styles.emptyIconText}>❤️</Text>
+      </LinearGradient>
       <Text style={styles.emptyText}>No Favorites Yet</Text>
       <Text style={styles.emptySubtext}>
-        Save your favorite recipes to access them quickly
+        {`Start saving recipes you love and "\n" they'll appear here for quick
+        access`}
       </Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Favorites</Text>
+      <LinearGradient
+        colors={["#ef4444", "#dc2626"]}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={styles.headerIcon}>❤️</Text>
+        <Text style={styles.headerTitle}>My Favorites</Text>
         <Text style={styles.headerSubtitle}>
           {favorites.length === 0
             ? "No saved recipes yet"
-            : `${favorites.length} recipe${favorites.length !== 1 ? "s" : ""}`}
+            : `${favorites.length} saved recipe${favorites.length !== 1 ? "s" : ""}`}
         </Text>
-      </View>
+      </LinearGradient>
 
       {favorites.length === 0 ? (
         renderEmptyState()
       ) : (
-        <View style={styles.contentContainer}>
-          <FlatList
-            data={favorites}
-            keyExtractor={(item) => item.id}
-            renderItem={renderFavoriteItem}
-            contentContainerStyle={styles.listContentContainer}
-            scrollEnabled={true}
-          />
-        </View>
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={renderFavoriteItem}
+          contentContainerStyle={styles.listContentContainer}
+          showsVerticalScrollIndicator={false}
+        />
       )}
     </View>
   );

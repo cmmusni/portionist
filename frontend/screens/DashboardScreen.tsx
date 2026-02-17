@@ -1,6 +1,10 @@
 import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,132 +16,223 @@ import { selectAuthUser } from "../redux/authSlice";
 import {
   selectCuisine,
   selectCurrentWeight,
+  selectTargetWeight,
   selectUserAge,
 } from "../redux/pantrySlice";
+import { apiUrl } from "../services/config";
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
   const user = useSelector(selectAuthUser);
   const currentWeight = useSelector(selectCurrentWeight);
+  const targetWeight = useSelector(selectTargetWeight);
   const cuisine = useSelector(selectCuisine);
   const userAge = useSelector(selectUserAge);
 
-  React.useEffect(() => {
-    console.log("📊 Dashboard mounted");
-    console.log("User:", user);
-    console.log("Weight:", currentWeight, "Cuisine:", cuisine, "Age:", userAge);
-  }, []);
+  const [suggestedMeals, setSuggestedMeals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const quickActions = [
-    {
-      id: "recipe-search",
-      title: "🔍 Search Recipe",
-      description: "Find recipes by ingredients",
-      icon: "🔍",
-      screen: "RecipeInput",
-      color: "#3b82f6",
-    },
-    {
-      id: "favorites",
-      title: "❤️ Favorites",
-      description: "Your saved recipes",
-      icon: "❤️",
-      screen: "Favorites",
-      color: "#ef4444",
-    },
-    {
-      id: "preferences",
-      title: "⚙️ Preferences",
-      description: "Update your profile",
-      icon: "⚙️",
-      screen: "Profile",
-      color: "#8b5cf6",
-    },
-  ];
+  const fetchSuggestedMeals = async () => {
+    try {
+      setLoading(true);
+      // Fetch random recipes based on user preferences and weight goals
+      const params = new URLSearchParams({
+        cuisine: cuisine || "any",
+        limit: "6",
+        currentWeight: String(currentWeight || 70),
+        targetWeight: String(targetWeight || 70),
+      });
+      const response = await fetch(apiUrl(`/recipes?${params.toString()}`));
 
-  const handleNavigate = (screen: string) => {
-    navigation.navigate(screen as never);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Dashboard API response:", data);
+        setSuggestedMeals(data.data || data.recipes || []);
+      } else {
+        // Fallback to sample data if API fails
+        setSuggestedMeals([
+          {
+            id: "1",
+            name: "Grilled Chicken Salad",
+            description: "Healthy protein-packed meal",
+            calories: 350,
+            cuisine: cuisine || "International",
+          },
+          {
+            id: "2",
+            name: "Vegetable Stir Fry",
+            description: "Quick and nutritious",
+            calories: 280,
+            cuisine: cuisine || "Asian",
+          },
+          {
+            id: "3",
+            name: "Salmon with Quinoa",
+            description: "Omega-3 rich meal",
+            calories: 420,
+            cuisine: cuisine || "Mediterranean",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching suggested meals:", error);
+      // Fallback suggestions
+      setSuggestedMeals([
+        {
+          id: "1",
+          name: "Healthy Bowl",
+          description: "Balanced meal for your goals",
+          calories: 400,
+          cuisine: cuisine || "International",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const getInitials = () => {
-    return user?.fullName?.charAt(0).toUpperCase() || "U";
+  useEffect(() => {
+    fetchSuggestedMeals();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchSuggestedMeals();
+  };
+
+  const handleMealPress = (meal: any) => {
+    // Navigate directly to RecipeDisplay with the meal data
+    navigation.navigate("RecipeDisplay" as never, { recipe: meal } as never);
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Welcome Header */}
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{getInitials()}</Text>
-          </View>
-        </View>
-        <Text style={styles.greeting}>Welcome back,</Text>
-        <Text style={styles.userName}>{user?.fullName || "User"}</Text>
-      </View>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#3b82f6"
+        />
+      }
+    >
+      {/* Welcome Section */}
+      <LinearGradient
+        colors={["#60a5fa", "#3b82f6"]}
+        style={styles.welcomeSection}
+      >
+        <Text style={styles.welcomeText}>
+          Hello, {user?.fullName?.split(" ")[0] || "there"}!
+        </Text>
+        <Text style={styles.welcomeSubtext}>
+          Here are your personalized meal suggestions
+        </Text>
+      </LinearGradient>
 
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Weight</Text>
+      {/* User Stats Summary */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>⚖️</Text>
           <Text style={styles.statValue}>{currentWeight || "--"} kg</Text>
-          <Text style={styles.statSubtext}>Tracking your progress</Text>
+          <Text style={styles.statLabel}>Current</Text>
         </View>
-
-        <View style={styles.statCard}>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>🎯</Text>
+          <Text style={styles.statValue}>{targetWeight || "--"} kg</Text>
+          <Text style={styles.statLabel}>Target</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>🍽️</Text>
+          <Text style={styles.statValue}>{cuisine || "Any"}</Text>
           <Text style={styles.statLabel}>Cuisine</Text>
-          <Text style={styles.statValue}>{cuisine || "Not set"}</Text>
-          <Text style={styles.statSubtext}>Preferred</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Age</Text>
-          <Text style={styles.statValue}>{userAge || "--"}</Text>
-          <Text style={styles.statSubtext}>Years</Text>
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Quick Access</Text>
-        <View style={styles.actionsGrid}>
-          {quickActions.map((action) => (
+      {/* Suggested Meals Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Suggested Meals</Text>
+        <Text style={styles.sectionSubtitle}>
+          Based on your preferences and goals
+        </Text>
+      </View>
+
+      {/* Loading State */}
+      {loading && !refreshing && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Loading meal suggestions...</Text>
+        </View>
+      )}
+
+      {/* Suggested Meals Grid */}
+      {!loading && (
+        <View style={styles.mealsGrid}>
+          {suggestedMeals.map((meal: any, index: number) => (
             <TouchableOpacity
-              key={action.id}
-              style={[styles.actionCard, { borderTopColor: action.color }]}
-              onPress={() => handleNavigate(action.screen)}
-              activeOpacity={0.7}
+              key={meal.id || index}
+              style={styles.mealCard}
+              onPress={() => handleMealPress(meal)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>{action.icon}</Text>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionDescription}>{action.description}</Text>
+              <LinearGradient
+                colors={["#ffffff", "#f0f9ff"]}
+                style={styles.mealCardGradient}
+              >
+                <View style={styles.mealIconContainer}>
+                  <Text style={styles.mealIcon}>
+                    {["🍗", "🥗", "🍜", "🍲", "🥘", "🍱"][index % 6]}
+                  </Text>
+                </View>
+                <Text style={styles.mealName} numberOfLines={2}>
+                  {meal.name || meal.title}
+                </Text>
+                <Text style={styles.mealDescription} numberOfLines={2}>
+                  {meal.description ||
+                    meal.summary ||
+                    "Delicious and nutritious"}
+                </Text>
+                <View style={styles.mealFooter}>
+                  <View style={styles.caloriesBadge}>
+                    <Text style={styles.caloriesText}>
+                      {meal.calories || "~400"} cal
+                    </Text>
+                  </View>
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      )}
 
-      {/* Quick Info Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Account Info</Text>
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Email:</Text>
-            <Text style={styles.infoValue}>{user?.email || "Not set"}</Text>
-          </View>
-          <View style={styles.infoDivider} />
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Name:</Text>
-            <Text style={styles.infoValue}>{user?.fullName || "Not set"}</Text>
-          </View>
+      {/* Empty State */}
+      {!loading && suggestedMeals.length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyEmoji}>🍽️</Text>
+          <Text style={styles.emptyText}>No suggestions available</Text>
+          <Text style={styles.emptySubtext}>
+            Try updating your preferences or refresh the page
+          </Text>
         </View>
-      </View>
+      )}
 
-      {/* View Full Menu Button */}
+      {/* Quick Action Button */}
       <TouchableOpacity
-        style={styles.menuButton}
-        onPress={() => navigation.navigate("Menu" as never)}
+        style={styles.searchButtonContainer}
+        onPress={() => navigation.navigate("RecipeInput" as never)}
+        activeOpacity={0.8}
       >
-        <Text style={styles.menuButtonText}>View Full Menu →</Text>
+        <LinearGradient
+          colors={["#3b82f6", "#2563eb"]}
+          style={styles.searchButton}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <Text style={styles.searchButtonIcon}>🔍</Text>
+          <Text style={styles.searchButtonText}>Search Recipe</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
       <View style={styles.spacer} />
@@ -148,186 +243,217 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#f8fafc",
   },
-  header: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+  welcomeSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#3b82f6",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  greeting: {
-    fontSize: 16,
-    color: "#6b7280",
-    marginBottom: 4,
-  },
-  userName: {
+  welcomeText: {
     fontSize: 28,
-    fontWeight: "700",
-    color: "#1f2937",
+    fontWeight: "800",
+    color: "#ffffff",
+    marginBottom: 8,
   },
-  statsContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+  welcomeSubtext: {
+    fontSize: 15,
+    color: "#e0f2fe",
+    fontWeight: "500",
+  },
+  statsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     gap: 12,
   },
-  statCard: {
+  statItem: {
     flex: 1,
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+    borderRadius: 16,
+    padding: 16,
     alignItems: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  statEmoji: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    color: "#9ca3af",
+    color: "#6b7280",
     fontWeight: "600",
     textTransform: "uppercase",
-    marginBottom: 8,
-    letterSpacing: 0.5,
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 4,
-  },
-  statSubtext: {
-    fontSize: 10,
-    color: "#d1d5db",
-    textAlign: "center",
-  },
-  sectionContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+  sectionHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   sectionTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#1f2937",
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  mealsGrid: {
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  mealCard: {
+    width: "48%",
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  mealCardGradient: {
+    padding: 16,
+    minHeight: 200,
+  },
+  mealIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#eff6ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  mealIcon: {
+    fontSize: 28,
+  },
+  mealName: {
     fontSize: 16,
     fontWeight: "700",
     color: "#1f2937",
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  mealDescription: {
+    fontSize: 13,
+    color: "#6b7280",
+    lineHeight: 18,
     marginBottom: 12,
+    flexGrow: 1,
   },
-  actionsGrid: {
+  mealFooter: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  actionCard: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
     alignItems: "center",
-    borderTopWidth: 3,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    marginTop: "auto",
   },
-  actionIcon: {
-    fontSize: 32,
+  caloriesBadge: {
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  caloriesText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3b82f6",
+  },
+  emptyState: {
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+    alignItems: "center",
+  },
+  emptyEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f2937",
     marginBottom: 8,
   },
-  actionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  actionDescription: {
-    fontSize: 10,
-    color: "#9ca3af",
-    textAlign: "center",
-    lineHeight: 13,
-  },
-  infoCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  infoLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6b7280",
-  },
-  infoValue: {
+  emptySubtext: {
     fontSize: 14,
-    color: "#1f2937",
-    fontWeight: "500",
-    flex: 1,
-    textAlign: "right",
-    marginLeft: 12,
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 20,
   },
-  infoDivider: {
-    height: 1,
-    backgroundColor: "#e5e7eb",
-    marginVertical: 12,
+  searchButtonContainer: {
+    marginHorizontal: 20,
+    marginVertical: 20,
+    borderRadius: 16,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#3b82f6",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
-  menuButton: {
-    marginHorizontal: 16,
-    marginVertical: 16,
-    backgroundColor: "#3b82f6",
-    borderRadius: 12,
-    paddingVertical: 14,
+  searchButton: {
+    paddingVertical: 18,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 3,
-    shadowColor: "#3b82f6",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    justifyContent: "center",
+    gap: 12,
   },
-  menuButtonText: {
+  searchButtonIcon: {
+    fontSize: 20,
+  },
+  searchButtonText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#ffffff",
   },
   spacer: {
-    height: 20,
+    height: 30,
   },
 });
 

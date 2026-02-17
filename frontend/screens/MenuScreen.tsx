@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
     Alert,
@@ -134,54 +135,77 @@ const MenuScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={["#8b5cf6", "#7c3aed"]}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
         <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
+          <LinearGradient colors={["#a78bfa", "#8b5cf6"]} style={styles.avatar}>
             <Text style={styles.avatarText}>
               {user?.fullName?.charAt(0).toUpperCase() || "U"}
             </Text>
-          </View>
+          </LinearGradient>
         </View>
-        <Text style={styles.greeting}>
-          Welcome,{"\n"}
-          <Text style={styles.userName}>{user?.fullName || "User"}</Text>
-        </Text>
-      </View>
+        <Text style={styles.greeting}>Welcome,</Text>
+        <Text style={styles.userName}>{user?.fullName || "User"}</Text>
+      </LinearGradient>
 
       {/* Menu Items */}
       <View style={styles.menuContainer}>
         {menuItems.map((item) => (
           <TouchableOpacity
             key={item.id}
-            style={[styles.menuItem, { borderLeftColor: item.color }]}
+            style={styles.menuItemWrapper}
             onPress={() => handleNavigate(item.screen)}
             activeOpacity={0.7}
           >
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{item.title}</Text>
-              <Text style={styles.menuDescription}>{item.description}</Text>
-            </View>
-            <Text style={styles.arrow}>→</Text>
+            <LinearGradient
+              colors={["#ffffff", "#f9fafb"]}
+              style={[styles.menuItem, { borderLeftColor: item.color }]}
+            >
+              <View style={styles.menuContent}>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Text style={styles.menuDescription}>{item.description}</Text>
+              </View>
+              <View
+                style={[
+                  styles.arrowCircle,
+                  { backgroundColor: item.color + "20" },
+                ]}
+              >
+                <Text style={[styles.arrow, { color: item.color }]}>→</Text>
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Quick Info */}
       <View style={styles.infoContainer}>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>Email</Text>
+        <LinearGradient colors={["#dbeafe", "#bfdbfe"]} style={styles.infoCard}>
+          <Text style={styles.infoIcon}>📧</Text>
+          <Text style={styles.infoLabel}>Email Address</Text>
           <Text style={styles.infoValue}>{user?.email || "Not set"}</Text>
-        </View>
+        </LinearGradient>
       </View>
 
       {/* Sign Out Button */}
       <View style={styles.signOutContainer}>
         <TouchableOpacity
-          style={styles.signOutButton}
+          style={styles.signOutButtonWrapper}
           onPress={handleSignOut}
           activeOpacity={0.8}
         >
-          <Text style={styles.signOutButtonText}>🚪 Sign Out</Text>
+          <LinearGradient
+            colors={["#ef4444", "#dc2626"]}
+            style={styles.signOutButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.signOutButtonText}>🚪 Sign Out</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -191,124 +215,152 @@ const MenuScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#f8fafc",
   },
   header: {
-    backgroundColor: "#ffffff",
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingVertical: 40,
+    paddingTop: 60,
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
   },
   avatarContainer: {
     marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#3b82f6",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   avatarText: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 40,
+    fontWeight: "800",
     color: "#ffffff",
   },
   greeting: {
-    fontSize: 18,
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 24,
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 4,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1f2937",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#ffffff",
   },
   menuContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 24,
     gap: 12,
   },
+  menuItemWrapper: {
+    borderRadius: 16,
+    overflow: "hidden",
+  },
   menuItem: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderLeftWidth: 4,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   menuContent: {
     flex: 1,
     marginRight: 12,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1f2937",
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#0f172a",
     marginBottom: 4,
   },
   menuDescription: {
     fontSize: 13,
-    color: "#6b7280",
+    color: "#64748b",
     lineHeight: 18,
+  },
+  arrowCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   arrow: {
     fontSize: 20,
-    color: "#d1d5db",
     fontWeight: "bold",
   },
   infoContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 24,
   },
   infoCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: "#6b7280",
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: "#1f2937",
-    fontWeight: "500",
-  },
-  signOutContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-  signOutButton: {
-    backgroundColor: "#ef4444",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: "#ef4444",
+    paddingVertical: 20,
+    shadowColor: "#3b82f6",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  infoIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: "#1e40af",
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  infoValue: {
+    fontSize: 17,
+    color: "#1e3a8a",
+    fontWeight: "600",
+  },
+  signOutContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  signOutButtonWrapper: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#ef4444",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  signOutButton: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   signOutButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "700",
     color: "#ffffff",
   },
 });

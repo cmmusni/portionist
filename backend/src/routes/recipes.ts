@@ -5,6 +5,11 @@ import recipeController from "../controllers/recipeController.js";
 
 const router = Router();
 
+// GET /recipes - Get suggested recipes (for dashboard)
+router.get("/", async (req: Request, res: Response) => {
+  await recipeController.getSuggestedRecipes(req, res);
+});
+
 // GET /recipes/ingredients - Get all ingredients from database
 router.get("/ingredients", async (req: Request, res: Response) => {
   await recipeController.getIngredients(req, res);
