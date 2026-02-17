@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-    NavigationContainer,
-    NavigationIndependentTree,
-    useNavigation,
+  NavigationContainer,
+  NavigationIndependentTree,
+  useNavigation,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
@@ -11,15 +11,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { saveAuthToStorage } from "../hooks/useAuthRestore";
 import { saveOnboardingToStorage } from "../hooks/useOnboardingStorage";
 import {
-    selectAuthUser,
-    selectIsAuthenticated,
-    signInSuccess,
-    signUpSuccess,
+  selectAuthUser,
+  selectIsAuthenticated,
+  signInSuccess,
+  signUpSuccess,
 } from "../redux/authSlice";
 import {
-    selectOnboardingCompleted,
-    setOnboardingCompleted,
-    setOnboardingData,
+  selectOnboardingCompleted,
+  setOnboardingCompleted,
+  setOnboardingData,
 } from "../redux/pantrySlice";
 import DashboardScreen from "../screens/DashboardScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
@@ -104,9 +104,7 @@ function SignInScreenWrapper() {
       } catch (error) {
         console.error("Error fetching onboarding data:", error);
         // On error, check local storage as fallback
-        const localData = await AsyncStorage.getItem(
-          "portionist_onboarding",
-        );
+        const localData = await AsyncStorage.getItem("portionist_onboarding");
         if (localData) {
           navigation.navigate("Dashboard" as never);
         } else {
@@ -193,9 +191,7 @@ function SignUpScreenWrapper() {
       } catch (error) {
         console.error("Error fetching onboarding data:", error);
         // On error, check local storage as fallback
-        const localData = await AsyncStorage.getItem(
-          "portionist_onboarding",
-        );
+        const localData = await AsyncStorage.getItem("portionist_onboarding");
         if (localData) {
           navigation.navigate("Dashboard" as never);
         } else {
