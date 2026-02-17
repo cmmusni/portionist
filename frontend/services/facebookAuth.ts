@@ -108,7 +108,7 @@ const facebookLoginWeb = (): Promise<FacebookUser | null> => {
           const accessToken = response.authResponse.accessToken;
 
           // Get user info from Facebook
-          window.FB.api("/me", { fields: "id,name,email" }, (userData: any) => {
+          window.FB.api("/me", { fields: "id,name" }, (userData: any) => {
             // Send to backend for authentication
             fetch(apiUrl("/auth/facebook"), {
               method: "POST",
@@ -118,7 +118,7 @@ const facebookLoginWeb = (): Promise<FacebookUser | null> => {
               body: JSON.stringify({
                 facebookId: userData.id,
                 fullName: userData.name,
-                email: userData.email,
+                email: userData.email || undefined,
               }),
             })
               .then((backendResponse) => {
@@ -141,7 +141,7 @@ const facebookLoginWeb = (): Promise<FacebookUser | null> => {
           resolve(null);
         }
       },
-      { scope: "public_profile,email" },
+      { scope: "public_profile" },
     );
   });
 };
@@ -162,13 +162,13 @@ export const facebookLogin = async (): Promise<FacebookUser | null> => {
 
   try {
     const result = await Facebook.logInWithReadPermissionsAsync({
-      permissions: ["public_profile", "email"],
+      permissions: ["public_profile"],
     });
 
     if (result.type === "success") {
       // Get user info from Facebook
       const response = await fetch(
-        `https://graph.facebook.com/me?fields=id,name,email&access_token=${result.token}`,
+        `https://graph.facebook.com/me?fields=id,name&access_token=${result.token}`,
       );
       const facebookData = await response.json();
 
@@ -181,7 +181,7 @@ export const facebookLogin = async (): Promise<FacebookUser | null> => {
         body: JSON.stringify({
           facebookId: facebookData.id,
           fullName: facebookData.name,
-          email: facebookData.email,
+          email: facebookData.email || undefined,
         }),
       });
 

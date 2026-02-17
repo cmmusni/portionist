@@ -36,7 +36,10 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
 
 **Configure the following settings:**
 
-1. **Valid OAuth Redirect URIs:**
+1. **Login with JavaScript SDK:**
+   - Toggle to **"Yes"** (REQUIRED for web login)
+
+2. **Valid OAuth Redirect URIs:**
 
    ```
    https://portionist.netlify.app/
@@ -44,11 +47,11 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
 
    **Note:** `localhost` redirects are automatically allowed in development mode and don't need to be added here.
 
-2. **Client OAuth Settings:**
+3. **Client OAuth Settings:**
    - ✅ Web OAuth Login: Enabled
    - ✅ Use Strict Mode for Redirect URIs: Enabled
 
-3. **Allowed Domains for the JavaScript SDK:**
+4. **Allowed Domains for the JavaScript SDK:**
 
    ```
    portionist.netlify.app
@@ -56,7 +59,19 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
 
    **Note:** Don't add `localhost` here - Facebook won't accept it. Local testing will still work via the OAuth redirect URI.
 
-### 3. Make App Public (When Ready)
+### 3. Permissions (Optional)
+
+The app currently uses only `public_profile` permission, which is available by default.
+
+To request `email` permission:
+
+1. Go to Use cases → Facebook Login → Permissions and features
+2. Click "+ Add" next to "email"
+3. Submit for App Review (required for production)
+
+**Note:** Email permission requires Facebook App Review before it can be used with regular users.
+
+### 4. Make App Public (When Ready)
 
 For production use:
 
