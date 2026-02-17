@@ -19,6 +19,7 @@ const slugify = (s: string) =>
 const ingredientCategories: Record<string, string> = {
   // Meat
   "chicken breast": "Meat",
+  chicken: "Meat",
   beef: "Meat",
   pork: "Meat",
   fish: "Meat",
@@ -26,6 +27,11 @@ const ingredientCategories: Record<string, string> = {
   lamb: "Meat",
   turkey: "Meat",
   duck: "Meat",
+  salmon: "Meat",
+  tuna: "Meat",
+  bacon: "Meat",
+  sausage: "Meat",
+  "ground beef": "Meat",
   // Vegetables
   carrot: "Vegetables",
   potato: "Vegetables",
@@ -38,6 +44,13 @@ const ingredientCategories: Record<string, string> = {
   tomato: "Vegetables",
   corn: "Vegetables",
   "sweet potato": "Vegetables",
+  cabbage: "Vegetables",
+  kale: "Vegetables",
+  zucchini: "Vegetables",
+  eggplant: "Vegetables",
+  asparagus: "Vegetables",
+  celery: "Vegetables",
+  cucumber: "Vegetables",
   // Fruits
   apple: "Fruits",
   orange: "Fruits",
@@ -56,6 +69,7 @@ const ingredientCategories: Record<string, string> = {
   eggs: "Dairy",
   butter: "Dairy",
   "cheddar cheese": "Dairy",
+  cheese: "Dairy",
   mozzarella: "Dairy",
   cream: "Dairy",
   yogurt: "Dairy",
@@ -69,6 +83,7 @@ const ingredientCategories: Record<string, string> = {
   bread: "Grains",
   // Spices & Seasonings
   "black pepper": "Spices",
+  pepper: "Spices",
   salt: "Spices",
   cinnamon: "Spices",
   cumin: "Spices",
@@ -84,6 +99,7 @@ const ingredientCategories: Record<string, string> = {
   ginger: "Spices",
   // Oils & Condiments
   "olive oil": "Oils",
+  oil: "Oils",
   "soy sauce": "Condiments",
   vinegar: "Condiments",
   mustard: "Condiments",
@@ -98,17 +114,134 @@ const ingredientCategories: Record<string, string> = {
   chickpeas: "Legumes",
   lentils: "Legumes",
   "black beans": "Legumes",
+  beans: "Legumes",
   almonds: "Nuts",
   walnuts: "Nuts",
   peanuts: "Nuts",
   // Special
   "coconut milk": "Specialty",
   coconut: "Specialty",
+  tofu: "Specialty",
+  tempeh: "Specialty",
 };
+
+// Category keywords for partial matching
+const categoryKeywords: Array<{ keywords: string[]; category: string }> = [
+  {
+    keywords: [
+      "chicken",
+      "beef",
+      "pork",
+      "lamb",
+      "turkey",
+      "duck",
+      "fish",
+      "salmon",
+      "tuna",
+      "shrimp",
+      "bacon",
+      "sausage",
+      "meat",
+    ],
+    category: "Meat",
+  },
+  {
+    keywords: [
+      "carrot",
+      "potato",
+      "pepper",
+      "broccoli",
+      "spinach",
+      "mushroom",
+      "onion",
+      "garlic",
+      "tomato",
+      "corn",
+      "cabbage",
+      "kale",
+      "zucchini",
+      "eggplant",
+      "asparagus",
+      "celery",
+      "cucumber",
+    ],
+    category: "Vegetables",
+  },
+  {
+    keywords: [
+      "apple",
+      "orange",
+      "banana",
+      "strawberry",
+      "blueberry",
+      "raspberry",
+      "grape",
+      "pineapple",
+      "mango",
+      "lemon",
+      "lime",
+      "avocado",
+      "berry",
+    ],
+    category: "Fruits",
+  },
+  {
+    keywords: ["milk", "egg", "butter", "cheese", "cream", "yogurt", "dairy"],
+    category: "Dairy",
+  },
+  {
+    keywords: ["rice", "pasta", "flour", "oat", "quinoa", "bread", "grain"],
+    category: "Grains",
+  },
+  {
+    keywords: [
+      "pepper",
+      "salt",
+      "cinnamon",
+      "cumin",
+      "paprika",
+      "coriander",
+      "turmeric",
+      "basil",
+      "parsley",
+      "oregano",
+      "thyme",
+      "rosemary",
+      "cilantro",
+      "ginger",
+      "spice",
+    ],
+    category: "Spices",
+  },
+  { keywords: ["oil"], category: "Oils" },
+  {
+    keywords: ["sauce", "vinegar", "mustard", "ketchup", "mayo"],
+    category: "Condiments",
+  },
+  { keywords: ["honey", "sugar", "syrup", "sweet"], category: "Sweeteners" },
+  { keywords: ["bean", "lentil", "chickpea"], category: "Legumes" },
+  { keywords: ["almond", "walnut", "peanut", "nut"], category: "Nuts" },
+  { keywords: ["coconut", "tofu", "tempeh"], category: "Specialty" },
+];
 
 function getCategory(name: string): string {
   const lower = name.toLowerCase();
-  return ingredientCategories[lower] || "Other";
+
+  // First try exact match
+  if (ingredientCategories[lower]) {
+    return ingredientCategories[lower];
+  }
+
+  // Then try partial keyword matching
+  for (const { keywords, category } of categoryKeywords) {
+    for (const keyword of keywords) {
+      if (lower.includes(keyword)) {
+        return category;
+      }
+    }
+  }
+
+  return "Other";
 }
 
 function generateVariants(baseNames: string[], target: number) {

@@ -3,7 +3,8 @@ module.exports = ({ config }) => {
     ...config,
     extra: {
       API_BASE_URL:
-        process.env.EXPO_PUBLIC_API_BASE_URL || "https://portionist.up.railway.app",
+        process.env.EXPO_PUBLIC_API_BASE_URL ||
+        "https://portionist.up.railway.app",
     },
   };
 };
