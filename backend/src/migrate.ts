@@ -115,8 +115,36 @@ const migrate = async () => {
     console.log("✅ Recipe ingredients table created");
 
     console.log("\n✅ Database migration completed successfully!\n");
+
+    // Attempt to write a verification marker into a migrations table so
+    // deployment logs or DB queries can confirm the migration ran.
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS migrations (
+          id SERIAL PRIMARY KEY,
+          name TEXT,
+          ran_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          note TEXT
+        )
+      `);
+
+      const name = process.env.MIGRATION_NAME || "auto-migrate";
+      const note = process.env.MIGRATION_NOTE || "deployed via CI";
+      const res = await query(
+        `INSERT INTO migrations (name, note) VALUES ($1, $2) RETURNING id`,
+        [name, note],
+      );
+      const insertedId = res.rows && res.rows[0] ? res.rows[0].id : "<unknown>";
+      console.log(`MIGRATION_MARKER_INSERTED: id=${insertedId} name=${name}`);
+    } catch (mErr) {
+      console.error("MIGRATION_MARKER_FAILED:", (mErr as any)?.message || mErr);
+      process.exit(1);
+    }
+
     // Emit a distinct log line so platform logs can be matched easily
-    console.log("MIGRATION_COMPLETED: Portionist migration finished successfully");
+    console.log(
+      "MIGRATION_COMPLETED: Portionist migration finished successfully",
+    );
     process.exit(0);
   } catch (error) {
     console.error("❌ Migration failed:", error);
