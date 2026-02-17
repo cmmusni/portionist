@@ -1,18 +1,18 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { selectAuthUser } from "../redux/authSlice";
 import {
-    selectCuisine,
-    selectCurrentWeight,
-    selectUserAge,
+  selectCuisine,
+  selectCurrentWeight,
+  selectUserAge,
 } from "../redux/pantrySlice";
 
 const DashboardScreen: React.FC = () => {

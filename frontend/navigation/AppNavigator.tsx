@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  NavigationContainer,
-  NavigationIndependentTree,
-  useNavigation,
+    NavigationContainer,
+    NavigationIndependentTree,
+    useNavigation,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
@@ -11,15 +11,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { saveAuthToStorage } from "../hooks/useAuthRestore";
 import { saveOnboardingToStorage } from "../hooks/useOnboardingStorage";
 import {
-  selectAuthUser,
-  selectIsAuthenticated,
-  signInSuccess,
-  signUpSuccess,
+    selectAuthUser,
+    selectIsAuthenticated,
+    signInSuccess,
+    signUpSuccess,
 } from "../redux/authSlice";
 import {
-  selectOnboardingCompleted,
-  setOnboardingCompleted,
-  setOnboardingData,
+    selectOnboardingCompleted,
+    setOnboardingCompleted,
+    setOnboardingData,
 } from "../redux/pantrySlice";
 import DashboardScreen from "../screens/DashboardScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
@@ -202,11 +202,11 @@ function OnboardingScreenWrapper() {
       );
       // Mark onboarding as completed
       dispatch(setOnboardingCompleted(true));
-      
+
       console.log("✅ Onboarding completed, navigating to Dashboard...");
       console.log("User data:", user);
       console.log("Onboarding values:", values);
-      
+
       // Navigate to Dashboard after onboarding
       navigation.navigate("Dashboard" as never);
     } catch (error) {
