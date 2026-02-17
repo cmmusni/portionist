@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { apiUrl } from "../services/config";
 import { facebookLogin, initializeFacebook } from "../services/facebookAuth";
@@ -243,29 +242,23 @@ export default function SignUpScreen({
           </Text>
         </View>
 
-        {Platform.OS !== "web" && (
-          <>
-            <TouchableOpacity
-              style={styles.facebookButton}
-              onPress={handleFacebookSignUp}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.facebookButtonText}>
-                  Sign Up with Facebook
-                </Text>
-              )}
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.facebookButton}
+          onPress={handleFacebookSignUp}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.facebookButtonText}>Sign Up with Facebook</Text>
+          )}
+        </TouchableOpacity>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
-            </View>
-          </>
-        )}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Full Name</Text>
