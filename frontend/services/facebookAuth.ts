@@ -94,7 +94,7 @@ export const initializeFacebook = async (): Promise<void> => {
 /**
  * Log in with Facebook (Web version)
  */
-const facebookLoginWeb = async (): Promise<FacebookUser | null> => {
+const facebookLoginWeb = (): Promise<FacebookUser | null> => {
   return new Promise((resolve, reject) => {
     if (!window.FB) {
       Alert.alert("Error", "Facebook SDK not loaded. Please refresh the page.");
@@ -103,42 +103,39 @@ const facebookLoginWeb = async (): Promise<FacebookUser | null> => {
     }
 
     window.FB.login(
-      async (response: any) => {
+      (response: any) => {
         if (response.authResponse) {
           const accessToken = response.authResponse.accessToken;
 
           // Get user info from Facebook
-          window.FB.api(
-            "/me",
-            { fields: "id,name,email" },
-            async (userData: any) => {
-              try {
-                // Send to backend for authentication
-                const backendResponse = await fetch(apiUrl("/auth/facebook"), {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    facebookId: userData.id,
-                    fullName: userData.name,
-                    email: userData.email,
-                  }),
-                });
-
+          window.FB.api("/me", { fields: "id,name,email" }, (userData: any) => {
+            // Send to backend for authentication
+            fetch(apiUrl("/auth/facebook"), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                facebookId: userData.id,
+                fullName: userData.name,
+                email: userData.email,
+              }),
+            })
+              .then((backendResponse) => {
                 if (!backendResponse.ok) {
                   throw new Error("Backend authentication failed");
                 }
-
-                const authData = await backendResponse.json();
+                return backendResponse.json();
+              })
+              .then((authData) => {
                 resolve(authData.data as FacebookUser);
-              } catch (error) {
+              })
+              .catch((error) => {
                 console.error("Backend auth error:", error);
                 Alert.alert("Error", "Failed to authenticate with server");
                 reject(error);
-              }
-            },
-          );
+              });
+          });
         } else {
           console.log("User cancelled login or did not fully authorize.");
           resolve(null);

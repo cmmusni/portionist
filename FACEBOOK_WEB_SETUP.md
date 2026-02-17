@@ -15,12 +15,10 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
    - Save changes
 
 2. **App Domains** (On the same Settings → Basic page, scroll up to find the "App Domains" field)
-   - In the "App Domains" text field, add: `portionist.netlify.app`
-   - Press Enter to add another domain
-   - Add: `localhost` (for local testing)
+   - In the "App Domains" text field, type: `portionist.netlify.app`
    - Click "Save Changes" button at the bottom
 
-   **Note:** This field is near the top of the Basic Settings page, above where you added the platform. Just type the domain name without `https://` or `http://`
+   **Note:** This field is near the top of the Basic Settings page, above where you added the platform. Just type the domain name without `https://` or `http://`. Don't add `localhost` here - it's not needed and Facebook won't accept it.
 
 3. **Privacy Policy URL** (required for public apps)
    - Add your privacy policy URL
@@ -30,24 +28,33 @@ Go to [Facebook App Dashboard](https://developers.facebook.com/apps/) → Your A
 
 ### 2. Facebook Login Settings
 
-Go to Products → Facebook Login → Settings
+**Navigate to Facebook Login settings:**
+
+1. In the left sidebar, click **"Use cases"**
+2. Click on **"Authenticate and request data from users with Facebook Login"**
+3. Look for **"Settings"** or a **gear icon (⚙️)** to access configuration options
+
+**Configure the following settings:**
 
 1. **Valid OAuth Redirect URIs:**
 
    ```
    https://portionist.netlify.app/
-   http://localhost:19006/
    ```
+
+   **Note:** `localhost` redirects are automatically allowed in development mode and don't need to be added here.
 
 2. **Client OAuth Settings:**
    - ✅ Web OAuth Login: Enabled
    - ✅ Use Strict Mode for Redirect URIs: Enabled
 
 3. **Allowed Domains for the JavaScript SDK:**
+
    ```
    portionist.netlify.app
-   localhost
    ```
+
+   **Note:** Don't add `localhost` here - Facebook won't accept it. Local testing will still work via the OAuth redirect URI.
 
 ### 3. Make App Public (When Ready)
 
@@ -57,15 +64,18 @@ For production use:
 2. Turn on "App Mode" from Development to Live
 3. Complete App Review if needed (for email permission)
 
-### 4. Testing Locally
+### 4. Testing
 
-For local web testing:
+**Important:** Facebook Login requires HTTPS and cannot be tested on `http://localhost`.
 
-```bash
-npm run web
-```
+**Test on deployed site:**
 
-Access at: `http://localhost:19006`
+- Production: https://portionist.netlify.app
+
+**Local development:**
+
+- You can still run `npm run web` for general testing
+- Facebook login will only work on the HTTPS deployed site
 
 ### Current Configuration
 
