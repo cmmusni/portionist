@@ -11,12 +11,59 @@ export interface FacebookUser {
   token: string;
 }
 
+// Declare Facebook SDK types for web
+declare global {
+  interface Window {
+    FB?: any;
+    fbAsyncInit?: () => void;
+  }
+}
+
+/**
+ * Initialize Facebook SDK for Web
+ */
+const initializeFacebookWeb = (): Promise<void> => {
+  return new Promise((resolve) => {
+    // Check if already loaded
+    if (window.FB) {
+      resolve();
+      return;
+    }
+
+    // Load Facebook SDK script
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: "v19.0",
+      });
+      resolve();
+    };
+
+    // Load SDK script if not already loaded
+    if (!document.getElementById("facebook-jssdk")) {
+      const script = document.createElement("script");
+      script.id = "facebook-jssdk";
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  });
+};
+
 /**
  * Initialize Facebook SDK
  */
 export const initializeFacebook = async (): Promise<void> => {
-  // Skip Facebook initialization on web
   if (Platform.OS === "web") {
+    try {
+      await initializeFacebookWeb();
+      console.log("Facebook SDK initialized for web");
+    } catch (error) {
+      console.error("Facebook web initialization error:", error);
+    }
     return;
   }
 
@@ -45,16 +92,75 @@ export const initializeFacebook = async (): Promise<void> => {
 };
 
 /**
+ * Log in with Facebook (Web version)
+ */
+const facebookLoginWeb = async (): Promise<FacebookUser | null> => {
+  return new Promise((resolve, reject) => {
+    if (!window.FB) {
+      Alert.alert("Error", "Facebook SDK not loaded. Please refresh the page.");
+      resolve(null);
+      return;
+    }
+
+    window.FB.login(
+      async (response: any) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+
+          // Get user info from Facebook
+          window.FB.api(
+            "/me",
+            { fields: "id,name,email" },
+            async (userData: any) => {
+              try {
+                // Send to backend for authentication
+                const backendResponse = await fetch(apiUrl("/auth/facebook"), {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    facebookId: userData.id,
+                    fullName: userData.name,
+                    email: userData.email,
+                  }),
+                });
+
+                if (!backendResponse.ok) {
+                  throw new Error("Backend authentication failed");
+                }
+
+                const authData = await backendResponse.json();
+                resolve(authData.data as FacebookUser);
+              } catch (error) {
+                console.error("Backend auth error:", error);
+                Alert.alert("Error", "Failed to authenticate with server");
+                reject(error);
+              }
+            },
+          );
+        } else {
+          console.log("User cancelled login or did not fully authorize.");
+          resolve(null);
+        }
+      },
+      { scope: "public_profile,email" },
+    );
+  });
+};
+
+/**
  * Log in with Facebook and authenticate with backend
  */
 export const facebookLogin = async (): Promise<FacebookUser | null> => {
-  // Facebook login is not available on web
+  // Use web-specific Facebook login
   if (Platform.OS === "web") {
-    Alert.alert(
-      "Not Available",
-      "Facebook login is only available on mobile (iOS/Android). Please use email and password to sign in.",
-    );
-    return null;
+    try {
+      return await facebookLoginWeb();
+    } catch (error) {
+      console.error("Facebook web login error:", error);
+      throw error;
+    }
   }
 
   try {
@@ -105,6 +211,9 @@ export const facebookLogin = async (): Promise<FacebookUser | null> => {
  */
 export const facebookLogout = async (): Promise<void> => {
   if (Platform.OS === "web") {
+    if (window.FB) {
+      window.FB.logout();
+    }
     return;
   }
 
