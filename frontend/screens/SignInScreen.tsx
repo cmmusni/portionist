@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { apiUrl } from "../services/config";
 import { facebookLogin, initializeFacebook } from "../services/facebookAuth";
@@ -241,14 +241,18 @@ export default function SignInScreen({
 
       if (!response.ok) {
         const error = await response.json();
-        setAuthError(error.error || "Invalid email or password. Please try again.");
+        setAuthError(
+          error.error || "Invalid email or password. Please try again.",
+        );
         return;
       }
 
       const data = await response.json();
       handleSignIn(data.data);
     } catch (error) {
-      setAuthError("Network error. Please check your connection and try again.");
+      setAuthError(
+        "Network error. Please check your connection and try again.",
+      );
       console.error(error);
     } finally {
       setIsLoading(false);

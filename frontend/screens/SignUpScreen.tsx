@@ -8,7 +8,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 import { apiUrl } from "../services/config";
 import { facebookLogin, initializeFacebook } from "../services/facebookAuth";
@@ -261,14 +261,18 @@ export default function SignUpScreen({
 
       if (!response.ok) {
         const error = await response.json();
-        setAuthError(error.error || "Failed to create account. Please try again.");
+        setAuthError(
+          error.error || "Failed to create account. Please try again.",
+        );
         return;
       }
 
       const data = await response.json();
       handleSignUp(data.data);
     } catch (error) {
-      setAuthError("Network error. Please check your connection and try again.");
+      setAuthError(
+        "Network error. Please check your connection and try again.",
+      );
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -454,7 +458,9 @@ export default function SignUpScreen({
             </TouchableOpacity>
 
             <View style={styles.signInLink}>
-              <Text style={styles.signInLinkText}>Already have an account?</Text>
+              <Text style={styles.signInLinkText}>
+                Already have an account?
+              </Text>
               <TouchableOpacity
                 style={styles.signInLinkButton}
                 onPress={onNavigateToSignIn}
