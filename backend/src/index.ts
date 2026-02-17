@@ -13,33 +13,17 @@ import profileRouter from "./routes/profile.js";
 import recipesRouter from "./routes/recipes.js";
 
 const app: Express = express();
-const PORT: number = 3000;
+const PORT: number = parseInt(process.env.PORT || "3000", 10);
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:8081',
-  'http://localhost:19000',
-  'http://localhost:19001',
-  'https://portionist.netlify.app',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Allow all for now, change to false in production
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// CORS configuration - Allow all origins for now
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
