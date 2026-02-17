@@ -25,9 +25,6 @@ app.use(
   }),
 );
 
-// Handle preflight requests
-app.options("*", cors());
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
