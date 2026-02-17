@@ -115,6 +115,8 @@ const migrate = async () => {
     console.log("✅ Recipe ingredients table created");
 
     console.log("\n✅ Database migration completed successfully!\n");
+    // Emit a distinct log line so platform logs can be matched easily
+    console.log("MIGRATION_COMPLETED: Portionist migration finished successfully");
     process.exit(0);
   } catch (error) {
     console.error("❌ Migration failed:", error);
