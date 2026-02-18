@@ -9,11 +9,10 @@ interface Ingredient {
 }
 
 interface GetRecipesRequest {
-  mainIngredient: Ingredient;
-  sideIngredients: Ingredient[];
+  ingredients: Ingredient[];
   currentWeight: number;
   targetWeight: number;
-  mealType: string;
+  mealType?: string;
   cuisine: string;
 }
 
@@ -42,13 +41,12 @@ interface Recipe {
   cookTime: number;
   totalTime: number;
   servings: number;
+  calories?: number;
 }
 
 interface RecipeWithScore extends Recipe {
   matchScore: number;
   scoreBreakdown: {
-    mainIngredientMatch: number;
-    sideIngredientsMatch: number;
     portionMatch: number;
   };
 }
@@ -186,6 +184,20 @@ class RecipeController {
     "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800",
   ];
 
+  private calculateCalories(portionSize: number, mealType: string): number {
+    // Estimate calories based on portion size and meal type
+    // Different meals have different calorie densities
+    const calorieMultipliers: Record<string, number> = {
+      Breakfast: 1.3, // ~1.3 cal/g (eggs, toast, dairy)
+      Lunch: 1.5, // ~1.5 cal/g (balanced meal)
+      Dinner: 1.6, // ~1.6 cal/g (often more protein/fat)
+      Snack: 2.5, // ~2.5 cal/g (more calorie-dense)
+    };
+
+    const multiplier = calorieMultipliers[mealType] || 1.5;
+    return Math.round(portionSize * multiplier);
+  }
+
   private generateImageUrl(recipeName: string): string {
     console.log(`🖼️  Selecting random image for: "${recipeName}"`);
     // Select a random image from the array
@@ -210,7 +222,7 @@ class RecipeController {
     try {
       const query = `${mainIngredient} ${cuisine}`.trim();
       const response = await fetch(
-        `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=5&addRecipeInformation=true&apiKey=${process.env.SPOONACULAR_API_KEY}`,
+        `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=5&addRecipeInformation=true&addRecipeInstructions=true&apiKey=${process.env.SPOONACULAR_API_KEY}`,
       );
 
       if (!response.ok) {
@@ -238,6 +250,12 @@ class RecipeController {
             )
           : [];
 
+        if (instructions.length === 0) {
+          console.log(
+            `⚠️  No instructions in fetchFromSpoonacular for: ${spoonacularRecipe.title}`,
+          );
+        }
+
         const ingredients = spoonacularRecipe.extendedIngredients
           ? spoonacularRecipe.extendedIngredients
               .slice(0, 10)
@@ -249,6 +267,9 @@ class RecipeController {
               }))
           : [];
 
+        const portionSize = spoonacularRecipe.servings * 100 || 300;
+        const mealType = "Lunch";
+
         return {
           id: `spoonacular-${spoonacularRecipe.id}`,
           name: spoonacularRecipe.title || "",
@@ -258,14 +279,15 @@ class RecipeController {
           sideIngredients: [],
           ingredients,
           instructions,
-          mealType: "Lunch",
+          mealType,
           cuisine: cuisine || "International",
-          portionSize: spoonacularRecipe.servings * 100 || 300,
+          portionSize,
           portionUnit: "g",
           prepTime: 15,
           cookTime: spoonacularRecipe.readyInMinutes || 30,
           totalTime: spoonacularRecipe.readyInMinutes || 30,
           servings: spoonacularRecipe.servings || 1,
+          calories: this.calculateCalories(portionSize, mealType),
         };
       });
     } catch (error) {
@@ -275,44 +297,18 @@ class RecipeController {
   }
 
   /**
-   * Score a recipe based on:
-   * - Main ingredient match (40%)
-   * - Side ingredients match (20%)
-   * - Portion match (40%)
+   * Score a recipe based on portion match
    */
   private scoreRecipe(
     recipe: Recipe,
-    mainIngredient: Ingredient,
-    sideIngredients: Ingredient[],
     targetWeight: number,
     currentWeight: number,
   ): RecipeWithScore {
     const remainingWeight = targetWeight - currentWeight;
 
-    // 1. Main Ingredient Match (40%)
-    const mainIngredientMatch =
-      recipe.mainIngredient.id === mainIngredient.id ? 1 : 0;
-    const mainIngredientScore = mainIngredientMatch * 0.4;
-
-    // 2. Side Ingredients Match (20%)
-    let sideIngredientsMatched = 0;
-    if (sideIngredients.length > 0) {
-      sideIngredientsMatched = recipe.sideIngredients.filter((recipeSide) =>
-        sideIngredients.some((userSide) => userSide.id === recipeSide.id),
-      ).length;
-    }
-    const sideIngredientsRatio =
-      sideIngredients.length > 0
-        ? sideIngredientsMatched / sideIngredients.length
-        : 0;
-    const sideIngredientsScore = sideIngredientsRatio * 0.2;
-
-    // 3. Portion Match (40%)
+    // Portion Match (100%)
     // Calculate how close the recipe portion is to the remaining weight
     // But be more forgiving - a reasonable meal is 150-400g, so don't penalize too much
-    const portionDifference = Math.abs(recipe.portionSize - remainingWeight);
-    // Use a more generous max to avoid extreme penalties
-    // Treat portions above 150g as reasonable for a meal
     const normalizedRemainingWeight = Math.max(remainingWeight, 150);
     const normalizedRecipeSize = Math.max(recipe.portionSize, 150);
     const normalizedDifference = Math.abs(
@@ -326,18 +322,15 @@ class RecipeController {
       normalizedMaxDifference > 0
         ? Math.max(0, 1 - normalizedDifference / normalizedMaxDifference)
         : 1;
-    const portionScore = portionMatchRatio * 0.4;
+    const portionScore = portionMatchRatio * 1.0;
 
     // Total score (0-100)
-    const totalScore =
-      (mainIngredientScore + sideIngredientsScore + portionScore) * 100;
+    const totalScore = portionScore * 100;
 
     return {
       ...recipe,
       matchScore: totalScore,
       scoreBreakdown: {
-        mainIngredientMatch: mainIngredientScore,
-        sideIngredientsMatch: sideIngredientsScore,
         portionMatch: portionScore,
       },
     };
@@ -348,31 +341,32 @@ class RecipeController {
     res: Response,
   ): Promise<void> {
     try {
-      const {
-        mainIngredient,
-        sideIngredients,
-        currentWeight,
-        targetWeight,
-        mealType,
-        cuisine,
-      } = req.body;
+      const { ingredients, currentWeight, targetWeight, mealType, cuisine } =
+        req.body;
 
       // Validate required fields
-      if (!mainIngredient || !mainIngredient.id || !mainIngredient.name) {
+      if (
+        !ingredients ||
+        !Array.isArray(ingredients) ||
+        ingredients.length === 0
+      ) {
         res.status(400).json({
           success: false,
-          message: "mainIngredient with id and name is required",
+          message: "ingredients array with at least one ingredient is required",
         });
         return;
       }
 
-      if (!mealType || !cuisine) {
+      if (!cuisine) {
         res.status(400).json({
           success: false,
-          message: "mealType and cuisine are required",
+          message: "cuisine is required",
         });
         return;
       }
+
+      // Default mealType to Lunch if not provided
+      const finalMealType = mealType || "Lunch";
 
       if (typeof currentWeight !== "number" || currentWeight < 0) {
         res.status(400).json({
@@ -410,6 +404,9 @@ class RecipeController {
         for (const row of rows.rows) {
           const id = row.recipe_id;
           if (!map[id]) {
+            const portionSize = row.portion_size || 0;
+            const recipeMealType = row.meal_type || finalMealType;
+
             map[id] = {
               id,
               name: row.name,
@@ -429,14 +426,15 @@ class RecipeController {
                     instruction: String(s),
                   }))
                 : [],
-              mealType,
+              mealType: recipeMealType,
               cuisine,
-              portionSize: row.portion_size || 0,
+              portionSize,
               portionUnit: row.portion_unit || "g",
               prepTime: row.prep_time || 0,
               cookTime: row.cook_time || 0,
               totalTime: row.total_time || 0,
               servings: row.servings || 1,
+              calories: this.calculateCalories(portionSize, recipeMealType),
             };
           }
           if (row.ingredient_id) {
@@ -460,14 +458,16 @@ class RecipeController {
       }
 
       // Fetch from Spoonacular API if configured
-      if (process.env.SPOONACULAR_API_KEY) {
+      if (process.env.SPOONACULAR_API_KEY && ingredients.length > 0) {
         console.log(
           "🍳 Fetching from Spoonacular API with key:",
           process.env.SPOONACULAR_API_KEY.substring(0, 10) + "...",
         );
+        // Use first ingredient for Spoonacular search
+        const searchIngredient = ingredients[0]!;
         const spoonacularRecipes = await this.fetchFromSpoonacular(
-          mainIngredient.name,
-          mainIngredient.id,
+          searchIngredient.name,
+          searchIngredient.id,
           cuisine,
         );
         console.log(
@@ -480,13 +480,7 @@ class RecipeController {
 
       // Score recipes
       const scoredRecipes: RecipeWithScore[] = recipesToScore.map((recipe) =>
-        this.scoreRecipe(
-          recipe,
-          mainIngredient,
-          sideIngredients || [],
-          targetWeight,
-          currentWeight,
-        ),
+        this.scoreRecipe(recipe, targetWeight, currentWeight),
       );
 
       // Sort by score descending, then by name
@@ -508,13 +502,12 @@ class RecipeController {
             ? "Recipes matched and ranked by relevance"
             : "No matching recipes found",
         filters: {
-          mainIngredient: mainIngredient.name,
+          ingredientsCount: ingredients.length,
           cuisine,
-          mealType,
+          mealType: finalMealType,
           currentWeight,
           targetWeight,
           remainingWeight: targetWeight - currentWeight,
-          sideIngredientsCount: sideIngredients?.length || 0,
         },
       });
     } catch (error) {
@@ -643,6 +636,7 @@ class RecipeController {
     try {
       const cuisine = (req.query.cuisine as string) || "Filipino";
       const limit = parseInt((req.query.limit as string) || "6", 10);
+      const mealType = (req.query.mealType as string) || "Lunch";
       const currentWeight = parseFloat(
         (req.query.currentWeight as string) || "70",
       );
@@ -652,150 +646,264 @@ class RecipeController {
 
       console.log("📊 Suggested Recipes Request:");
       console.log(`   Cuisine: ${cuisine}`);
+      console.log(`   Meal Type: ${mealType}`);
       console.log(`   Current Weight: ${currentWeight}kg`);
       console.log(`   Target Weight: ${targetWeight}kg`);
       console.log(`   Weight Difference: ${targetWeight - currentWeight}kg`);
-      // Clean up recipes with invalid portions from database
-      try {
-        const deleteResult = await query(
-          `DELETE FROM recipes WHERE portion_size <= 0`,
-        );
-        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
-          console.log(
-            `🧹 Cleaned up ${deleteResult.rowCount} recipes with invalid portions`,
-          );
-        }
-      } catch (err) {
-        console.warn("Failed to clean up invalid recipes:", err);
+
+      // Calculate calorie range based on weight goals
+      const weightDifference = targetWeight - currentWeight;
+
+      // Base metabolic rate approximation: weight(kg) × 30 calories
+      // Per meal (assuming 3 meals/day): divide by 3
+      const maintenanceCaloriesPerMeal = Math.round((currentWeight * 30) / 3);
+
+      let minCalories: number;
+      let maxCalories: number;
+      let goal: string;
+
+      if (weightDifference < -5) {
+        // Significant weight loss goal: reduce by 200 calories per meal
+        minCalories = maintenanceCaloriesPerMeal - 250;
+        maxCalories = maintenanceCaloriesPerMeal - 150;
+        goal = "weight loss";
+      } else if (weightDifference < 0) {
+        // Moderate weight loss: reduce by 150 calories per meal
+        minCalories = maintenanceCaloriesPerMeal - 200;
+        maxCalories = maintenanceCaloriesPerMeal - 100;
+        goal = "moderate weight loss";
+      } else if (weightDifference > 5) {
+        // Significant weight gain: add 200 calories per meal
+        minCalories = maintenanceCaloriesPerMeal + 150;
+        maxCalories = maintenanceCaloriesPerMeal + 250;
+        goal = "weight gain";
+      } else if (weightDifference > 0) {
+        // Moderate weight gain: add 150 calories per meal
+        minCalories = maintenanceCaloriesPerMeal + 100;
+        maxCalories = maintenanceCaloriesPerMeal + 200;
+        goal = "moderate weight gain";
+      } else {
+        // Maintenance
+        minCalories = maintenanceCaloriesPerMeal - 50;
+        maxCalories = maintenanceCaloriesPerMeal + 50;
+        goal = "maintenance";
       }
-      // First try to get recipes from database
+
+      console.log(`🎯 Calorie Calculation:`);
+      console.log(`   Maintenance per meal: ${maintenanceCaloriesPerMeal} cal`);
+      console.log(`   Goal: ${goal}`);
+      console.log(`   Target range: ${minCalories}-${maxCalories} cal`);
+
       let recipes: Recipe[] = [];
 
-      try {
-        const rows = await query(
-          `SELECT DISTINCT r.recipe_id, r.name, r.cuisine, r.meal_type, 
-                  r.main_ingredient_id, r.portion_size, r.portion_unit,
-                  r.prep_time, r.cook_time, r.total_time, r.servings, r.instructions,
-                  ri.ingredient_id, ri.quantity as ing_quantity, ri.unit as ing_unit,
-                  ing.name as ingredient_name
-           FROM recipes r
-           LEFT JOIN recipe_ingredients ri ON r.recipe_id = ri.recipe_id
-           LEFT JOIN ingredients ing ON ri.ingredient_id = ing.ingredient_id
-           WHERE r.cuisine ILIKE $1
-           ORDER BY r.recipe_id
-           LIMIT $2`,
-          [`%${cuisine}%`, limit * 3], // Get more to filter later
-        );
+      // Use Spoonacular API to get recipe suggestions
+      if (process.env.SPOONACULAR_API_KEY) {
+        try {
+          const cuisineParam = cuisine.toLowerCase() !== "any" ? cuisine : "";
 
-        const map: Record<string, Recipe> = {};
-        for (const row of rows.rows) {
-          const id = row.recipe_id;
-          if (!map[id]) {
-            map[id] = {
-              id,
-              name: row.name,
-              image: this.generateImageUrl(row.name),
-              source: "database",
-              mainIngredient: {
-                id: row.main_ingredient_id || "",
-                name: row.main_ingredient_id || "",
-              },
-              sideIngredients: [],
-              ingredients: [],
-              instructions: Array.isArray(row.instructions)
-                ? row.instructions
-                : [],
-              mealType: row.meal_type || "",
-              cuisine: row.cuisine || cuisine,
-              portionSize: row.portion_size || 0,
-              portionUnit: row.portion_unit || "g",
-              prepTime: row.prep_time || 0,
-              cookTime: row.cook_time || 0,
-              totalTime: row.total_time || 0,
-              servings: row.servings || 1,
-            };
-          }
-          if (row.ingredient_id) {
-            map[id].ingredients.push({
-              id: row.ingredient_id,
-              name: row.ingredient_name || row.ingredient_id,
-              quantity: row.ing_quantity || 0,
-              unit: row.ing_unit || "",
-            });
-          }
-        }
-
-        recipes = Object.values(map).slice(0, limit);
-      } catch (err) {
-        console.warn("DB query failed, using mock recipes:", err);
-      }
-
-      // Fallback to mock recipes if database is empty
-      if (recipes.length === 0) {
-        recipes = MOCK_RECIPES.filter(
-          (r) => r.cuisine.toLowerCase() === cuisine.toLowerCase(),
-        ).slice(0, limit);
-      }
-
-      // If still no recipes, return any mock recipes
-      if (recipes.length === 0) {
-        recipes = MOCK_RECIPES.slice(0, limit);
-      }
-
-      // Adjust portion sizes based on weight goals
-      const weightDifference = targetWeight - currentWeight;
-      let portionMultiplier = 1.0;
-
-      if (weightDifference < 0) {
-        // User wants to lose weight - reduce portions by 15%
-        portionMultiplier = 0.85;
-      } else if (weightDifference > 0) {
-        // User wants to gain weight - increase portions by 15%
-        portionMultiplier = 1.15;
-      }
-      // If weightDifference is 0, maintain current portions (1.0)
-
-      console.log(`🍽️  Portion Adjustment:`);
-      console.log(
-        `   Multiplier: ${portionMultiplier}x (${weightDifference < 0 ? "weight loss" : weightDifference > 0 ? "weight gain" : "maintenance"})`,
-      );
-      console.log(
-        `   Original portions: ${recipes.map((r) => `${r.name}: ${r.portionSize}g`).join(", ")}`,
-      );
-
-      // Apply portion adjustments to all recipes
-      const adjustedRecipes = recipes.map((recipe) => {
-        // Fix any negative or invalid portions from old data
-        let basePortionSize = recipe.portionSize;
-
-        // If portion is negative or zero, assign appropriate base portion
-        if (basePortionSize <= 0) {
-          const basePortions: Record<string, number> = {
-            Breakfast: 300,
-            Lunch: 400,
-            Dinner: 400,
-            Snack: 150,
+          // Map user-friendly meal types to Spoonacular API types
+          const mealTypeMapping: Record<string, string> = {
+            breakfast: "breakfast",
+            lunch: "main course",
+            dinner: "main course",
+            snack: "snack",
           };
-          basePortionSize = basePortions[recipe.mealType] || 350;
+          const spoonacularMealType =
+            mealTypeMapping[mealType.toLowerCase()] || "main course";
+
+          const spoonacularUrl = `https://api.spoonacular.com/recipes/complexSearch?cuisine=${encodeURIComponent(cuisineParam)}&type=${encodeURIComponent(spoonacularMealType)}&minCalories=${minCalories}&maxCalories=${maxCalories}&number=${limit}&addRecipeInformation=true&addRecipeInstructions=true&fillIngredients=true&apiKey=${process.env.SPOONACULAR_API_KEY}`;
+
+          console.log(`🌐 Calling Spoonacular API...`);
           console.log(
-            `   ⚠️  Fixed invalid portion for ${recipe.name}: ${recipe.portionSize}g → ${basePortionSize}g`,
+            `   Meal Type: ${mealType} → Spoonacular Type: ${spoonacularMealType}`,
           );
+          console.log(
+            `   URL: ${spoonacularUrl.replace(process.env.SPOONACULAR_API_KEY, "API_KEY")}`,
+          );
+
+          const response = await fetch(spoonacularUrl);
+
+          if (response.ok) {
+            const data = (await response.json()) as any;
+
+            if (Array.isArray(data.results) && data.results.length > 0) {
+              console.log(
+                `✅ Spoonacular returned ${data.results.length} recipes`,
+              );
+
+              recipes = data.results.map((spoonacularRecipe: any) => {
+                const instructions = spoonacularRecipe.analyzedInstructions?.[0]
+                  ?.steps
+                  ? spoonacularRecipe.analyzedInstructions[0].steps.map(
+                      (step: any, idx: number) => ({
+                        stepNumber: idx + 1,
+                        instruction: step.step || "",
+                      }),
+                    )
+                  : [];
+
+                if (instructions.length === 0) {
+                  console.log(
+                    `⚠️  No instructions found for recipe: ${spoonacularRecipe.title}`,
+                  );
+                } else {
+                  console.log(
+                    `✅ Found ${instructions.length} instruction steps for: ${spoonacularRecipe.title}`,
+                  );
+                }
+
+                const ingredients = spoonacularRecipe.extendedIngredients
+                  ? spoonacularRecipe.extendedIngredients.map(
+                      (ing: any, idx: number) => ({
+                        id: `spoon-${spoonacularRecipe.id}-${idx}`,
+                        name: ing.original || ing.name || "",
+                        quantity: ing.amount || 0,
+                        unit: ing.unit || "",
+                      }),
+                    )
+                  : [];
+
+                const calories =
+                  spoonacularRecipe.nutrition?.nutrients?.find(
+                    (n: any) => n.name === "Calories",
+                  )?.amount || Math.round((minCalories + maxCalories) / 2);
+
+                return {
+                  id: `spoonacular-${spoonacularRecipe.id}`,
+                  name: spoonacularRecipe.title || "",
+                  image:
+                    spoonacularRecipe.image ||
+                    this.generateImageUrl(spoonacularRecipe.title || ""),
+                  source: "spoonacular",
+                  mainIngredient: { id: "", name: "" },
+                  sideIngredients: [],
+                  ingredients,
+                  instructions,
+                  mealType: mealType,
+                  cuisine: cuisine || "International",
+                  portionSize: Math.round(
+                    (spoonacularRecipe.servings || 1) * 200,
+                  ),
+                  portionUnit: "g",
+                  prepTime: spoonacularRecipe.readyInMinutes || 30,
+                  cookTime: spoonacularRecipe.cookingMinutes || 20,
+                  totalTime: spoonacularRecipe.readyInMinutes || 30,
+                  servings: spoonacularRecipe.servings || 1,
+                  calories: Math.round(calories),
+                };
+              });
+            } else {
+              console.log("⚠️  Spoonacular returned no recipes");
+            }
+          } else {
+            console.warn(`❌ Spoonacular API error: ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Error calling Spoonacular API:", error);
+        }
+      } else {
+        console.log("❌ SPOONACULAR_API_KEY not configured");
+      }
+
+      // Fallback to database/mock recipes if Spoonacular fails or returns nothing
+      if (recipes.length === 0) {
+        console.log("📦 Using fallback recipes from database/mock data");
+
+        try {
+          const rows = await query(
+            `SELECT DISTINCT r.recipe_id, r.name, r.cuisine, r.meal_type, 
+                    r.main_ingredient_id, r.portion_size, r.portion_unit,
+                    r.prep_time, r.cook_time, r.total_time, r.servings, r.instructions,
+                    ri.ingredient_id, ri.quantity as ing_quantity, ri.unit as ing_unit,
+                    ing.name as ingredient_name
+             FROM recipes r
+             LEFT JOIN recipe_ingredients ri ON r.recipe_id = ri.recipe_id
+             LEFT JOIN ingredients ing ON ri.ingredient_id = ing.ingredient_id
+             WHERE r.cuisine ILIKE $1 AND r.meal_type ILIKE $2 AND r.portion_size > 0
+             ORDER BY r.recipe_id
+             LIMIT $3`,
+            [`%${cuisine}%`, `%${mealType}%`, limit],
+          );
+
+          const map: Record<string, Recipe> = {};
+          for (const row of rows.rows) {
+            const id = row.recipe_id;
+            if (!map[id]) {
+              const portionSize = row.portion_size || 0;
+              const recipeMealType = row.meal_type || "";
+
+              map[id] = {
+                id,
+                name: row.name,
+                image: this.generateImageUrl(row.name),
+                source: "database",
+                mainIngredient: {
+                  id: row.main_ingredient_id || "",
+                  name: row.main_ingredient_id || "",
+                },
+                sideIngredients: [],
+                ingredients: [],
+                instructions: Array.isArray(row.instructions)
+                  ? row.instructions
+                  : [],
+                mealType: recipeMealType,
+                cuisine: row.cuisine || cuisine,
+                portionSize,
+                portionUnit: row.portion_unit || "g",
+                prepTime: row.prep_time || 0,
+                cookTime: row.cook_time || 0,
+                totalTime: row.total_time || 0,
+                servings: row.servings || 1,
+                calories: this.calculateCalories(portionSize, recipeMealType),
+              };
+            }
+            if (row.ingredient_id) {
+              map[id].ingredients.push({
+                id: row.ingredient_id,
+                name: row.ingredient_name || row.ingredient_id,
+                quantity: row.ing_quantity || 0,
+                unit: row.ing_unit || "",
+              });
+            }
+          }
+
+          recipes = Object.values(map).slice(0, limit);
+        } catch (err) {
+          console.warn("DB query failed, using mock recipes:", err);
         }
 
-        return {
-          ...recipe,
-          portionSize: Math.round(basePortionSize * portionMultiplier),
-        };
-      });
+        // Fallback to mock recipes if database is empty
+        if (recipes.length === 0) {
+          recipes = MOCK_RECIPES.filter(
+            (r) =>
+              r.cuisine.toLowerCase() === cuisine.toLowerCase() &&
+              r.mealType.toLowerCase() === mealType.toLowerCase(),
+          ).slice(0, limit);
+        }
 
-      console.log(
-        `   Adjusted portions: ${adjustedRecipes.map((r) => `${r.name}: ${r.portionSize}g`).join(", ")}`,
-      );
+        // If still no recipes, return any mock recipes matching meal type
+        if (recipes.length === 0) {
+          recipes = MOCK_RECIPES.filter(
+            (r) => r.mealType.toLowerCase() === mealType.toLowerCase(),
+          ).slice(0, limit);
+        }
+
+        // Last resort: return any mock recipes
+        if (recipes.length === 0) {
+          recipes = MOCK_RECIPES.slice(0, limit);
+        }
+      }
 
       res.status(200).json({
         success: true,
-        data: adjustedRecipes,
-        message: `Retrieved ${adjustedRecipes.length} suggested recipes (portions adjusted for ${weightDifference < 0 ? "weight loss" : weightDifference > 0 ? "weight gain" : "maintenance"})`,
+        data: recipes,
+        meta: {
+          mealType,
+          goal,
+          calorieRange: `${minCalories}-${maxCalories} cal`,
+          source: recipes[0]?.source || "unknown",
+        },
+        message: `Retrieved ${recipes.length} ${mealType.toLowerCase()} recipes for ${goal}`,
       });
     } catch (error) {
       console.error("Error fetching suggested recipes:", error);
@@ -810,7 +918,7 @@ class RecipeController {
   async getIngredients(req: Request, res: Response): Promise<void> {
     try {
       const rows = await query(
-        `SELECT ingredient_id, name, category, is_pantry, is_main
+        `SELECT ingredient_id, name, category, is_pantry
          FROM ingredients 
          ORDER BY category, name ASC`,
         [],
@@ -821,7 +929,6 @@ class RecipeController {
         name: row.name,
         category: row.category || "other",
         isPantry: row.is_pantry,
-        isMain: row.is_main,
       }));
 
       // Group by category

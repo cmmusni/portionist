@@ -9,11 +9,10 @@ interface Ingredient {
 }
 
 interface AIRecipeGeneratorRequest {
-  mainIngredient: Ingredient;
-  sideIngredients: Ingredient[];
+  ingredients: Ingredient[];
   currentWeight: number;
   targetWeight: number;
-  mealType: string;
+  mealType?: string;
   cuisine: string;
 }
 
@@ -42,6 +41,7 @@ interface Recipe {
   cookTime: number;
   totalTime: number;
   servings: number;
+  calories?: number;
 }
 
 class AIRecipeController {
@@ -77,6 +77,19 @@ class AIRecipeController {
     "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800",
   ];
 
+  private calculateCalories(portionSize: number, mealType: string): number {
+    // Estimate calories based on portion size and meal type
+    const calorieMultipliers: Record<string, number> = {
+      Breakfast: 1.3,
+      Lunch: 1.5,
+      Dinner: 1.6,
+      Snack: 2.5,
+    };
+
+    const multiplier = calorieMultipliers[mealType] || 1.5;
+    return Math.round(portionSize * multiplier);
+  }
+
   private generateImageUrl(recipeName: string): string {
     console.log(`🖼️  Selecting random image for: "${recipeName}"`);
     // Select a random image from the array
@@ -90,17 +103,16 @@ class AIRecipeController {
   }
 
   private async generateSingleRecipe(
-    mainIngredient: Ingredient,
-    sideIngredients: Ingredient[],
+    ingredients: Ingredient[],
     portionSize: number,
     mealType: string,
     cuisine: string,
     recipeIndex: number = 0,
   ): Promise<Recipe> {
-    const sideIngredientsText =
-      sideIngredients.length > 0
-        ? `Side ingredients: ${sideIngredients.map((i) => i.name).join(", ")}`
-        : "No specific side ingredients";
+    const ingredientsText =
+      ingredients.length > 0
+        ? `Ingredients: ${ingredients.map((i) => i.name).join(", ")}`
+        : "No specific ingredients";
 
     // Define different cooking styles for variety
     const cookingStyles = [
@@ -114,7 +126,7 @@ class AIRecipeController {
 
     const selectedStyle = cookingStyles[recipeIndex % cookingStyles.length];
 
-    const prompt = `Generate a ${mealType} recipe in JSON format using ${mainIngredient.name} as the main ingredient. ${sideIngredientsText}. 
+    const prompt = `Generate a ${mealType} recipe in JSON format using these ingredients: ${ingredientsText}. 
       The recipe should be for ${cuisine} cuisine and should serve 1 person with approximately ${portionSize}g portion size.
       IMPORTANT: Create a unique ${selectedStyle?.style} version that is ${selectedStyle?.description}. Make this distinctly different from other versions.
       Use different preparation techniques, spices, and accompaniments than typical recipes.
@@ -123,8 +135,6 @@ class AIRecipeController {
       {
         "recipeId": "ai-recipe-TIMESTAMP",
         "name": "Recipe name",
-        "mainIngredient": {"id": "${mainIngredient.id}", "name": "${mainIngredient.name}"},
-        "sideIngredients": [{"id": "ingredient_id", "name": "Ingredient Name"}],
         "ingredients": [{"id": "ingredient_id", "name": "Ingredient Name", "quantity": 100, "unit": "g"}],
         "instructions": ["Step 1", "Step 2", "Step 3"],
         "mealType": "${mealType}",
@@ -142,7 +152,7 @@ class AIRecipeController {
     });
 
     console.log(
-      `Generating recipe ${recipeIndex + 1} for ${mainIngredient.name} (${cuisine} ${mealType})`,
+      `Generating recipe ${recipeIndex + 1} with ${ingredients.length} ingredients (${cuisine} ${mealType})`,
     );
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
@@ -163,13 +173,19 @@ class AIRecipeController {
     const imageUrl = this.generateImageUrl(recipeData.name);
 
     // Format recipe to match expected schema
+    const finalPortionSize = recipeData.portionSize || portionSize;
+    const finalMealType = recipeData.mealType || mealType;
+
+    // Get first ingredient for display purposes (backward compatibility)
+    const displayIngredient = ingredients[0] || { id: "", name: "Unknown" };
+
     const generatedRecipe: Recipe = {
       id: recipeData.recipeId || `ai-recipe-${Date.now()}-${recipeIndex}`,
       name: recipeData.name,
       image: imageUrl,
       source: "ai",
-      mainIngredient: recipeData.mainIngredient || mainIngredient,
-      sideIngredients: recipeData.sideIngredients || [],
+      mainIngredient: displayIngredient,
+      sideIngredients: ingredients.slice(1),
       ingredients: (recipeData.ingredients || []).map((ing: any) => ({
         id: ing.id || ing.name.toLowerCase().replace(/\s+/g, "_"),
         name: ing.name,
@@ -182,14 +198,15 @@ class AIRecipeController {
           instruction,
         }),
       ),
-      mealType: recipeData.mealType || mealType,
+      mealType: finalMealType,
       cuisine: recipeData.cuisine || cuisine,
-      portionSize: recipeData.portionSize || portionSize,
+      portionSize: finalPortionSize,
       portionUnit: recipeData.portionUnit || "g",
       prepTime: recipeData.prepTime || 15,
       cookTime: recipeData.cookTime || 20,
       totalTime: recipeData.totalTime || 35,
       servings: recipeData.servings || 1,
+      calories: this.calculateCalories(finalPortionSize, finalMealType),
     };
 
     return generatedRecipe;
@@ -200,31 +217,32 @@ class AIRecipeController {
     res: Response,
   ): Promise<void> {
     try {
-      const {
-        mainIngredient,
-        sideIngredients,
-        currentWeight,
-        targetWeight,
-        mealType,
-        cuisine,
-      } = req.body;
+      const { ingredients, currentWeight, targetWeight, mealType, cuisine } =
+        req.body;
 
       // Validate required fields
-      if (!mainIngredient || !mainIngredient.id || !mainIngredient.name) {
+      if (
+        !ingredients ||
+        !Array.isArray(ingredients) ||
+        ingredients.length === 0
+      ) {
         res.status(400).json({
           success: false,
-          message: "mainIngredient with id and name is required",
+          message: "ingredients array with at least one ingredient is required",
         });
         return;
       }
 
-      if (!mealType || !cuisine) {
+      if (!cuisine) {
         res.status(400).json({
           success: false,
-          message: "mealType and cuisine are required",
+          message: "cuisine is required",
         });
         return;
       }
+
+      // Default mealType to Lunch if not provided
+      const finalMealType = mealType || "Lunch";
 
       if (!process.env.GOOGLE_API_KEY) {
         res.status(500).json({
@@ -244,7 +262,7 @@ class AIRecipeController {
         Snack: 150,
       };
 
-      let portionSize = basePortionSizes[mealType] || 350;
+      let portionSize = basePortionSizes[finalMealType] || 350;
 
       // Adjust portion size based on weight goals
       const weightDifference = targetWeight - currentWeight;
@@ -259,7 +277,7 @@ class AIRecipeController {
       // If weightDifference is 0 (maintain weight), use base portion
 
       console.log(
-        `Portion calculation: meal=${mealType}, current=${currentWeight}kg, target=${targetWeight}kg, portion=${portionSize}g`,
+        `Portion calculation: meal=${finalMealType}, current=${currentWeight}kg, target=${targetWeight}kg, portion=${portionSize}g`,
       );
 
       // Generate 3 recipes in sequence with small delays
@@ -268,10 +286,9 @@ class AIRecipeController {
       for (let i = 0; i < 3; i++) {
         try {
           const recipe = await this.generateSingleRecipe(
-            mainIngredient,
-            sideIngredients,
+            ingredients,
             portionSize,
-            mealType,
+            finalMealType,
             cuisine,
             i, // Pass index for unique variations
           );

@@ -18,8 +18,6 @@ export interface Recipe {
 export interface RecipeWithScore extends Recipe {
   matchScore: number;
   scoreBreakdown: {
-    mainIngredientMatch: number;
-    sideIngredientsMatch: number;
     portionMatch: number;
   };
 }
@@ -27,8 +25,6 @@ export interface RecipeWithScore extends Recipe {
 /**
  * Match and score recipes based on user preferences
  * @param recipes - List of recipes to score
- * @param mainIngredient - User's main ingredient preference
- * @param sideIngredients - User's side ingredient preferences
  * @param currentWeight - User's current weight (kg)
  * @param targetWeight - User's target weight (kg)
  * @param mealType - Type of meal (Breakfast, Lunch, Dinner, Snack)
@@ -37,8 +33,6 @@ export interface RecipeWithScore extends Recipe {
  */
 export function matchRecipes(
   recipes: Recipe[],
-  mainIngredient: Ingredient,
-  sideIngredients: Ingredient[],
   currentWeight: number,
   targetWeight: number,
   mealType: string,
@@ -60,43 +54,22 @@ export function matchRecipes(
 
   // Score each recipe
   const scoredRecipes: RecipeWithScore[] = filteredRecipes.map((recipe) => {
-    // 1. Main Ingredient Match (40%)
-    const mainIngredientMatch =
-      recipe.mainIngredient.id === mainIngredient.id ? 1 : 0;
-    const mainIngredientScore = mainIngredientMatch * 0.4;
-
-    // 2. Side Ingredients Match (20%)
-    let sideIngredientsMatched = 0;
-    if (sideIngredients.length > 0) {
-      sideIngredientsMatched = recipe.sideIngredients.filter((recipeSide) =>
-        sideIngredients.some((userSide) => userSide.id === recipeSide.id),
-      ).length;
-    }
-    const sideIngredientsRatio =
-      sideIngredients.length > 0
-        ? sideIngredientsMatched / sideIngredients.length
-        : 0;
-    const sideIngredientsScore = sideIngredientsRatio * 0.2;
-
-    // 3. Portion Match (40%)
+    // Portion Match (100%)
     // portionMatchPercent = 1 - abs(recipeWeight - (targetWeight - currentWeight)) / (targetWeight - currentWeight)
     const portionDifference = Math.abs(recipe.portionSize - remainingWeight);
     const portionMatchRatio = Math.max(
       0,
       1 - portionDifference / remainingWeight,
     );
-    const portionScore = portionMatchRatio * 0.4;
+    const portionScore = portionMatchRatio * 1.0;
 
     // Total score (0-1)
-    const totalScore =
-      mainIngredientScore + sideIngredientsScore + portionScore;
+    const totalScore = portionScore;
 
     return {
       ...recipe,
       matchScore: totalScore,
       scoreBreakdown: {
-        mainIngredientMatch: mainIngredientScore,
-        sideIngredientsMatch: sideIngredientsScore,
         portionMatch: portionScore,
       },
     };

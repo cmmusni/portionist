@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import {
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface Ingredient {
@@ -260,7 +260,7 @@ export default function IngredientPickerModal({
       return (
         <View style={styles.selectedSection}>
           <Text style={styles.selectedSectionTitle}>
-            {`Selected ${multiSelect ? "Side" : "Main"} Ingredient${selectedIngredients.length !== 1 ? "s" : ""}`}
+            {`Selected Ingredient${selectedIngredients.length !== 1 ? "s" : ""}`}
           </Text>
           <View style={styles.selectedIngredientsRow}>
             {selectedIngredients.map((ing) => (

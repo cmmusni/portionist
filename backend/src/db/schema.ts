@@ -58,7 +58,6 @@ export const initializeDatabase = async (): Promise<void> => {
         category VARCHAR(100),
         is_common BOOLEAN DEFAULT false,
         is_pantry BOOLEAN DEFAULT false,
-        is_main BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

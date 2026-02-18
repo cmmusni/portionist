@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BrandColors } from "../../constants/theme";
 import { apiUrl } from "../services/config";
 import IngredientPickerModal from "./IngredientPickerModal";
 
@@ -18,14 +19,12 @@ interface Ingredient {
   name: string;
   category?: string;
   isPantry?: boolean;
-  isMain?: boolean;
 }
 
 interface RecipeInputValues {
-  mainIngredient: Ingredient;
-  sideIngredients: Ingredient[];
-  mealType: string;
+  ingredients: Ingredient[];
   cuisine: string;
+  mealType: string;
 }
 
 interface RecipeInputScreenProps {
@@ -62,7 +61,7 @@ const CUISINE_OPTIONS = ["Filipino", "Italian", "Japanese", "Korean"];
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: BrandColors.white,
   },
   content: {
     flex: 1,
@@ -89,12 +88,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: BrandColors.gray300,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: "#1f2937",
-    backgroundColor: "#f9fafb",
+    color: BrandColors.gray800,
+    backgroundColor: BrandColors.gray50,
     marginBottom: 8,
   },
   dropdownContainer: {
@@ -113,16 +112,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   dropdownItemSelected: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: BrandColors.primaryVeryLight,
   },
   dropdownItemText: {
     color: "#1f2937",
   },
   selectedIndicator: {
     marginTop: 8,
-    backgroundColor: "#eff6ff",
+    backgroundColor: BrandColors.primaryBackground,
     borderWidth: 1,
-    borderColor: "#bfdbfe",
+    borderColor: BrandColors.primaryLight,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -143,12 +142,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 2,
-    backgroundColor: "#ffffff",
-    borderColor: "#d1d5db",
+    backgroundColor: BrandColors.white,
+    borderColor: BrandColors.gray300,
   },
   mealTypeButtonActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
+    borderColor: BrandColors.primary,
   },
   mealTypeButtonText: {
     color: "#374151",
@@ -159,16 +158,16 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: BrandColors.gray300,
     borderRadius: 8,
-    backgroundColor: "#f9fafb",
+    backgroundColor: BrandColors.gray50,
     overflow: "hidden",
   },
   ingredientListContainer: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: BrandColors.gray300,
     borderRadius: 8,
-    backgroundColor: "#f9fafb",
+    backgroundColor: BrandColors.gray50,
     overflow: "hidden",
   },
   ingredientListItem: {
@@ -191,9 +190,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectedIngredientTag: {
-    backgroundColor: "#dcfce7",
+    backgroundColor: BrandColors.successVeryLight,
     borderWidth: 1,
-    borderColor: "#86efac",
+    borderColor: BrandColors.successLight,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -208,11 +207,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   removeButtonText: {
-    color: "#ef4444",
+    color: BrandColors.danger,
     fontWeight: "bold",
   },
   submitButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
     borderRadius: 8,
     paddingVertical: 16,
     flexDirection: "row",
@@ -240,7 +239,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 28,
-    color: "#3b82f6",
+    color: BrandColors.primary,
   },
   headerTitle: {
     fontSize: 18,
@@ -258,20 +257,16 @@ export default function RecipeInputScreen({
   handleGenerateRecipe,
   defaultCuisine = "Filipino",
 }: RecipeInputScreenProps) {
-  const [mainIngredient, setMainIngredient] = useState<Ingredient | null>(null);
-  const [showMainIngredientModal, setShowMainIngredientModal] = useState(false);
-  const [showSideIngredientsModal, setShowSideIngredientsModal] =
-    useState(false);
-  const [sideIngredients, setSideIngredients] = useState<Ingredient[]>([]);
-  const [mealType, setMealType] = useState(MEAL_TYPES[1]); // Default to Lunch
+  const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>(
+    [],
+  );
+  const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const [cuisine, setCuisine] = useState(defaultCuisine);
+  const [mealType, setMealType] = useState("Lunch");
   const [isLoading, setIsLoading] = useState(false);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>(
     FALLBACK_COMMON_INGREDIENTS,
   );
-  const [mainIngredientOptions, setMainIngredientOptions] = useState<
-    Ingredient[]
-  >(FALLBACK_COMMON_INGREDIENTS);
   const [ingredientsLoading, setIngredientsLoading] = useState(true);
 
   // Fetch ingredients from database on mount
@@ -284,35 +279,22 @@ export default function RecipeInputScreen({
         if (result.success && Array.isArray(result.data)) {
           setAllIngredients(result.data);
 
-          // Filter main ingredients from database flag
-          const mainIngredients = result.data.filter(
-            (ing: any) => ing.isMain === true,
-          );
-          setMainIngredientOptions(
-            mainIngredients.length > 0
-              ? mainIngredients
-              : FALLBACK_COMMON_INGREDIENTS,
-          );
-
-          // Extract and pre-select pantry ingredients
+          // Pre-select pantry ingredients
           const pantryItems = result.data.filter(
             (ing: any) => ing.isPantry === true,
           );
-          setSideIngredients(
-            pantryItems.length > 0 ? pantryItems : FALLBACK_PANTRY_INGREDIENTS,
-          );
+          if (pantryItems.length > 0) {
+            setSelectedIngredients(pantryItems);
+          }
         } else {
           console.warn(
             "Failed to load ingredients from database, using fallback",
           );
-          setMainIngredientOptions(FALLBACK_COMMON_INGREDIENTS);
-          setSideIngredients(FALLBACK_PANTRY_INGREDIENTS);
+          setAllIngredients(FALLBACK_COMMON_INGREDIENTS);
         }
       } catch (error) {
         console.warn("Error fetching ingredients:", error);
-        // Use fallback
-        setMainIngredientOptions(FALLBACK_COMMON_INGREDIENTS);
-        setSideIngredients(FALLBACK_PANTRY_INGREDIENTS);
+        setAllIngredients(FALLBACK_COMMON_INGREDIENTS);
       } finally {
         setIngredientsLoading(false);
       }
@@ -320,25 +302,20 @@ export default function RecipeInputScreen({
     fetchIngredients();
   }, []);
 
-  const toggleSideIngredient = (ingredient: Ingredient) => {
-    const exists = sideIngredients.some((ing) => ing.id === ingredient.id);
+  const toggleIngredient = (ingredient: Ingredient) => {
+    const exists = selectedIngredients.some((ing) => ing.id === ingredient.id);
     if (exists) {
-      setSideIngredients(
-        sideIngredients.filter((ing) => ing.id !== ingredient.id),
+      setSelectedIngredients(
+        selectedIngredients.filter((ing) => ing.id !== ingredient.id),
       );
     } else {
-      setSideIngredients([...sideIngredients, ingredient]);
+      setSelectedIngredients([...selectedIngredients, ingredient]);
     }
   };
 
-  const handleSelectMainIngredient = (ingredient: Ingredient) => {
-    setMainIngredient(ingredient);
-    setShowMainIngredientModal(false);
-  };
-
   const validateAndSubmit = async () => {
-    if (!mainIngredient) {
-      Alert.alert("Validation Error", "Please select a main ingredient");
+    if (selectedIngredients.length === 0) {
+      Alert.alert("Validation Error", "Please select at least one ingredient");
       return;
     }
 
@@ -346,10 +323,9 @@ export default function RecipeInputScreen({
 
     try {
       const values: RecipeInputValues = {
-        mainIngredient,
-        sideIngredients,
-        mealType,
+        ingredients: selectedIngredients,
         cuisine,
+        mealType,
       };
 
       await handleGenerateRecipe(values);
@@ -381,86 +357,6 @@ export default function RecipeInputScreen({
           Select your ingredients and preferences
         </Text>
 
-        {/* Main Ingredient Selection */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>
-            Main Ingredient <Text style={{ color: "#ef4444" }}>*</Text>
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.input,
-              {
-                paddingVertical: 16,
-                justifyContent: "center",
-                backgroundColor: mainIngredient ? "#dbeafe" : "#f9fafb",
-              },
-            ]}
-            onPress={() => setShowMainIngredientModal(true)}
-            disabled={isLoading}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={{
-                color: mainIngredient ? "#1f2937" : "#9ca3af",
-                fontSize: 16,
-              }}
-            >
-              {mainIngredient
-                ? mainIngredient.name
-                : "Tap to select ingredient"}
-            </Text>
-          </TouchableOpacity>
-
-          {mainIngredient && (
-            <View style={styles.selectedIndicator}>
-              <Text style={styles.selectedText}>
-                Selected:{" "}
-                <Text style={{ fontWeight: "600" }}>{mainIngredient.name}</Text>
-              </Text>
-              <TouchableOpacity onPress={() => setMainIngredient(null)}>
-                <Text style={{ color: "#ef4444", fontWeight: "bold" }}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Main Ingredient Modal */}
-        <IngredientPickerModal
-          visible={showMainIngredientModal}
-          ingredients={mainIngredientOptions}
-          selectedIds={mainIngredient ? [mainIngredient.id] : []}
-          onSelect={handleSelectMainIngredient}
-          onClose={() => setShowMainIngredientModal(false)}
-          multiSelect={false}
-        />
-
-        {/* Meal Type Selection */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Meal Type</Text>
-          <View style={styles.mealTypeContainer}>
-            {MEAL_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.mealTypeButton,
-                  mealType === type && styles.mealTypeButtonActive,
-                ]}
-                onPress={() => setMealType(type)}
-                disabled={isLoading}
-              >
-                <Text
-                  style={[
-                    styles.mealTypeButtonText,
-                    mealType === type && styles.mealTypeButtonTextActive,
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* Cuisine Selection */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Cuisine</Text>
@@ -477,11 +373,38 @@ export default function RecipeInputScreen({
           </View>
         </View>
 
-        {/* Side Ingredients Selection */}
-        <View style={{ marginBottom: 32 }}>
+        {/* Meal Type Selection */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Meal Type</Text>
+          <View style={styles.mealTypeContainer}>
+            {MEAL_TYPES.map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.mealTypeButton,
+                  mealType === type && styles.mealTypeButtonActive,
+                ]}
+                onPress={() => setMealType(type)}
+                disabled={isLoading}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.mealTypeButtonText,
+                    mealType === type && styles.mealTypeButtonTextActive,
+                  ]}
+                >
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Ingredients Selection */}
+        <View style={styles.fieldGroup}>
           <Text style={styles.label}>
-            Side Ingredients{" "}
-            <Text style={{ color: "#6b7280" }}>(Optional)</Text>
+            Select Ingredients <Text style={{ color: "#ef4444" }}>*</Text>
           </Text>
           <TouchableOpacity
             style={[
@@ -490,32 +413,32 @@ export default function RecipeInputScreen({
                 paddingVertical: 16,
                 justifyContent: "center",
                 backgroundColor:
-                  sideIngredients.length > 0 ? "#dcfce7" : "#f9fafb",
+                  selectedIngredients.length > 0 ? "#dbeafe" : "#f9fafb",
               },
             ]}
-            onPress={() => setShowSideIngredientsModal(true)}
+            onPress={() => setShowIngredientsModal(true)}
             disabled={isLoading}
             activeOpacity={0.7}
           >
             <Text
               style={{
-                color: sideIngredients.length > 0 ? "#1f2937" : "#9ca3af",
+                color: selectedIngredients.length > 0 ? "#1f2937" : "#9ca3af",
                 fontSize: 16,
               }}
             >
-              {sideIngredients.length > 0
-                ? `${sideIngredients.length} ingredient${sideIngredients.length !== 1 ? "s" : ""} selected`
-                : "Tap to select side ingredients"}
+              {selectedIngredients.length > 0
+                ? `${selectedIngredients.length} ingredient${selectedIngredients.length !== 1 ? "s" : ""} selected`
+                : "Tap to select ingredients"}
             </Text>
           </TouchableOpacity>
 
-          {sideIngredients.length > 0 && (
+          {selectedIngredients.length > 0 && (
             <View style={styles.selectedIngredientsContainer}>
-              {sideIngredients.map((ing) => (
+              {selectedIngredients.map((ing) => (
                 <View key={ing.id} style={styles.selectedIngredientTag}>
                   <Text style={styles.selectedIngredientText}>{ing.name}</Text>
                   <TouchableOpacity
-                    onPress={() => toggleSideIngredient(ing)}
+                    onPress={() => toggleIngredient(ing)}
                     style={styles.removeButton}
                   >
                     <Text style={styles.removeButtonText}>✕</Text>
@@ -526,13 +449,13 @@ export default function RecipeInputScreen({
           )}
         </View>
 
-        {/* Side Ingredients Modal */}
+        {/* Ingredients Modal */}
         <IngredientPickerModal
-          visible={showSideIngredientsModal}
+          visible={showIngredientsModal}
           ingredients={allIngredients}
-          selectedIds={sideIngredients.map((ing) => ing.id)}
-          onSelect={toggleSideIngredient}
-          onClose={() => setShowSideIngredientsModal(false)}
+          selectedIds={selectedIngredients.map((ing) => ing.id)}
+          onSelect={toggleIngredient}
+          onClose={() => setShowIngredientsModal(false)}
           multiSelect={true}
         />
 
@@ -546,7 +469,7 @@ export default function RecipeInputScreen({
           {isLoading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.submitButtonText}>Generate Recipe</Text>
+            <Text style={styles.submitButtonText}>Search Recipe</Text>
           )}
         </TouchableOpacity>
       </View>

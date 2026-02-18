@@ -1,45 +1,54 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import {
-  NavigationContainer,
-  NavigationIndependentTree,
-  useNavigation,
+    NavigationContainer,
+    NavigationIndependentTree,
+    useFocusEffect,
+    useNavigation,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { saveAuthToStorage, useAuthRestore } from "../hooks/useAuthRestore";
-import { useOnboardingRestore } from "../hooks/useOnboardingRestore";
-import { saveOnboardingToStorage } from "../hooks/useOnboardingStorage";
+import { BrandColors } from "../../constants/theme";
 import {
-  selectAuthUser,
-  selectIsAuthenticated,
-  signInSuccess,
-  signUpSuccess,
+    clearAuthFromStorage,
+    saveAuthToStorage,
+    useAuthRestore,
+} from "../hooks/useAuthRestore";
+import { useOnboardingRestore } from "../hooks/useOnboardingRestore";
+import {
+    clearOnboardingFromStorage,
+    saveOnboardingToStorage,
+} from "../hooks/useOnboardingStorage";
+import {
+    selectAuthUser,
+    selectIsAuthenticated,
+    signInSuccess,
+    signOut,
+    signUpSuccess,
 } from "../redux/authSlice";
 import {
-  addFavorite,
-  removeFavorite,
-  selectOnboardingCompleted,
-  setOnboardingCompleted,
-  setOnboardingData,
+    addFavorite,
+    removeFavorite,
+    selectOnboardingCompleted,
+    setOnboardingCompleted,
+    setOnboardingData,
 } from "../redux/pantrySlice";
 import type { AppDispatch, RootState } from "../redux/store";
 import DashboardScreen from "../screens/DashboardScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
-import MenuScreen from "../screens/MenuScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import RecipeDisplayScreen from "../screens/RecipeDisplayScreen";
 import RecipeInputScreen from "../screens/RecipeInputScreen";
 import RecipeSelectionList from "../screens/RecipeSelectionList";
-import SettingsScreen from "../screens/SettingsScreen";
 import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import { apiUrl } from "../services/config";
@@ -58,15 +67,15 @@ function AppDrawer() {
           backgroundColor: "#ffffff",
           width: 280,
         },
-        drawerActiveBackgroundColor: "#eff6ff",
-        drawerActiveTintColor: "#3b82f6",
+        drawerActiveBackgroundColor: BrandColors.primaryVeryLight,
+        drawerActiveTintColor: BrandColors.primary,
         drawerInactiveTintColor: "#6b7280",
         drawerLabelStyle: {
           fontSize: 16,
           fontWeight: "600",
         },
         headerStyle: {
-          backgroundColor: "#3b82f6",
+          backgroundColor: BrandColors.primary,
         },
         headerTintColor: "#ffffff",
         headerTitleStyle: {
@@ -102,24 +111,117 @@ function AppDrawer() {
         }}
       />
       <Drawer.Screen
-        name="Menu"
-        component={MenuScreen}
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          title: "Menu",
-          drawerLabel: "Menu",
-          drawerIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+          title: "Profile",
+          drawerLabel: "Profile",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
       />
       <Drawer.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="SignOut"
+        component={SignOutScreenWrapper}
         options={{
-          title: "Settings",
-          drawerLabel: "Settings",
-          drawerIcon: () => <Text style={{ fontSize: 20 }}>⚙️</Text>,
+          title: "Sign Out",
+          drawerLabel: "Sign Out",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>🚪</Text>,
         }}
       />
     </Drawer.Navigator>
+  );
+}
+
+// Sign Out Screen Wrapper - handles logout flow
+function SignOutScreenWrapper() {
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const user = useSelector(selectAuthUser);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const performSignOut = async () => {
+        try {
+          console.log("[SignOut] Starting sign out process...");
+
+          // Call backend sign out API
+          if (user?.userId) {
+            try {
+              console.log("[SignOut] Calling backend API...");
+              const response = await fetch(apiUrl("/auth/signout"), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  userId: user.userId,
+                }),
+              });
+              console.log("[SignOut] API Response Status:", response.status);
+            } catch (apiError) {
+              console.error("[SignOut] API Error:", apiError);
+            }
+          }
+
+          console.log("[SignOut] Clearing storage...");
+          await clearAuthFromStorage();
+          await clearOnboardingFromStorage();
+
+          console.log("[SignOut] Dispatching Redux actions...");
+          dispatch(setOnboardingCompleted(false));
+          dispatch(signOut());
+
+          console.log("[SignOut] Resetting navigation...");
+          // Use setTimeout to ensure state updates complete
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "SignIn" as never }],
+            });
+          }, 100);
+        } catch (error) {
+          console.error("[SignOut] Error:", error);
+          Alert.alert("Error", "Failed to sign out");
+        }
+      };
+
+      // Show confirmation dialog
+      Alert.alert(
+        "Sign Out",
+        "Are you sure you want to sign out?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => {
+              // Navigate back to Dashboard if cancelled
+              navigation.navigate("Dashboard" as never);
+            },
+          },
+          {
+            text: "Sign Out",
+            style: "destructive",
+            onPress: () => {
+              performSignOut().catch((err) => {
+                console.error("[SignOut] Unhandled error:", err);
+              });
+            },
+          },
+        ],
+        { cancelable: false },
+      );
+
+      // Return cleanup function (required by useFocusEffect)
+      return () => {};
+    }, [dispatch, navigation, user]),
+  );
+
+  // Show loading while processing
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" color={BrandColors.primary} />
+      <Text style={{ marginTop: 16, color: "#6b7280" }}>Signing out...</Text>
+    </View>
   );
 }
 
@@ -447,22 +549,19 @@ function RecipeDisplayScreenWrapper({ route }: any) {
         // Use search params from route if available, otherwise use defaults
         const searchParams = route?.params?.searchParams;
         const body: {
-          mainIngredient: { id: string; name: string };
-          sideIngredients: any[];
+          ingredients: any[];
           currentWeight: number;
           targetWeight: number;
-          mealType: string;
           cuisine: string;
+          mealType?: string;
         } = {
-          mainIngredient: searchParams?.mainIngredient || {
-            id: "chicken_breast",
-            name: "Chicken",
-          },
-          sideIngredients: searchParams?.sideIngredients || ([] as any[]),
+          ingredients: searchParams?.ingredients || [
+            { id: "chicken_breast", name: "Chicken Breast" },
+          ],
           currentWeight: onboard?.currentWeight ?? 70,
           targetWeight: onboard?.targetWeight ?? 75,
-          mealType: searchParams?.mealType || "Lunch",
           cuisine: searchParams?.cuisine || onboard?.cuisine || "Asian",
+          mealType: searchParams?.mealType || "Lunch",
         };
 
         console.log("📝 Fetching recipes with params:", body);

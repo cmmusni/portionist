@@ -1,17 +1,19 @@
+import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { BrandColors } from "../../constants/theme";
 import { clearAuthFromStorage } from "../hooks/useAuthRestore";
 import { clearOnboardingFromStorage } from "../hooks/useOnboardingStorage";
 import { selectAuthUser, signOut } from "../redux/authSlice";
@@ -26,15 +28,28 @@ interface ProfileData {
   updatedAt: string;
 }
 
+interface OnboardingData {
+  currentWeight: number;
+  targetWeight: number;
+  cuisine: string;
+  userAge: number;
+}
+
+const CUISINE_OPTIONS = ["Filipino", "Italian", "Japanese", "Korean"];
+
 const ProfileScreen: React.FC = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const user = useSelector(selectAuthUser);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [currentWeight, setCurrentWeight] = useState("");
+  const [targetWeight, setTargetWeight] = useState("");
+  const [cuisine, setCuisine] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Helper function for cross-platform alerts
@@ -60,21 +75,38 @@ const ProfileScreen: React.FC = () => {
         return;
       }
 
-      const response = await fetch(apiUrl(`/profile/${user.userId}`), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Fetch profile and onboarding data in parallel
+      const [profileResponse, onboardingResponse] = await Promise.all([
+        fetch(apiUrl(`/profile/${user.userId}`), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }),
+        fetch(apiUrl(`/profile/${user.userId}/onboarding`), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }),
+      ]);
 
-      const result = await response.json();
+      const profileResult = await profileResponse.json();
+      const onboardingResult = await onboardingResponse.json();
 
-      if (response.ok) {
-        setProfile(result.data);
-        setFullName(result.data.fullName);
-        setEmail(result.data.email);
+      if (profileResponse.ok) {
+        setProfile(profileResult.data);
+        setFullName(profileResult.data.fullName);
+        setEmail(profileResult.data.email);
       } else {
-        showAlert("Error", result.error || "Failed to fetch profile");
+        showAlert("Error", profileResult.error || "Failed to fetch profile");
+      }
+
+      if (onboardingResponse.ok && onboardingResult.data) {
+        setOnboarding(onboardingResult.data);
+        setCurrentWeight(String(onboardingResult.data.currentWeight || ""));
+        setTargetWeight(String(onboardingResult.data.targetWeight || ""));
+        setCuisine(onboardingResult.data.cuisine || "");
       }
     } catch (error) {
       console.error("Fetch profile error:", error);
@@ -104,6 +136,25 @@ const ProfileScreen: React.FC = () => {
         return;
       }
 
+      // Validate weight inputs
+      const currentWeightNum = parseFloat(currentWeight);
+      const targetWeightNum = parseFloat(targetWeight);
+
+      if (!currentWeight || isNaN(currentWeightNum) || currentWeightNum <= 0) {
+        showAlert("Validation", "Please enter a valid current weight");
+        return;
+      }
+
+      if (!targetWeight || isNaN(targetWeightNum) || targetWeightNum <= 0) {
+        showAlert("Validation", "Please enter a valid target weight");
+        return;
+      }
+
+      if (!cuisine.trim()) {
+        showAlert("Validation", "Please select a cuisine preference");
+        return;
+      }
+
       setSaving(true);
 
       if (!user?.userId) {
@@ -111,25 +162,46 @@ const ProfileScreen: React.FC = () => {
         return;
       }
 
-      const response = await fetch(apiUrl(`/profile/${user.userId}`), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: fullName.trim(),
-          email: email.trim(),
+      // Update profile and onboarding data in parallel
+      const [profileResponse, onboardingResponse] = await Promise.all([
+        fetch(apiUrl(`/profile/${user.userId}`), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: fullName.trim(),
+            email: email.trim(),
+          }),
         }),
-      });
+        fetch(apiUrl(`/profile/${user.userId}/onboarding`), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentWeight: currentWeightNum,
+            targetWeight: targetWeightNum,
+            cuisine: cuisine.trim(),
+            userAge: onboarding?.userAge || 25,
+          }),
+        }),
+      ]);
 
-      const result = await response.json();
+      const profileResult = await profileResponse.json();
+      const onboardingResult = await onboardingResponse.json();
 
-      if (response.ok) {
-        setProfile(result.data);
+      if (profileResponse.ok && onboardingResponse.ok) {
+        setProfile(profileResult.data);
+        setOnboarding(onboardingResult.data);
         setEditing(false);
         showAlert("Success", "Profile updated successfully");
       } else {
-        showAlert("Error", result.error || "Failed to update profile");
+        const errorMsg =
+          profileResult.error ||
+          onboardingResult.error ||
+          "Failed to update profile";
+        showAlert("Error", errorMsg);
       }
     } catch (error) {
       console.error("Save profile error:", error);
@@ -140,9 +212,12 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleCancel = () => {
-    if (profile) {
+    if (profile && onboarding) {
       setFullName(profile.fullName);
       setEmail(profile.email);
+      setCurrentWeight(String(onboarding.currentWeight || ""));
+      setTargetWeight(String(onboarding.targetWeight || ""));
+      setCuisine(onboarding.cuisine || "");
       setEditing(false);
     }
   };
@@ -224,7 +299,7 @@ const ProfileScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={BrandColors.primary} />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       </View>
@@ -292,21 +367,49 @@ const ProfileScreen: React.FC = () => {
             />
           </View>
 
-          {/* User ID (read-only) */}
+          {/* Current Weight */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>User ID</Text>
-            <View style={[styles.input, styles.inputDisabled]}>
-              <Text style={styles.readOnlyText}>{profile.userId}</Text>
-            </View>
+            <Text style={styles.label}>Current Weight (kg)</Text>
+            <TextInput
+              style={[styles.input, !editing && styles.inputDisabled]}
+              placeholder="Enter current weight"
+              placeholderTextColor="#d1d5db"
+              value={currentWeight}
+              onChangeText={setCurrentWeight}
+              editable={editing}
+              keyboardType="numeric"
+            />
           </View>
 
-          {/* Member Since */}
+          {/* Target Weight */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Member Since</Text>
-            <View style={[styles.input, styles.inputDisabled]}>
-              <Text style={styles.readOnlyText}>
-                {new Date(profile.createdAt).toLocaleDateString()}
-              </Text>
+            <Text style={styles.label}>Target Weight (kg)</Text>
+            <TextInput
+              style={[styles.input, !editing && styles.inputDisabled]}
+              placeholder="Enter target weight"
+              placeholderTextColor="#d1d5db"
+              value={targetWeight}
+              onChangeText={setTargetWeight}
+              editable={editing}
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Preferred Cuisine */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Preferred Cuisine</Text>
+            <View
+              style={[styles.pickerContainer, !editing && styles.inputDisabled]}
+            >
+              <Picker
+                selectedValue={cuisine}
+                onValueChange={(itemValue) => setCuisine(itemValue)}
+                enabled={editing}
+              >
+                {CUISINE_OPTIONS.map((option) => (
+                  <Picker.Item key={option} label={option} value={option} />
+                ))}
+              </Picker>
             </View>
           </View>
         </View>
@@ -374,11 +477,11 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: "#ef4444",
+    color: BrandColors.danger,
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: BrandColors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -417,7 +520,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#3b82f6",
+    backgroundColor: BrandColors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -448,18 +551,25 @@ const styles = StyleSheet.create({
     color: "#1f2937",
   },
   inputDisabled: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: BrandColors.gray100,
     justifyContent: "center",
   },
   readOnlyText: {
     fontSize: 14,
     color: "#6b7280",
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: BrandColors.gray300,
+    borderRadius: 8,
+    backgroundColor: BrandColors.gray50,
+    overflow: "hidden",
+  },
   buttonsSection: {
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: BrandColors.primary,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
@@ -471,19 +581,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   secondaryButton: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: BrandColors.gray100,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   secondaryButtonText: {
-    color: "#6b7280",
+    color: BrandColors.gray500,
     fontSize: 16,
     fontWeight: "600",
   },
   dangerButton: {
-    backgroundColor: "#ef4444",
+    backgroundColor: BrandColors.danger,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

@@ -12,12 +12,12 @@ import {
   View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import { BrandColors } from "../../constants/theme";
 import { selectAuthUser } from "../redux/authSlice";
 import {
   selectCuisine,
   selectCurrentWeight,
   selectTargetWeight,
-  selectUserAge,
 } from "../redux/pantrySlice";
 import { apiUrl } from "../services/config";
 
@@ -27,7 +27,6 @@ const DashboardScreen: React.FC = () => {
   const currentWeight = useSelector(selectCurrentWeight);
   const targetWeight = useSelector(selectTargetWeight);
   const cuisine = useSelector(selectCuisine);
-  const userAge = useSelector(selectUserAge);
 
   const [suggestedMeals, setSuggestedMeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,13 +114,13 @@ const DashboardScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#3b82f6"
+          tintColor={BrandColors.primary}
         />
       }
     >
       {/* Welcome Section */}
       <LinearGradient
-        colors={["#60a5fa", "#3b82f6"]}
+        colors={[BrandColors.primaryLight, BrandColors.primary]}
         style={styles.welcomeSection}
       >
         <Text style={styles.welcomeText}>
@@ -131,25 +130,6 @@ const DashboardScreen: React.FC = () => {
           Here are your personalized meal suggestions
         </Text>
       </LinearGradient>
-
-      {/* User Stats Summary */}
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>⚖️</Text>
-          <Text style={styles.statValue}>{currentWeight || "--"} kg</Text>
-          <Text style={styles.statLabel}>Current</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>🎯</Text>
-          <Text style={styles.statValue}>{targetWeight || "--"} kg</Text>
-          <Text style={styles.statLabel}>Target</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>🍽️</Text>
-          <Text style={styles.statValue}>{cuisine || "Any"}</Text>
-          <Text style={styles.statLabel}>Cuisine</Text>
-        </View>
-      </View>
 
       {/* Suggested Meals Header */}
       <View style={styles.sectionHeader}>
@@ -162,7 +142,7 @@ const DashboardScreen: React.FC = () => {
       {/* Loading State */}
       {loading && !refreshing && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={BrandColors.primary} />
           <Text style={styles.loadingText}>Loading meal suggestions...</Text>
         </View>
       )}
@@ -243,7 +223,7 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: BrandColors.warmWhite,
   },
   welcomeSection: {
     paddingHorizontal: 20,
@@ -259,49 +239,9 @@ const styles = StyleSheet.create({
   },
   welcomeSubtext: {
     fontSize: 15,
-    color: "#e0f2fe",
+    color: "#ffffff",
     fontWeight: "500",
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 12,
-  },
-  statItem: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  statEmoji: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: "#6b7280",
-    fontWeight: "600",
-    textTransform: "uppercase",
+    opacity: 0.9,
   },
   sectionHeader: {
     paddingHorizontal: 20,
@@ -361,7 +301,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#eff6ff",
+    backgroundColor: BrandColors.primaryVeryLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
@@ -389,7 +329,7 @@ const styles = StyleSheet.create({
     marginTop: "auto",
   },
   caloriesBadge: {
-    backgroundColor: "#dbeafe",
+    backgroundColor: BrandColors.primaryVeryLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -397,7 +337,7 @@ const styles = StyleSheet.create({
   caloriesText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#3b82f6",
+    color: BrandColors.primary,
   },
   emptyState: {
     paddingVertical: 60,
@@ -427,7 +367,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#3b82f6",
+        shadowColor: BrandColors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

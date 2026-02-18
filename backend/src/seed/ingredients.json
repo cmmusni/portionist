@@ -1,32 +1,603 @@
 [
-  { "id": "1", "name": "Salt", "category": "Spices", "is_common": true },
-  { "id": "2", "name": "Sugar", "category": "Sweeteners", "is_common": true },
   {
-    "id": "3",
-    "name": "Black Pepper",
-    "category": "Spices",
-    "is_common": true
-  },
-  { "id": "4", "name": "Olive Oil", "category": "Oils", "is_common": true },
-  { "id": "5", "name": "Butter", "category": "Dairy", "is_common": true },
-  { "id": "6", "name": "Garlic", "category": "Vegetables", "is_common": true },
-  { "id": "7", "name": "Onion", "category": "Vegetables", "is_common": true },
-  { "id": "8", "name": "Tomato", "category": "Vegetables", "is_common": true },
-  {
-    "id": "9",
+    "id": "chicken_breast",
     "name": "Chicken Breast",
     "category": "Meat",
     "is_common": true
   },
-  { "id": "10", "name": "Eggs", "category": "Dairy", "is_common": true },
-  { "id": "11", "name": "Milk", "category": "Dairy", "is_common": true },
-  { "id": "12", "name": "Flour", "category": "Baking", "is_common": true },
-  { "id": "13", "name": "Rice", "category": "Grains", "is_common": true },
-  { "id": "14", "name": "Pasta", "category": "Grains", "is_common": true },
-  { "id": "15", "name": "Beef", "category": "Meat", "is_common": true },
-  { "id": "16", "name": "Pork", "category": "Meat", "is_common": true },
-  { "id": "17", "name": "Fish", "category": "Seafood", "is_common": true },
-  { "id": "18", "name": "Shrimp", "category": "Seafood", "is_common": true },
-  { "id": "19", "name": "Carrot", "category": "Vegetables", "is_common": true },
-  { "id": "20", "name": "Potato", "category": "Vegetables", "is_common": true }
+  {
+    "id": "chicken_thigh",
+    "name": "Chicken Thigh",
+    "category": "Meat",
+    "is_common": true
+  },
+  {
+    "id": "ground_beef",
+    "name": "Ground Beef",
+    "category": "Meat",
+    "is_common": true
+  },
+  {
+    "id": "beef_steak",
+    "name": "Beef Steak",
+    "category": "Meat",
+    "is_common": true
+  },
+  {
+    "id": "pork_chop",
+    "name": "Pork Chop",
+    "category": "Meat",
+    "is_common": true
+  },
+  {
+    "id": "pork_belly",
+    "name": "Pork Belly",
+    "category": "Meat",
+    "is_common": true
+  },
+  { "id": "bacon", "name": "Bacon", "category": "Meat", "is_common": true },
+  { "id": "sausage", "name": "Sausage", "category": "Meat", "is_common": true },
+  {
+    "id": "salmon",
+    "name": "Salmon",
+    "category": "Seafood",
+    "is_common": true
+  },
+  { "id": "tuna", "name": "Tuna", "category": "Seafood", "is_common": true },
+  {
+    "id": "shrimp",
+    "name": "Shrimp",
+    "category": "Seafood",
+    "is_common": true
+  },
+  {
+    "id": "white_fish",
+    "name": "White Fish",
+    "category": "Seafood",
+    "is_common": true
+  },
+  { "id": "crab", "name": "Crab", "category": "Seafood", "is_common": false },
+  {
+    "id": "lobster",
+    "name": "Lobster",
+    "category": "Seafood",
+    "is_common": false
+  },
+  {
+    "id": "mussels",
+    "name": "Mussels",
+    "category": "Seafood",
+    "is_common": false
+  },
+  { "id": "lamb", "name": "Lamb", "category": "Meat", "is_common": false },
+  { "id": "turkey", "name": "Turkey", "category": "Meat", "is_common": true },
+  { "id": "duck", "name": "Duck", "category": "Meat", "is_common": false },
+
+  { "id": "rice", "name": "Rice", "category": "Grains", "is_common": true },
+  { "id": "pasta", "name": "Pasta", "category": "Grains", "is_common": true },
+  {
+    "id": "spaghetti",
+    "name": "Spaghetti",
+    "category": "Grains",
+    "is_common": true
+  },
+  {
+    "id": "noodles",
+    "name": "Noodles",
+    "category": "Grains",
+    "is_common": true
+  },
+  { "id": "quinoa", "name": "Quinoa", "category": "Grains", "is_common": true },
+  { "id": "bread", "name": "Bread", "category": "Grains", "is_common": true },
+  { "id": "flour", "name": "Flour", "category": "Baking", "is_common": true },
+  { "id": "oats", "name": "Oats", "category": "Grains", "is_common": true },
+  {
+    "id": "couscous",
+    "name": "Couscous",
+    "category": "Grains",
+    "is_common": false
+  },
+  {
+    "id": "barley",
+    "name": "Barley",
+    "category": "Grains",
+    "is_common": false
+  },
+
+  {
+    "id": "potato",
+    "name": "Potato",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "sweet_potato",
+    "name": "Sweet Potato",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "carrot",
+    "name": "Carrot",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "onion",
+    "name": "Onion",
+    "category": "Vegetables",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "garlic",
+    "name": "Garlic",
+    "category": "Vegetables",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "tomato",
+    "name": "Tomato",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "bell_pepper",
+    "name": "Bell Pepper",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "broccoli",
+    "name": "Broccoli",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "spinach",
+    "name": "Spinach",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  { "id": "kale", "name": "Kale", "category": "Vegetables", "is_common": true },
+  {
+    "id": "cabbage",
+    "name": "Cabbage",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "mushroom",
+    "name": "Mushroom",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "zucchini",
+    "name": "Zucchini",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "eggplant",
+    "name": "Eggplant",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "asparagus",
+    "name": "Asparagus",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  { "id": "corn", "name": "Corn", "category": "Vegetables", "is_common": true },
+  { "id": "peas", "name": "Peas", "category": "Vegetables", "is_common": true },
+  {
+    "id": "green_beans",
+    "name": "Green Beans",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "celery",
+    "name": "Celery",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "cucumber",
+    "name": "Cucumber",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "lettuce",
+    "name": "Lettuce",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "brussels_sprouts",
+    "name": "Brussels Sprouts",
+    "category": "Vegetables",
+    "is_common": true
+  },
+  {
+    "id": "cauliflower",
+    "name": "Cauliflower",
+    "category": "Vegetables",
+    "is_common": true
+  },
+
+  { "id": "eggs", "name": "Eggs", "category": "Dairy", "is_common": true },
+  { "id": "milk", "name": "Milk", "category": "Dairy", "is_common": true },
+  {
+    "id": "butter",
+    "name": "Butter",
+    "category": "Dairy",
+    "is_common": true,
+    "is_pantry": true
+  },
+  { "id": "cheese", "name": "Cheese", "category": "Dairy", "is_common": true },
+  {
+    "id": "cheddar_cheese",
+    "name": "Cheddar Cheese",
+    "category": "Dairy",
+    "is_common": true
+  },
+  {
+    "id": "mozzarella",
+    "name": "Mozzarella",
+    "category": "Dairy",
+    "is_common": true
+  },
+  {
+    "id": "parmesan",
+    "name": "Parmesan",
+    "category": "Dairy",
+    "is_common": true
+  },
+  { "id": "cream", "name": "Cream", "category": "Dairy", "is_common": true },
+  {
+    "id": "heavy_cream",
+    "name": "Heavy Cream",
+    "category": "Dairy",
+    "is_common": true
+  },
+  { "id": "yogurt", "name": "Yogurt", "category": "Dairy", "is_common": true },
+  {
+    "id": "sour_cream",
+    "name": "Sour Cream",
+    "category": "Dairy",
+    "is_common": true
+  },
+
+  {
+    "id": "chickpeas",
+    "name": "Chickpeas",
+    "category": "Legumes",
+    "is_common": true
+  },
+  {
+    "id": "black_beans",
+    "name": "Black Beans",
+    "category": "Legumes",
+    "is_common": true
+  },
+  {
+    "id": "lentils",
+    "name": "Lentils",
+    "category": "Legumes",
+    "is_common": true
+  },
+  {
+    "id": "kidney_beans",
+    "name": "Kidney Beans",
+    "category": "Legumes",
+    "is_common": true
+  },
+  { "id": "tofu", "name": "Tofu", "category": "Specialty", "is_common": true },
+  {
+    "id": "tempeh",
+    "name": "Tempeh",
+    "category": "Specialty",
+    "is_common": false
+  },
+
+  { "id": "apple", "name": "Apple", "category": "Fruits", "is_common": true },
+  { "id": "banana", "name": "Banana", "category": "Fruits", "is_common": true },
+  { "id": "orange", "name": "Orange", "category": "Fruits", "is_common": true },
+  { "id": "lemon", "name": "Lemon", "category": "Fruits", "is_common": true },
+  { "id": "lime", "name": "Lime", "category": "Fruits", "is_common": true },
+  {
+    "id": "strawberry",
+    "name": "Strawberry",
+    "category": "Fruits",
+    "is_common": true
+  },
+  {
+    "id": "blueberry",
+    "name": "Blueberry",
+    "category": "Fruits",
+    "is_common": true
+  },
+  {
+    "id": "avocado",
+    "name": "Avocado",
+    "category": "Fruits",
+    "is_common": true
+  },
+  { "id": "mango", "name": "Mango", "category": "Fruits", "is_common": true },
+  {
+    "id": "pineapple",
+    "name": "Pineapple",
+    "category": "Fruits",
+    "is_common": true
+  },
+  { "id": "grapes", "name": "Grapes", "category": "Fruits", "is_common": true },
+
+  { "id": "almonds", "name": "Almonds", "category": "Nuts", "is_common": true },
+  { "id": "walnuts", "name": "Walnuts", "category": "Nuts", "is_common": true },
+  { "id": "peanuts", "name": "Peanuts", "category": "Nuts", "is_common": true },
+  { "id": "cashews", "name": "Cashews", "category": "Nuts", "is_common": true },
+  {
+    "id": "peanut_butter",
+    "name": "Peanut Butter",
+    "category": "Condiments",
+    "is_common": true
+  },
+
+  {
+    "id": "salt",
+    "name": "Salt",
+    "category": "Spices",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "black_pepper",
+    "name": "Black Pepper",
+    "category": "Spices",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "paprika",
+    "name": "Paprika",
+    "category": "Spices",
+    "is_common": true
+  },
+  { "id": "cumin", "name": "Cumin", "category": "Spices", "is_common": true },
+  {
+    "id": "coriander",
+    "name": "Coriander",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "turmeric",
+    "name": "Turmeric",
+    "category": "Spices",
+    "is_common": true
+  },
+  { "id": "ginger", "name": "Ginger", "category": "Spices", "is_common": true },
+  {
+    "id": "chili_powder",
+    "name": "Chili Powder",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "cinnamon",
+    "name": "Cinnamon",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "oregano",
+    "name": "Oregano",
+    "category": "Spices",
+    "is_common": true
+  },
+  { "id": "basil", "name": "Basil", "category": "Spices", "is_common": true },
+  { "id": "thyme", "name": "Thyme", "category": "Spices", "is_common": true },
+  {
+    "id": "rosemary",
+    "name": "Rosemary",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "parsley",
+    "name": "Parsley",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "cilantro",
+    "name": "Cilantro",
+    "category": "Spices",
+    "is_common": true
+  },
+  {
+    "id": "bay_leaves",
+    "name": "Bay Leaves",
+    "category": "Spices",
+    "is_common": true
+  },
+
+  {
+    "id": "olive_oil",
+    "name": "Olive Oil",
+    "category": "Oils",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "vegetable_oil",
+    "name": "Vegetable Oil",
+    "category": "Oils",
+    "is_common": true,
+    "is_pantry": true
+  },
+  {
+    "id": "coconut_oil",
+    "name": "Coconut Oil",
+    "category": "Oils",
+    "is_common": true
+  },
+  {
+    "id": "sesame_oil",
+    "name": "Sesame Oil",
+    "category": "Oils",
+    "is_common": true
+  },
+
+  {
+    "id": "soy_sauce",
+    "name": "Soy Sauce",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "vinegar",
+    "name": "Vinegar",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "balsamic_vinegar",
+    "name": "Balsamic Vinegar",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "ketchup",
+    "name": "Ketchup",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "mustard",
+    "name": "Mustard",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "mayonnaise",
+    "name": "Mayonnaise",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "hot_sauce",
+    "name": "Hot Sauce",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "worcestershire_sauce",
+    "name": "Worcestershire Sauce",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "fish_sauce",
+    "name": "Fish Sauce",
+    "category": "Condiments",
+    "is_common": false
+  },
+
+  {
+    "id": "sugar",
+    "name": "Sugar",
+    "category": "Sweeteners",
+    "is_common": true
+  },
+  {
+    "id": "brown_sugar",
+    "name": "Brown Sugar",
+    "category": "Sweeteners",
+    "is_common": true
+  },
+  {
+    "id": "honey",
+    "name": "Honey",
+    "category": "Sweeteners",
+    "is_common": true
+  },
+  {
+    "id": "maple_syrup",
+    "name": "Maple Syrup",
+    "category": "Sweeteners",
+    "is_common": true
+  },
+
+  {
+    "id": "coconut_milk",
+    "name": "Coconut Milk",
+    "category": "Specialty",
+    "is_common": true
+  },
+  {
+    "id": "tomato_paste",
+    "name": "Tomato Paste",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "tomato_sauce",
+    "name": "Tomato Sauce",
+    "category": "Condiments",
+    "is_common": true
+  },
+  {
+    "id": "chicken_broth",
+    "name": "Chicken Broth",
+    "category": "Specialty",
+    "is_common": true
+  },
+  {
+    "id": "beef_broth",
+    "name": "Beef Broth",
+    "category": "Specialty",
+    "is_common": true
+  },
+  {
+    "id": "vegetable_broth",
+    "name": "Vegetable Broth",
+    "category": "Specialty",
+    "is_common": true
+  },
+  {
+    "id": "baking_powder",
+    "name": "Baking Powder",
+    "category": "Baking",
+    "is_common": true
+  },
+  {
+    "id": "baking_soda",
+    "name": "Baking Soda",
+    "category": "Baking",
+    "is_common": true
+  },
+  {
+    "id": "vanilla_extract",
+    "name": "Vanilla Extract",
+    "category": "Baking",
+    "is_common": true
+  },
+  {
+    "id": "cocoa_powder",
+    "name": "Cocoa Powder",
+    "category": "Baking",
+    "is_common": true
+  },
+  {
+    "id": "chocolate_chips",
+    "name": "Chocolate Chips",
+    "category": "Baking",
+    "is_common": true
+  }
 ]

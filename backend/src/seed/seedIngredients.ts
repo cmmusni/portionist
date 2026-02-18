@@ -352,7 +352,6 @@ async function seedIngredients() {
     category?: string | undefined;
     is_common?: boolean | undefined;
     is_pantry?: boolean | undefined;
-    is_main?: boolean | undefined;
   }> = [];
 
   try {
@@ -367,168 +366,30 @@ async function seedIngredients() {
         is_pantry: p.is_pantry,
       }));
   } catch (err) {
-    console.warn(
-      "Could not read ingredients.json, will generate list:",
-      String(err),
-    );
+    console.error("Could not read ingredients.json:", String(err));
+    process.exit(1);
   }
 
-  if (!ingredients || ingredients.length < TARGET_COUNT) {
-    // base list of common ingredient names
-    const base = [
-      "Salt",
-      "Sugar",
-      "Black Pepper",
-      "Olive Oil",
-      "Butter",
-      "Garlic",
-      "Onion",
-      "Tomato",
-      "Chicken Breast",
-      "Eggs",
-      "Milk",
-      "Flour",
-      "Rice",
-      "Pasta",
-      "Beef",
-      "Pork",
-      "Fish",
-      "Shrimp",
-      "Carrot",
-      "Potato",
-      "Bell Pepper",
-      "Broccoli",
-      "Spinach",
-      "Mushroom",
-      "Ginger",
-      "Soy Sauce",
-      "Vinegar",
-      "Honey",
-      "Lemon",
-      "Lime",
-      "Cinnamon",
-      "Cumin",
-      "Paprika",
-      "Coriander",
-      "Turmeric",
-      "Basil",
-      "Parsley",
-      "Oregano",
-      "Thyme",
-      "Rosemary",
-      "Cilantro",
-      "Almonds",
-      "Walnuts",
-      "Peanuts",
-      "Chickpeas",
-      "Lentils",
-      "Black Beans",
-      "Quinoa",
-      "Oats",
-      "Yogurt",
-      "Cheddar Cheese",
-      "Mozzarella",
-      "Cream",
-      "Coconut Milk",
-      "Coconut",
-      "Corn",
-      "Sweet Potato",
-      "Avocado",
-      "Banana",
-      "Apple",
-      "Orange",
-      "Strawberry",
-      "Blueberry",
-      "Raspberry",
-      "Grapes",
-      "Pineapple",
-      "Mango",
-      "Maple Syrup",
-      "Mustard",
-      "Ketchup",
-      "Mayonnaise",
-      "Sour Cream",
-      "Brown Sugar",
-      "Baking Powder",
-      "Baking Soda",
-      "Yeast",
-      "Cornstarch",
-      "Sesame Oil",
-      "Canola Oil",
-      "Sunflower Oil",
-      "Tahini",
-      "Soy Milk",
-      "Tofu",
-      "Tempeh",
-      "Ground Beef",
-      "Bacon",
-      "Sausage",
-      "Salmon",
-      "Tuna",
-      "Clams",
-      "Mussels",
-      "Oyster",
-      "Sardines",
-      "Anchovy",
-      "Cabbage",
-      "Kale",
-      "Zucchini",
-      "Eggplant",
-      "Asparagus",
-      "Brussels Sprouts",
-      "Celery",
-      "Cucumber",
-      "Cornmeal",
-      "Polenta",
-      "Pancetta",
-      "Prosciutto",
-      "Raisins",
-      "Dates",
-      "Figs",
-      "Saffron",
-      "Cardamom",
-      "Nutmeg",
-      "Cloves",
-      "Allspice",
-      "Vanilla",
-      "Cocoa Powder",
-      "Chocolate",
-      "Dark Chocolate",
-      "White Chocolate",
-      "Coffee",
-      "Tea",
-      "Green Tea",
-      "Black Tea",
-      "Red Wine",
-      "White Wine",
-      "Beer",
-      "Toothpicks",
-      "Gelatin",
-      "Pectin",
-      "Anchovies",
-      "Marmalade",
-      "Chocolate Chips",
-      "Breadcrumbs",
-      "Panko",
-      "Saffron",
-      "Wasabi",
-    ];
-
-    ingredients = generateVariants(base, TARGET_COUNT);
+  if (!ingredients || ingredients.length === 0) {
+    console.error("No ingredients found in ingredients.json");
+    process.exit(1);
   }
+
+  // Clear existing ingredients first
+  await query(`DELETE FROM ingredients`);
+  console.log("✅ Cleared existing ingredients");
 
   let inserted = 0;
   for (const ingredient of ingredients) {
     try {
       await query(
-        `INSERT INTO ingredients (ingredient_id, name, category, is_common, is_pantry, is_main) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (ingredient_id) DO NOTHING`,
+        `INSERT INTO ingredients (ingredient_id, name, category, is_common, is_pantry) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (ingredient_id) DO NOTHING`,
         [
           ingredient.id || slugify(ingredient.name),
           ingredient.name,
           ingredient.category || null,
           !!ingredient.is_common,
           !!ingredient.is_pantry,
-          !!ingredient.is_main,
         ],
       );
       inserted++;
@@ -536,7 +397,7 @@ async function seedIngredients() {
       console.error("Failed to insert ingredient:", ingredient, err);
     }
   }
-  console.log(`Seeded ${inserted} ingredients.`);
+  console.log(`✅ Seeded ${inserted} ingredients.`);
 }
 
 seedIngredients().catch((err) => {

@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BrandColors } from "../../constants/theme";
 
 interface RecipeIngredient {
   id: string;
@@ -123,27 +124,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 16,
-    shadowColor: "#ef4444",
+    shadowColor: BrandColors.danger,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   favoriteButtonText: {
-    color: "#ffffff",
+    color: BrandColors.white,
     fontWeight: "700",
     marginLeft: 10,
     fontSize: 16,
   },
   favoriteButtonInactive: {
-    backgroundColor: "#ffffff",
+    backgroundColor: BrandColors.white,
     borderWidth: 2,
-    borderColor: "#ef4444",
+    borderColor: BrandColors.danger,
     shadowColor: "#000",
     shadowOpacity: 0.1,
   },
   favoriteButtonTextInactive: {
-    color: "#ef4444",
+    color: BrandColors.danger,
   },
   section: {
     marginHorizontal: 24,
@@ -173,23 +174,23 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 8,
-    backgroundColor: "#f9fafb",
+    backgroundColor: BrandColors.gray50,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: "#10b981",
+    borderLeftColor: BrandColors.success,
   },
   ingredientName: {
     fontSize: 15,
-    color: "#1f2937",
+    color: BrandColors.textPrimary,
     flex: 1,
     fontWeight: "500",
   },
   ingredientQuantity: {
     fontSize: 14,
-    color: "#059669",
+    color: BrandColors.successDark,
     fontWeight: "700",
     marginLeft: 12,
-    backgroundColor: "#d1fae5",
+    backgroundColor: BrandColors.successVeryLight,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -198,11 +199,11 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 18,
     paddingVertical: 16,
-    backgroundColor: "#eff6ff",
+    backgroundColor: BrandColors.primaryVeryLight,
     borderRadius: 16,
     borderLeftWidth: 5,
-    borderLeftColor: "#3b82f6",
-    shadowColor: "#3b82f6",
+    borderLeftColor: BrandColors.primary,
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   stepNumber: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#2563eb",
+    color: BrandColors.primaryDark,
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -306,7 +307,11 @@ export default function RecipeDisplayScreen({
       <View style={styles.content}>
         {/* Header with Gradient */}
         <LinearGradient
-          colors={["#8b5cf6", "#6366f1", "#3b82f6"]}
+          colors={[
+            BrandColors.primaryLight,
+            BrandColors.primary,
+            BrandColors.primaryDark,
+          ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
@@ -388,7 +393,7 @@ export default function RecipeDisplayScreen({
         <View style={styles.favoriteButtonContainer}>
           {favorited ? (
             <LinearGradient
-              colors={["#ef4444", "#dc2626"]}
+              colors={[BrandColors.danger, BrandColors.dangerDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.favoriteButton}
@@ -405,7 +410,9 @@ export default function RecipeDisplayScreen({
                   paddingVertical: 2,
                 }}
               >
-                <Text style={{ fontSize: 20, color: "#ffffff" }}>♥</Text>
+                <Text style={{ fontSize: 20, color: BrandColors.white }}>
+                  ♥
+                </Text>
                 <Text style={styles.favoriteButtonText}>
                   Saved to Favorites
                 </Text>
@@ -418,7 +425,7 @@ export default function RecipeDisplayScreen({
               disabled={isLoading}
               activeOpacity={0.7}
             >
-              <Text style={{ fontSize: 20, color: "#ef4444" }}>♡</Text>
+              <Text style={{ fontSize: 20, color: BrandColors.danger }}>♡</Text>
               <Text
                 style={[
                   styles.favoriteButtonText,
@@ -441,7 +448,7 @@ export default function RecipeDisplayScreen({
               scrollEnabled={false}
               renderItem={({ item }) => (
                 <View style={styles.ingredientItem}>
-                  <Text style={styles.ingredientName}>• {item.name}</Text>
+                  <Text style={styles.ingredientName}>{item.name}</Text>
                   <Text style={styles.ingredientQuantity}>
                     {item.quantity} {item.unit}
                   </Text>
@@ -454,7 +461,7 @@ export default function RecipeDisplayScreen({
         {/* Portion Info */}
         <View style={styles.section}>
           <LinearGradient
-            colors={["#10b981", "#059669"]}
+            colors={[BrandColors.success, BrandColors.successDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.portionCard}
