@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   stepNumber: {
     fontSize: 15,
     fontWeight: "800",
-    color: BrandColors.primaryDark,
+    color: BrandColors.primaryLight,
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,

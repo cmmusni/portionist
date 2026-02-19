@@ -1,5 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,9 +16,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { BrandColors } from "../../constants/theme";
 import { clearAuthFromStorage } from "../hooks/useAuthRestore";
-import { clearOnboardingFromStorage } from "../hooks/useOnboardingStorage";
 import { selectAuthUser, signOut } from "../redux/authSlice";
-import { setOnboardingCompleted } from "../redux/pantrySlice";
 import { apiUrl } from "../services/config";
 
 interface ProfileData {
@@ -268,18 +267,12 @@ const ProfileScreen: React.FC = () => {
       console.log("Clearing auth from storage...");
       // Clear auth from storage
       await clearAuthFromStorage();
+      // Note: Onboarding data will be reloaded from backend on next sign in
 
-      console.log("Clearing onboarding from storage...");
-      // Clear onboarding data from storage
-      await clearOnboardingFromStorage();
-
-      console.log("Resetting Redux state...");
-      // Reset onboarding completed flag
-      dispatch(setOnboardingCompleted(false));
-
-      // Dispatch sign out action
       console.log("Dispatching sign out...");
+      // Dispatch sign out action
       dispatch(signOut());
+      // Note: onboardingCompleted will be set based on backend data on next sign in
 
       console.log("Navigating to SignIn...");
       // Explicitly navigate to SignIn with reset
@@ -322,10 +315,18 @@ const ProfileScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+      <LinearGradient
+        colors={[BrandColors.primary, BrandColors.primary + "cc"]}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.headerTop}>
+          <Text style={styles.headerIcon}>👤</Text>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
         <Text style={styles.headerSubtitle}>Manage your account details</Text>
-      </View>
+      </LinearGradient>
 
       {/* Profile Content */}
       <View style={styles.content}>
@@ -493,19 +494,33 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    paddingVertical: 24,
+    paddingTop: 36,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  headerIcon: {
+    fontSize: 28,
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#1f2937",
+    fontWeight: "800",
+    color: "#ffffff",
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 4,
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.9)",
   },
   content: {
     flex: 1,

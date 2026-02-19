@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Request, Response } from "express";
+import { saveRecipeToHistory } from "./recipeLogController.js";
 
 interface Ingredient {
   id: string;
@@ -14,13 +15,14 @@ interface AIRecipeGeneratorRequest {
   targetWeight: number;
   mealType?: string;
   cuisine: string;
+  count?: number; // Number of recipes to generate (default: 2)
 }
 
 interface Recipe {
   id: string;
   name: string;
   image?: string;
-  source?: "database" | "spoonacular" | "ai";
+  source?: "spoonacular" | "ai";
   mainIngredient: Ingredient;
   sideIngredients: Ingredient[];
   ingredients: {
@@ -154,6 +156,7 @@ class AIRecipeController {
     console.log(
       `Generating recipe ${recipeIndex + 1} with ${ingredients.length} ingredients (${cuisine} ${mealType})`,
     );
+
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     console.log("Gemini response received, length:", responseText.length);
@@ -217,18 +220,22 @@ class AIRecipeController {
     res: Response,
   ): Promise<void> {
     try {
-      const { ingredients, currentWeight, targetWeight, mealType, cuisine } =
-        req.body;
+      const {
+        ingredients,
+        currentWeight,
+        targetWeight,
+        mealType,
+        cuisine,
+        count,
+      } = req.body;
 
       // Validate required fields
-      if (
-        !ingredients ||
-        !Array.isArray(ingredients) ||
-        ingredients.length === 0
-      ) {
+      // Allow empty ingredients array for meal-time suggestions
+      if (!ingredients || !Array.isArray(ingredients)) {
         res.status(400).json({
           success: false,
-          message: "ingredients array with at least one ingredient is required",
+          message:
+            "ingredients must be an array (can be empty for suggestions)",
         });
         return;
       }
@@ -280,10 +287,14 @@ class AIRecipeController {
         `Portion calculation: meal=${finalMealType}, current=${currentWeight}kg, target=${targetWeight}kg, portion=${portionSize}g`,
       );
 
-      // Generate 3 recipes in sequence with small delays
+      // Determine number of recipes to generate (default: 2, max: 4)
+      const recipeCount = Math.min(Math.max(count || 2, 1), 4);
+      console.log(`🔄 Generating ${recipeCount} recipe(s)...`);
+
+      // Generate recipes in sequence with shorter delays to avoid rate limiting
       const generatedRecipes: Recipe[] = [];
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < recipeCount; i++) {
         try {
           const recipe = await this.generateSingleRecipe(
             ingredients,
@@ -294,26 +305,62 @@ class AIRecipeController {
           );
           generatedRecipes.push(recipe);
 
-          // Add delay between requests to avoid rate limiting (except after the last one)
-          if (i < 2) {
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased to 2 seconds
+          // Add 0.5-second delay between requests
+          if (i < recipeCount - 1) {
+            console.log(`⏱️  Waiting 0.5 seconds before next recipe...`);
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error(`Failed to generate recipe ${i + 1}:`, err);
+
+          // If it's a rate limit error, return immediately instead of continuing
+          if (err.status === 429) {
+            res.status(429).json({
+              success: false,
+              message:
+                "API rate limit reached. Please try again in a few minutes.",
+              error: "RATE_LIMIT_EXCEEDED",
+              generatedCount: generatedRecipes.length,
+            });
+            return;
+          }
+
           console.error(
             "Error details:",
             err instanceof Error ? err.stack : JSON.stringify(err),
           );
-          // Continue generating the remaining recipes even if one fails
+          // Continue generating the remaining recipes for other errors
         }
       }
 
       if (generatedRecipes.length === 0) {
-        res.status(500).json({
+        res.status(503).json({
           success: false,
-          message: "Failed to generate any recipes",
+          message:
+            "AI service temporarily unavailable due to rate limits. Please try again in a few minutes.",
+          error: "RATE_LIMIT_EXCEEDED",
         });
         return;
+      }
+
+      // Save generated recipes to user history (if userId is provided)
+      const userId = (req as any).user?.userId || (req.body as any).userId;
+
+      if (userId && generatedRecipes.length > 0) {
+        console.log(
+          `💾 Saving ${generatedRecipes.length} AI-generated recipes to user history for user: ${userId}`,
+        );
+
+        for (const recipe of generatedRecipes) {
+          try {
+            await saveRecipeToHistory(userId, recipe, "search");
+          } catch (error) {
+            console.warn(
+              `Failed to save AI recipe ${recipe.id} to history:`,
+              error,
+            );
+          }
+        }
       }
 
       res.status(200).json({

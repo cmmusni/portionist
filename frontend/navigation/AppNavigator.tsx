@@ -1,45 +1,43 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import {
-    NavigationContainer,
-    NavigationIndependentTree,
-    useFocusEffect,
-    useNavigation,
+  NavigationContainer,
+  NavigationIndependentTree,
+  useFocusEffect,
+  useNavigation,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { BrandColors } from "../../constants/theme";
 import {
-    clearAuthFromStorage,
-    saveAuthToStorage,
-    useAuthRestore,
+  clearAuthFromStorage,
+  saveAuthToStorage,
+  useAuthRestore,
 } from "../hooks/useAuthRestore";
 import { useOnboardingRestore } from "../hooks/useOnboardingRestore";
+import { saveOnboardingToStorage } from "../hooks/useOnboardingStorage";
 import {
-    clearOnboardingFromStorage,
-    saveOnboardingToStorage,
-} from "../hooks/useOnboardingStorage";
-import {
-    selectAuthUser,
-    selectIsAuthenticated,
-    signInSuccess,
-    signOut,
-    signUpSuccess,
+  selectAuthUser,
+  selectIsAuthenticated,
+  signInSuccess,
+  signOut,
+  signUpSuccess,
 } from "../redux/authSlice";
 import {
-    addFavorite,
-    removeFavorite,
-    selectOnboardingCompleted,
-    setOnboardingCompleted,
-    setOnboardingData,
+  addFavorite,
+  removeFavorite,
+  selectOnboardingCompleted,
+  setOnboardingCompleted,
+  setOnboardingData,
 } from "../redux/pantrySlice";
 import type { AppDispatch, RootState } from "../redux/store";
 import DashboardScreen from "../screens/DashboardScreen";
@@ -48,6 +46,7 @@ import OnboardingScreen from "../screens/OnboardingScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RecipeDisplayScreen from "../screens/RecipeDisplayScreen";
 import RecipeInputScreen from "../screens/RecipeInputScreen";
+import RecipeLogScreen from "../screens/RecipeLogScreen";
 import RecipeSelectionList from "../screens/RecipeSelectionList";
 import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
@@ -120,6 +119,15 @@ function AppDrawer() {
         }}
       />
       <Drawer.Screen
+        name="RecipeLog"
+        component={RecipeLogScreen}
+        options={{
+          title: "Recipe Log",
+          drawerLabel: "Recipe Log",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Drawer.Screen
         name="SignOut"
         component={SignOutScreenWrapper}
         options={{
@@ -137,15 +145,36 @@ function SignOutScreenWrapper() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const user = useSelector(selectAuthUser);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const hasShownAlertRef = React.useRef(false);
+  const userRef = React.useRef(user);
+
+  // Keep user ref updated
+  React.useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useFocusEffect(
     React.useCallback(() => {
+      console.log(
+        "[SignOut] Screen focused, hasShownAlert:",
+        hasShownAlertRef.current,
+      );
+
+      // Prevent showing alert multiple times
+      if (hasShownAlertRef.current) {
+        console.log("[SignOut] Alert already shown, skipping");
+        return;
+      }
+      hasShownAlertRef.current = true;
+
       const performSignOut = async () => {
         try {
           console.log("[SignOut] Starting sign out process...");
+          setIsSigningOut(true);
 
-          // Call backend sign out API
-          if (user?.userId) {
+          // Call backend sign out API using ref
+          if (userRef.current?.userId) {
             try {
               console.log("[SignOut] Calling backend API...");
               const response = await fetch(apiUrl("/auth/signout"), {
@@ -154,7 +183,7 @@ function SignOutScreenWrapper() {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  userId: user.userId,
+                  userId: userRef.current.userId,
                 }),
               });
               console.log("[SignOut] API Response Status:", response.status);
@@ -163,64 +192,100 @@ function SignOutScreenWrapper() {
             }
           }
 
-          console.log("[SignOut] Clearing storage...");
+          console.log("[SignOut] Clearing auth storage...");
           await clearAuthFromStorage();
-          await clearOnboardingFromStorage();
+          // Note: We don't clear onboarding data as it will be reloaded from backend on next sign in
 
-          console.log("[SignOut] Dispatching Redux actions...");
-          dispatch(setOnboardingCompleted(false));
+          console.log("[SignOut] Dispatching Redux sign out...");
           dispatch(signOut());
+          // Note: onboardingCompleted will be set when user signs back in based on backend data
 
           console.log("[SignOut] Resetting navigation...");
-          // Use setTimeout to ensure state updates complete
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "SignIn" as never }],
-            });
-          }, 100);
+          // Navigate to sign in screen
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "SignIn" as never }],
+          });
         } catch (error) {
           console.error("[SignOut] Error:", error);
-          Alert.alert("Error", "Failed to sign out");
+          setIsSigningOut(false);
+          if (Platform.OS === "web") {
+            alert("Failed to sign out");
+          } else {
+            Alert.alert("Error", "Failed to sign out");
+          }
         }
       };
 
-      // Show confirmation dialog
-      Alert.alert(
-        "Sign Out",
-        "Are you sure you want to sign out?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => {
-              // Navigate back to Dashboard if cancelled
-              navigation.navigate("Dashboard" as never);
-            },
-          },
-          {
-            text: "Sign Out",
-            style: "destructive",
-            onPress: () => {
-              performSignOut().catch((err) => {
-                console.error("[SignOut] Unhandled error:", err);
-              });
-            },
-          },
-        ],
-        { cancelable: false },
-      );
+      // Show confirmation dialog immediately
+      console.log("[SignOut] Showing confirmation dialog");
 
-      // Return cleanup function (required by useFocusEffect)
-      return () => {};
-    }, [dispatch, navigation, user]),
+      if (Platform.OS === "web") {
+        // Use native browser confirm on web
+        const confirmed = window.confirm("Are you sure you want to sign out?");
+        if (confirmed) {
+          console.log("[SignOut] User confirmed sign out");
+          performSignOut().catch((err) => {
+            console.error("[SignOut] Unhandled error:", err);
+            setIsSigningOut(false);
+          });
+        } else {
+          console.log("[SignOut] User cancelled");
+          hasShownAlertRef.current = false;
+          navigation.goBack();
+        }
+      } else {
+        // Use Alert.alert on native platforms
+        Alert.alert(
+          "Sign Out",
+          "Are you sure you want to sign out?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                console.log("[SignOut] User cancelled");
+                hasShownAlertRef.current = false;
+                navigation.goBack();
+              },
+            },
+            {
+              text: "Sign Out",
+              style: "destructive",
+              onPress: () => {
+                console.log("[SignOut] User confirmed sign out");
+                performSignOut().catch((err) => {
+                  console.error("[SignOut] Unhandled error:", err);
+                  setIsSigningOut(false);
+                });
+              },
+            },
+          ],
+          { cancelable: false },
+        );
+      }
+
+      // Return cleanup function
+      return () => {
+        console.log("[SignOut] Cleanup - resetting hasShownAlert");
+        hasShownAlertRef.current = false;
+      };
+    }, [dispatch, navigation]),
   );
 
-  // Show loading while processing
+  // Show loading only when actually signing out
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color={BrandColors.primary} />
-      <Text style={{ marginTop: 16, color: "#6b7280" }}>Signing out...</Text>
+      {isSigningOut ? (
+        <>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={{ marginTop: 16, color: "#6b7280" }}>
+            Signing out...
+          </Text>
+        </>
+      ) : (
+        <Text style={{ color: "#6b7280" }}>Loading...</Text>
+      )}
     </View>
   );
 }
@@ -254,14 +319,20 @@ function SignInScreenWrapper() {
 
       // Fetch onboarding data from backend
       try {
+        console.log("[SignIn] Fetching onboarding data from backend...");
         const response = await fetch(
           apiUrl(`/profile/${user.userId}/onboarding`),
+        );
+        console.log(
+          "[SignIn] Onboarding API response status:",
+          response.status,
         );
 
         if (response.ok) {
           // Onboarding data exists on backend
           const result = await response.json();
           const onboardingData = result.data;
+          console.log("[SignIn] Onboarding data found:", onboardingData);
 
           // Load into Redux
           dispatch(
@@ -284,10 +355,14 @@ function SignInScreenWrapper() {
             onboardingCompleted: true,
           });
 
-          // Navigate to Dashboard
-          navigation.navigate("Dashboard" as never);
+          console.log("[SignIn] Navigating to AppDrawer (Dashboard)...");
+          // Navigate to AppDrawer which contains Dashboard
+          navigation.navigate("AppDrawer" as never);
         } else {
           // No onboarding data found, go to Onboarding
+          console.log(
+            "[SignIn] No onboarding data found, navigating to Onboarding...",
+          );
           navigation.navigate("Onboarding" as never);
         }
       } catch (error) {
@@ -428,6 +503,7 @@ function OnboardingScreenWrapper() {
 
       // Save to backend if user is authenticated
       if (user?.userId) {
+        console.log("[Onboarding] Saving to backend for user:", user.userId);
         const response = await fetch(
           apiUrl(`/profile/${user.userId}/onboarding`),
           {
@@ -444,14 +520,22 @@ function OnboardingScreenWrapper() {
           },
         );
 
+        console.log(
+          "[Onboarding] Backend save response status:",
+          response.status,
+        );
         if (!response.ok) {
           const errorData = await response.json();
           console.error(
-            "Failed to save onboarding data to backend:",
+            "[Onboarding] Failed to save onboarding data to backend:",
             errorData,
           );
           // Don't block navigation if backend save fails - data is saved locally
+        } else {
+          console.log("[Onboarding] Successfully saved to backend");
         }
+      } else {
+        console.warn("[Onboarding] No user ID, skipping backend save");
       }
 
       // Dispatch to Redux
@@ -508,23 +592,77 @@ function RecipeDisplayScreenWrapper({ route }: any) {
   const navigation = useNavigation();
   const dispatch = useDispatch<AppDispatch>();
   const favorites = useSelector((state: RootState) => state.pantry.favorites);
+  const user = useSelector(selectAuthUser);
 
-  const handleFavorite = (recipe: any) => {
-    // Add full recipe to favorites
-    dispatch(addFavorite(recipe));
-    Alert.alert(
-      "Added to Favorites",
-      `${recipe.name} has been saved to your favorites!`,
-      [{ text: "OK" }],
-    );
+  const handleFavorite = async (recipe: any) => {
+    const userId = user?.userId;
+
+    if (!userId) {
+      Alert.alert("Error", "User ID not available");
+      return;
+    }
+
+    try {
+      const response = await fetch(apiUrl("/saveFavorite"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          recipeId: recipe.id,
+          recipeName: recipe.name,
+          recipeData: recipe,
+        }),
+      });
+
+      if (response.ok) {
+        // Add to Redux store
+        dispatch(addFavorite(recipe));
+        Alert.alert(
+          "Added to Favorites",
+          `${recipe.name} has been saved to your favorites!`,
+          [{ text: "OK" }],
+        );
+      } else {
+        Alert.alert("Error", "Failed to save favorite");
+      }
+    } catch (error) {
+      console.error("Error saving favorite:", error);
+      Alert.alert("Error", "Failed to save favorite");
+    }
   };
 
-  const handleUnfavorite = (recipeId: string) => {
-    // Remove from favorites
-    dispatch(removeFavorite(recipeId));
-    Alert.alert("Removed from Favorites", "Recipe has been removed.", [
-      { text: "OK" },
-    ]);
+  const handleUnfavorite = async (recipeId: string) => {
+    const userId = user?.userId;
+
+    if (!userId) {
+      Alert.alert("Error", "User ID not available");
+      return;
+    }
+
+    try {
+      const response = await fetch(apiUrl(`/saveFavorite/${recipeId}`), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (response.ok) {
+        // Remove from Redux store
+        dispatch(removeFavorite(recipeId));
+        Alert.alert("Removed from Favorites", "Recipe has been removed.", [
+          { text: "OK" },
+        ]);
+      } else {
+        Alert.alert("Error", "Failed to remove favorite");
+      }
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      Alert.alert("Error", "Failed to remove favorite");
+    }
   };
 
   const [recipes, setRecipes] = React.useState<any[] | null>(null);
@@ -554,6 +692,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
           targetWeight: number;
           cuisine: string;
           mealType?: string;
+          userId?: string;
         } = {
           ingredients: searchParams?.ingredients || [
             { id: "chicken_breast", name: "Chicken Breast" },
@@ -562,6 +701,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
           targetWeight: onboard?.targetWeight ?? 75,
           cuisine: searchParams?.cuisine || onboard?.cuisine || "Asian",
           mealType: searchParams?.mealType || "Lunch",
+          userId: user?.userId, // Include userId so backend can save to history
         };
 
         console.log("📝 Fetching recipes with params:", body);
@@ -585,6 +725,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
         // Merge results
         const mergedRecipes: any[] = [];
         const recipesToSave: any[] = [];
+        const failedAPIs: string[] = [];
 
         // Add database and Spoonacular recipes
         if (
@@ -599,6 +740,24 @@ function RecipeDisplayScreenWrapper({ route }: any) {
               source: r.source || "database",
             })),
           );
+        } else if (
+          dbResponse.status === "fulfilled" &&
+          !dbResponse.value?.success
+        ) {
+          // Check if it's a rate limit error
+          if (
+            dbResponse.value?.error === "RATE_LIMIT_EXCEEDED" ||
+            dbResponse.value?.message?.includes("rate limit")
+          ) {
+            console.warn("Spoonacular API rate limit reached");
+            failedAPIs.push("Spoonacular");
+          }
+        } else if (dbResponse.status === "rejected") {
+          console.warn(
+            "Database/Spoonacular request failed:",
+            dbResponse.reason,
+          );
+          failedAPIs.push("Spoonacular");
         }
 
         // Add AI recipes
@@ -619,6 +778,21 @@ function RecipeDisplayScreenWrapper({ route }: any) {
 
           mergedRecipes.push(...aiRecipesWithSource);
           recipesToSave.push(...aiRecipesWithSource);
+        } else if (
+          aiResponse.status === "fulfilled" &&
+          !aiResponse.value?.success
+        ) {
+          // Check if it's a rate limit error
+          if (
+            aiResponse.value?.error === "RATE_LIMIT_EXCEEDED" ||
+            aiResponse.value?.message?.includes("rate limit")
+          ) {
+            console.warn("AI API rate limit reached");
+            failedAPIs.push("AI");
+          }
+        } else if (aiResponse.status === "rejected") {
+          console.warn("AI request failed:", aiResponse.reason);
+          failedAPIs.push("AI");
         }
 
         // Also save Spoonacular recipes if present in dbResponse
@@ -650,14 +824,42 @@ function RecipeDisplayScreenWrapper({ route }: any) {
           }
         }
 
+        // Show results if we have any, even if some APIs failed
         if (mergedRecipes.length > 0) {
           setRecipes(mergedRecipes);
+
+          // If some APIs failed but we still have results, show a subtle warning
+          if (failedAPIs.length > 0) {
+            console.warn(
+              `Showing ${mergedRecipes.length} recipes. Some sources unavailable: ${failedAPIs.join(", ")}`,
+            );
+            // Optional: Show a toast or subtle message to the user
+            // For now, we silently continue since we have results
+          }
         } else {
-          Alert.alert(
-            "No recipes",
-            "No matching recipes were found for your profile.",
-          );
-          navigation.goBack();
+          // No recipes at all
+          if (failedAPIs.length === 2) {
+            // Both APIs failed
+            Alert.alert(
+              "Service Temporarily Unavailable",
+              "Recipe sources are currently experiencing issues. Please try again in a few minutes.",
+              [{ text: "OK", onPress: () => navigation.goBack() }],
+            );
+          } else if (failedAPIs.length === 1) {
+            // One API failed, but the other returned no results
+            Alert.alert(
+              "No Recipes Found",
+              `No matching recipes were found. Note: ${failedAPIs[0]} is currently unavailable.`,
+              [{ text: "OK", onPress: () => navigation.goBack() }],
+            );
+          } else {
+            // Both APIs succeeded but returned no results
+            Alert.alert(
+              "No Recipes Found",
+              "No matching recipes were found for your selection. Try different ingredients or cuisine.",
+              [{ text: "OK", onPress: () => navigation.goBack() }],
+            );
+          }
         }
       } catch (err) {
         console.error("Failed to fetch recipes:", err);
@@ -686,28 +888,9 @@ function RecipeDisplayScreenWrapper({ route }: any) {
           backgroundColor: "#fff",
         }}
       >
+        <ActivityIndicator size="large" color={BrandColors.primary} />
         <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 16 }}>
           Fetching recipes...
-        </Text>
-        <View
-          style={{
-            width: "80%",
-            height: 8,
-            backgroundColor: "#e5e7eb",
-            borderRadius: 4,
-            overflow: "hidden",
-          }}
-        >
-          <View
-            style={{
-              height: "100%",
-              backgroundColor: "#3b82f6",
-              width: "60%",
-            }}
-          />
-        </View>
-        <Text style={{ color: "#6b7280", marginTop: 16, textAlign: "center" }}>
-          Loading database and AI recipes
         </Text>
       </View>
     );
@@ -728,14 +911,14 @@ function RecipeDisplayScreenWrapper({ route }: any) {
         />
         <TouchableOpacity
           style={{
-            backgroundColor: "#3b82f6",
+            backgroundColor: BrandColors.primary,
             paddingVertical: 14,
             paddingHorizontal: 20,
             marginHorizontal: 20,
             marginBottom: 20,
             borderRadius: 16,
             alignItems: "center",
-            shadowColor: "#3b82f6",
+            shadowColor: BrandColors.secondary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,

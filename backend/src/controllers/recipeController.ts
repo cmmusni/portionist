@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { query } from "../db/connection.js";
+import { saveRecipeToHistory } from "./recipeLogController.js";
 
 interface Ingredient {
   id: string;
@@ -20,7 +21,7 @@ interface Recipe {
   id: string;
   name: string;
   image?: string;
-  source?: "database" | "spoonacular" | "ai";
+  source?: "spoonacular" | "ai";
   mainIngredient: Ingredient;
   sideIngredients: Ingredient[];
   ingredients: {
@@ -51,14 +52,14 @@ interface RecipeWithScore extends Recipe {
   };
 }
 
-// Mock recipe database
+// Mock recipe database (for development/testing - marked as ai source)
 const MOCK_RECIPES: Recipe[] = [
   {
     id: "1",
     name: "Grilled Chicken with Rice",
     image:
       "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png",
-    source: "database",
+    source: "ai",
     mainIngredient: { id: "chicken", name: "Chicken" },
     sideIngredients: [
       { id: "garlic", name: "Garlic" },
@@ -91,7 +92,7 @@ const MOCK_RECIPES: Recipe[] = [
     name: "Chicken Stir Fry",
     image:
       "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png",
-    source: "database",
+    source: "ai",
     mainIngredient: { id: "chicken", name: "Chicken" },
     sideIngredients: [
       { id: "broccoli", name: "Broccoli" },
@@ -127,7 +128,7 @@ const MOCK_RECIPES: Recipe[] = [
     name: "Beef Pasta",
     image:
       "https://png.pngtree.com/png-vector/20230808/ourmid/pngtree-recipe-card-vector-png-image_6874598.png",
-    source: "database",
+    source: "ai",
     mainIngredient: { id: "beef", name: "Beef" },
     sideIngredients: [
       { id: "tomato", name: "Tomato" },
@@ -196,6 +197,115 @@ class RecipeController {
 
     const multiplier = calorieMultipliers[mealType] || 1.5;
     return Math.round(portionSize * multiplier);
+  }
+
+  private async fetchFromGoogle(
+    ingredients: string[],
+    mealType: string,
+    cuisine: string,
+    limit: number = 10,
+  ): Promise<Recipe[]> {
+    if (
+      !process.env.GOOGLE_CUSTOM_SEARCH_API_KEY ||
+      !process.env.GOOGLE_SEARCH_ENGINE_ID
+    ) {
+      console.log("⚠️  Google Custom Search API not configured");
+      return [];
+    }
+
+    try {
+      const searchQuery = `${ingredients.join(" ")} ${mealType} ${cuisine} recipe`;
+      const googleUrl = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_CUSTOM_SEARCH_API_KEY}&cx=${process.env.GOOGLE_SEARCH_ENGINE_ID}&q=${encodeURIComponent(searchQuery)}&num=${Math.min(limit, 10)}`;
+
+      console.log(`🔍 Calling Google Custom Search API...`);
+      console.log(`   Query: ${searchQuery}`);
+
+      const response = await fetch(googleUrl);
+
+      if (response.ok) {
+        const data = (await response.json()) as any;
+
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          console.log(`✅ Google returned ${data.items.length} results`);
+
+          const recipes: Recipe[] = data.items
+            .filter((item: any) => item.title && item.link)
+            .map((item: any, index: number) => {
+              const recipeName = item.title.replace(/\s*-\s*.*$/, "").trim();
+
+              return {
+                id: `google-${index}`,
+                name: recipeName,
+                image:
+                  item.pagemap?.cse_image?.[0]?.src ||
+                  this.generateImageUrl(recipeName),
+                source: "ai" as const,
+                mainIngredient: {
+                  id: ingredients[0] || "",
+                  name: ingredients[0] || "",
+                },
+                sideIngredients: [],
+                ingredients: ingredients.map((ing, idx) => ({
+                  id: `google-ing-${idx}`,
+                  name: ing,
+                  quantity: 100,
+                  unit: "g",
+                })),
+                instructions: [
+                  {
+                    stepNumber: 1,
+                    instruction: `View full recipe at: ${item.link}`,
+                  },
+                ],
+                mealType,
+                cuisine,
+                portionSize: 400,
+                portionUnit: "g",
+                prepTime: 20,
+                cookTime: 30,
+                totalTime: 50,
+                servings: 1,
+                calories: this.calculateCalories(400, mealType),
+              };
+            });
+
+          return recipes;
+        } else {
+          console.log("⚠️  Google returned no results");
+        }
+      } else {
+        console.warn(`❌ Google API error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error calling Google Custom Search API:", error);
+    }
+
+    return [];
+  }
+
+  private deduplicateRecipes(recipes: Recipe[]): Recipe[] {
+    const seen = new Map<string, Recipe>();
+
+    for (const recipe of recipes) {
+      // Create a unique key based on normalized recipe name
+      const key = recipe.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+      if (!seen.has(key)) {
+        seen.set(key, recipe);
+      } else {
+        // Prefer Spoonacular recipes, then AI/Google (no database source)
+        const existing = seen.get(key)!;
+        const priority = { spoonacular: 2, ai: 1 };
+        const existingPriority = priority[existing.source || "ai"] || 0;
+        const newPriority = priority[recipe.source || "ai"] || 0;
+
+        if (newPriority > existingPriority) {
+          seen.set(key, recipe);
+        }
+      }
+    }
+
+    return Array.from(seen.values());
   }
 
   private generateImageUrl(recipeName: string): string {
@@ -385,77 +495,11 @@ class RecipeController {
       //   return;
       // }
 
-      // Try to load recipes from the database; fallback to mock data
+      // Initialize empty recipe list - will be filled by API calls only
       let recipesToScore: Recipe[] = [];
-      try {
-        const rows = await query(
-          `SELECT r.recipe_id, r.name, r.cuisine, r.meal_type, r.main_ingredient_id, r.portion_size, r.portion_unit, r.prep_time, r.cook_time, r.total_time, r.servings, r.instructions,
-                  ri.ingredient_id, ri.quantity as ing_quantity, ri.unit as ing_unit, i.name as ingredient_name,
-                  main_i.name as main_ingredient_name
-           FROM recipes r
-           LEFT JOIN recipe_ingredients ri ON ri.recipe_id = r.recipe_id
-           LEFT JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
-           LEFT JOIN ingredients main_i ON main_i.ingredient_id = r.main_ingredient_id`,
-          [],
-        );
-
-        // assemble recipes grouped by recipe_id
-        const map: Record<string, any> = {};
-        for (const row of rows.rows) {
-          const id = row.recipe_id;
-          if (!map[id]) {
-            const portionSize = row.portion_size || 0;
-            const recipeMealType = row.meal_type || finalMealType;
-
-            map[id] = {
-              id,
-              name: row.name,
-              image: this.generateImageUrl(row.name),
-              source: "database",
-              mainIngredient: row.main_ingredient_id
-                ? {
-                    id: row.main_ingredient_id,
-                    name: row.main_ingredient_name || "",
-                  }
-                : { id: "", name: "" },
-              sideIngredients: [],
-              ingredients: [],
-              instructions: Array.isArray(row.instructions)
-                ? row.instructions.map((s: any, idx: number) => ({
-                    stepNumber: idx + 1,
-                    instruction: String(s),
-                  }))
-                : [],
-              mealType: recipeMealType,
-              cuisine,
-              portionSize,
-              portionUnit: row.portion_unit || "g",
-              prepTime: row.prep_time || 0,
-              cookTime: row.cook_time || 0,
-              totalTime: row.total_time || 0,
-              servings: row.servings || 1,
-              calories: this.calculateCalories(portionSize, recipeMealType),
-            };
-          }
-          if (row.ingredient_id) {
-            map[id].ingredients.push({
-              id: row.ingredient_id,
-              name: row.ingredient_name || row.ingredient_id,
-              quantity: row.ing_quantity || 0,
-              unit: row.ing_unit || "",
-            });
-          }
-        }
-
-        recipesToScore = Object.values(map) as Recipe[];
-      } catch (err) {
-        console.warn(
-          "DB recipe load failed, falling back to MOCK_RECIPES:",
-          String(err),
-        );
-        // fallback - return all mock recipes
-        recipesToScore = MOCK_RECIPES;
-      }
+      console.log(
+        "📡 Searching for recipes using Spoonacular and Google APIs only...",
+      );
 
       // Fetch from Spoonacular API if configured
       if (process.env.SPOONACULAR_API_KEY && ingredients.length > 0) {
@@ -478,8 +522,48 @@ class RecipeController {
         console.log("❌ SPOONACULAR_API_KEY not configured");
       }
 
+      // Fetch from Google Custom Search API
+      if (ingredients.length > 0) {
+        const ingredientNames = ingredients.map((ing) => ing.name);
+        const googleRecipes = await this.fetchFromGoogle(
+          ingredientNames,
+          finalMealType,
+          cuisine,
+          10,
+        );
+        console.log(`🔍 Got ${googleRecipes.length} recipes from Google`);
+        recipesToScore.push(...googleRecipes);
+      }
+
+      // Deduplicate recipes from all sources
+      const uniqueRecipes = this.deduplicateRecipes(recipesToScore);
+      console.log(
+        `🔄 Deduplicated ${recipesToScore.length} recipes to ${uniqueRecipes.length} unique recipes`,
+      );
+
+      // Save unique recipes to user history (if userId is provided)
+      // Extract userId from JWT token or request body
+      const userId = (req as any).user?.userId || (req.body as any).userId;
+
+      if (userId && uniqueRecipes.length > 0) {
+        console.log(
+          `💾 Saving ${uniqueRecipes.length} recipes to user history for user: ${userId}`,
+        );
+
+        for (const recipe of uniqueRecipes) {
+          try {
+            await saveRecipeToHistory(userId, recipe, "search");
+          } catch (error) {
+            console.warn(
+              `Failed to save recipe ${recipe.id} to history:`,
+              error,
+            );
+          }
+        }
+      }
+
       // Score recipes
-      const scoredRecipes: RecipeWithScore[] = recipesToScore.map((recipe) =>
+      const scoredRecipes: RecipeWithScore[] = uniqueRecipes.map((recipe) =>
         this.scoreRecipe(recipe, targetWeight, currentWeight),
       );
 
@@ -542,11 +626,8 @@ class RecipeController {
 
       for (const recipe of recipes) {
         try {
-          // Skip database recipes as they already exist
-          if (recipe.source === "database") {
-            skippedCount++;
-            continue;
-          }
+          // All recipes from external APIs can be saved
+          // (No database recipes to skip anymore)
 
           // Check if recipe already exists by name and main ingredient
           const existingCheck = await query(
@@ -805,92 +886,28 @@ class RecipeController {
         console.log("❌ SPOONACULAR_API_KEY not configured");
       }
 
-      // Fallback to database/mock recipes if Spoonacular fails or returns nothing
+      // No database fallback - API-only approach
       if (recipes.length === 0) {
-        console.log("📦 Using fallback recipes from database/mock data");
+        console.log("⚠️ No recipes returned from Spoonacular API");
+      }
 
-        try {
-          const rows = await query(
-            `SELECT DISTINCT r.recipe_id, r.name, r.cuisine, r.meal_type, 
-                    r.main_ingredient_id, r.portion_size, r.portion_unit,
-                    r.prep_time, r.cook_time, r.total_time, r.servings, r.instructions,
-                    ri.ingredient_id, ri.quantity as ing_quantity, ri.unit as ing_unit,
-                    ing.name as ingredient_name
-             FROM recipes r
-             LEFT JOIN recipe_ingredients ri ON r.recipe_id = ri.recipe_id
-             LEFT JOIN ingredients ing ON ri.ingredient_id = ing.ingredient_id
-             WHERE r.cuisine ILIKE $1 AND r.meal_type ILIKE $2 AND r.portion_size > 0
-             ORDER BY r.recipe_id
-             LIMIT $3`,
-            [`%${cuisine}%`, `%${mealType}%`, limit],
-          );
+      // Save suggested recipes to user history
+      const userId = req.params.userId || (req as any).user?.userId;
 
-          const map: Record<string, Recipe> = {};
-          for (const row of rows.rows) {
-            const id = row.recipe_id;
-            if (!map[id]) {
-              const portionSize = row.portion_size || 0;
-              const recipeMealType = row.meal_type || "";
+      if (userId && recipes.length > 0) {
+        console.log(
+          `💾 Saving ${recipes.length} suggested recipes to user history for user: ${userId}`,
+        );
 
-              map[id] = {
-                id,
-                name: row.name,
-                image: this.generateImageUrl(row.name),
-                source: "database",
-                mainIngredient: {
-                  id: row.main_ingredient_id || "",
-                  name: row.main_ingredient_id || "",
-                },
-                sideIngredients: [],
-                ingredients: [],
-                instructions: Array.isArray(row.instructions)
-                  ? row.instructions
-                  : [],
-                mealType: recipeMealType,
-                cuisine: row.cuisine || cuisine,
-                portionSize,
-                portionUnit: row.portion_unit || "g",
-                prepTime: row.prep_time || 0,
-                cookTime: row.cook_time || 0,
-                totalTime: row.total_time || 0,
-                servings: row.servings || 1,
-                calories: this.calculateCalories(portionSize, recipeMealType),
-              };
-            }
-            if (row.ingredient_id) {
-              map[id].ingredients.push({
-                id: row.ingredient_id,
-                name: row.ingredient_name || row.ingredient_id,
-                quantity: row.ing_quantity || 0,
-                unit: row.ing_unit || "",
-              });
-            }
+        for (const recipe of recipes) {
+          try {
+            await saveRecipeToHistory(userId, recipe, "suggested");
+          } catch (error) {
+            console.warn(
+              `Failed to save suggested recipe ${recipe.id} to history:`,
+              error,
+            );
           }
-
-          recipes = Object.values(map).slice(0, limit);
-        } catch (err) {
-          console.warn("DB query failed, using mock recipes:", err);
-        }
-
-        // Fallback to mock recipes if database is empty
-        if (recipes.length === 0) {
-          recipes = MOCK_RECIPES.filter(
-            (r) =>
-              r.cuisine.toLowerCase() === cuisine.toLowerCase() &&
-              r.mealType.toLowerCase() === mealType.toLowerCase(),
-          ).slice(0, limit);
-        }
-
-        // If still no recipes, return any mock recipes matching meal type
-        if (recipes.length === 0) {
-          recipes = MOCK_RECIPES.filter(
-            (r) => r.mealType.toLowerCase() === mealType.toLowerCase(),
-          ).slice(0, limit);
-        }
-
-        // Last resort: return any mock recipes
-        if (recipes.length === 0) {
-          recipes = MOCK_RECIPES.slice(0, limit);
         }
       }
 

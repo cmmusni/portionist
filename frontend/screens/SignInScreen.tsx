@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/theme";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     borderColor: "#f87171",
   },
   submitButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
     borderRadius: 10,
     paddingVertical: 16,
     marginTop: 8,
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   signUpLinkButtonText: {
-    color: "#2563eb",
+    color: BrandColors.primary,
     fontWeight: "700",
     fontSize: 14,
   },

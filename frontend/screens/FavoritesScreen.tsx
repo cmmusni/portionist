@@ -1,7 +1,9 @@
+import { BrandColors } from "@/constants/theme";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
@@ -10,7 +12,13 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { removeFavorite, selectFavorites } from "../redux/pantrySlice";
+import {
+  addFavorite,
+  removeFavorite,
+  selectFavorites,
+} from "../redux/pantrySlice";
+import { RootState } from "../redux/store";
+import { apiUrl } from "../services/config";
 
 const getMealIcon = (mealType?: string) => {
   const icons: Record<string, string> = {
@@ -30,18 +38,23 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     paddingVertical: 32,
-    paddingTop: 48,
+    paddingTop: 32,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#ef4444",
+    shadowColor: BrandColors.primaryLight,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
   headerIcon: {
     fontSize: 32,
-    marginBottom: 8,
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,
@@ -178,7 +191,7 @@ const styles = StyleSheet.create({
   },
   removeButtonText: {
     fontSize: 20,
-    color: "#991b1b",
+    color: BrandColors.danger,
     fontWeight: "600",
   },
 });
@@ -187,8 +200,50 @@ export default function FavoritesScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const favorites = useSelector(selectFavorites);
+  const userId = useSelector((state: RootState) => state.auth.userId);
+  const [loading, setLoading] = useState(true);
 
-  const handleRemoveFavorite = (recipeId: string) => {
+  useEffect(() => {
+    fetchFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchFavorites = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(apiUrl(`/saveFavorite/${userId}`), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          // Clear existing favorites and add fetched ones
+          data.data.forEach((recipe: any) => {
+            dispatch(addFavorite(recipe));
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFavorite = async (recipeId: string) => {
+    if (!userId) {
+      Alert.alert("Error", "User ID not available");
+      return;
+    }
+
     Alert.alert(
       "Remove Favorite",
       "Are you sure you want to remove this recipe from your favorites?",
@@ -200,8 +255,28 @@ export default function FavoritesScreen() {
         },
         {
           text: "Remove",
-          onPress: () => {
-            dispatch(removeFavorite(recipeId));
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                apiUrl(`/saveFavorite/${recipeId}`),
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId }),
+                },
+              );
+
+              if (response.ok) {
+                dispatch(removeFavorite(recipeId));
+              } else {
+                Alert.alert("Error", "Failed to remove favorite");
+              }
+            } catch (error) {
+              console.error("Error removing favorite:", error);
+              Alert.alert("Error", "Failed to remove favorite");
+            }
           },
           style: "destructive",
         },
@@ -298,22 +373,49 @@ export default function FavoritesScreen() {
       </LinearGradient>
       <Text style={styles.emptyText}>No Favorites Yet</Text>
       <Text style={styles.emptySubtext}>
-        {`Start saving recipes you love and "\n" they'll appear here for quick
+        {`Start saving recipes you love and\nthey'll appear here for quick
         access`}
       </Text>
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[BrandColors.primary, BrandColors.primary + "cc"]}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerIcon}>❤️</Text>
+            <Text style={styles.headerTitle}>My Favorites</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>Loading...</Text>
+        </LinearGradient>
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={{ marginTop: 12, color: "#666" }}>
+            Loading favorites...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#ef4444", "#dc2626"]}
+        colors={[BrandColors.primary, BrandColors.primary + "cc"]}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.headerIcon}>❤️</Text>
-        <Text style={styles.headerTitle}>My Favorites</Text>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerIcon}>❤️</Text>
+          <Text style={styles.headerTitle}>My Favorites</Text>
+        </View>
         <Text style={styles.headerSubtitle}>
           {favorites.length === 0
             ? "No saved recipes yet"

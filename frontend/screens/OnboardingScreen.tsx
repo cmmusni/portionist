@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/theme";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import {
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
     borderRadius: 4,
   },
   stepIndicator: {
@@ -82,10 +83,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   stepDotActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
   },
   stepDotCompleted: {
-    backgroundColor: "#10b981",
+    backgroundColor: BrandColors.success,
   },
   stepNumber: {
     color: "#94a3b8",
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 14,
-    color: "#2563eb",
+    color: BrandColors.primary,
     fontWeight: "700",
     marginBottom: 8,
     textTransform: "uppercase",
@@ -197,8 +198,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   nextButton: {
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: BrandColors.primary,
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

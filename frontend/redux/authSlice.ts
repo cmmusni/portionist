@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -145,11 +145,16 @@ export const selectToken = (state: { auth: AuthState }) => state.auth.token;
 export const selectIsLoading = (state: { auth: AuthState }) =>
   state.auth.isLoading;
 export const selectError = (state: { auth: AuthState }) => state.auth.error;
-export const selectAuthUser = (state: { auth: AuthState }) => ({
-  userId: state.auth.userId,
-  email: state.auth.email,
-  fullName: state.auth.fullName,
-  token: state.auth.token,
-});
+
+// Memoized selector to prevent unnecessary rerenders
+export const selectAuthUser = createSelector(
+  [selectUserId, selectEmail, selectFullName, selectToken],
+  (userId, email, fullName, token) => ({
+    userId,
+    email,
+    fullName,
+    token,
+  }),
+);
 
 export default authSlice.reducer;

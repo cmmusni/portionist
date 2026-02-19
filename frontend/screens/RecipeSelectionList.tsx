@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
@@ -13,7 +14,7 @@ interface Recipe {
   id: string;
   name: string;
   image?: string;
-  source?: "database" | "spoonacular" | "ai";
+  source?: "spoonacular" | "ai";
   matchScore?: number;
 }
 
@@ -33,17 +34,21 @@ const RecipeSelectionList: React.FC<RecipeSelectionListProps> = ({
       case "ai":
         return {
           icon: "✨",
-          text: "AI Generated",
-          colors: ["#a78bfa", "#8b5cf6"],
+          text: "AI Genarated",
+          colors: [BrandColors.accent, BrandColors.accentLight + "cc"],
         };
       case "spoonacular":
         return {
           icon: "🍳",
           text: "Spoonacular",
-          colors: ["#fbbf24", "#f59e0b"],
+          colors: [BrandColors.secondary, BrandColors.secondaryLight + "cc"],
         };
       default:
-        return { icon: "📚", text: "Database", colors: ["#60a5fa", "#3b82f6"] };
+        return {
+          icon: "📚",
+          text: "System",
+          colors: [BrandColors.primary, BrandColors.primary + "cc"],
+        };
     }
   };
 
@@ -118,7 +123,7 @@ const RecipeSelectionList: React.FC<RecipeSelectionListProps> = ({
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={["#3b82f6", "#2563eb"]}
+        colors={[BrandColors.primary, BrandColors.primary + "cc"]}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -313,14 +318,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#dbeafe",
+    backgroundColor: BrandColors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
   },
   arrow: {
     fontSize: 20,
-    color: "#2563eb",
+    color: "#ffffff",
     fontWeight: "bold",
   },
   emptyContainer: {

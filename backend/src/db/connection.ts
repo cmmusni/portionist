@@ -1,4 +1,8 @@
+import dotenv from "dotenv";
 import { Pool, QueryResult } from "pg";
+
+// Load environment variables before resolving DB config
+dotenv.config();
 
 // Resolve database connection values from a variety of env var names
 const resolveDbConfig = () => {

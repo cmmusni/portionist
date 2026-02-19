@@ -1,14 +1,15 @@
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { BrandColors } from "../../constants/theme";
 import { apiUrl } from "../services/config";
@@ -57,6 +58,16 @@ const FALLBACK_PANTRY_INGREDIENTS: Ingredient[] = [
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const CUISINE_OPTIONS = ["Filipino", "Italian", "Japanese", "Korean"];
+
+// Helper function to determine current meal type based on time of day
+const getCurrentMealType = (): string => {
+  const hour = new Date().getHours();
+
+  if (hour >= 5 && hour < 11) return "Breakfast";
+  if (hour >= 11 && hour < 16) return "Lunch";
+  if (hour >= 16 && hour < 21) return "Dinner";
+  return "Snack";
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -219,37 +230,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   submitButtonText: {
+    backgroundColor: BrandColors.primary,
     color: "#ffffff",
     fontWeight: "bold",
     fontSize: 18,
   },
   header: {
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    paddingTop: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerTop: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    marginBottom: 12,
   },
   backButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
   backButtonText: {
+    fontSize: 24,
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  headerTextContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerIcon: {
     fontSize: 28,
-    color: BrandColors.primary,
+    marginRight: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1f2937",
-    flex: 1,
-    textAlign: "center",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#ffffff",
   },
-  spacer: {
-    width: 40,
+  headerSubtitle: {
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.9)",
   },
 });
 
@@ -262,7 +295,7 @@ export default function RecipeInputScreen({
   );
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const [cuisine, setCuisine] = useState(defaultCuisine);
-  const [mealType, setMealType] = useState("Lunch");
+  const [mealType, setMealType] = useState(getCurrentMealType());
   const [isLoading, setIsLoading] = useState(false);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>(
     FALLBACK_COMMON_INGREDIENTS,
@@ -341,22 +374,31 @@ export default function RecipeInputScreen({
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Search Recipe</Text>
-        <View style={styles.spacer} />
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.title}>Search Recipe</Text>
-        <Text style={styles.subtitle}>
-          Select your ingredients and preferences
+      <LinearGradient
+        colors={[BrandColors.primary, BrandColors.primary + "cc"]}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerIcon}>🔍</Text>
+            <Text style={styles.headerTitle}>Search Recipe</Text>
+          </View>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          {selectedIngredients.length} ingredient
+          {selectedIngredients.length !== 1 ? "s" : ""} selected
         </Text>
-
+      </LinearGradient>
+      <View style={styles.content}>
         {/* Cuisine Selection */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Cuisine</Text>
@@ -469,7 +511,7 @@ export default function RecipeInputScreen({
           {isLoading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.submitButtonText}>Search Recipe</Text>
+            <Text style={styles.submitButtonText}>Search</Text>
           )}
         </TouchableOpacity>
       </View>

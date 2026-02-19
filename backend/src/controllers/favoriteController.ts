@@ -1,8 +1,11 @@
 import type { Request, Response } from "express";
+import { query } from "../db/connection.js";
 
 interface SaveFavoriteRequest {
   userId: string;
   recipeId: string;
+  recipeName: string;
+  recipeData: any;
 }
 
 interface RemoveFavoriteRequest {
@@ -21,58 +24,61 @@ interface SaveFavoriteResponse {
   };
 }
 
-// Mock favorites storage (in production, this would be a database)
-const userFavorites: Map<string, Set<string>> = new Map();
-
 class FavoriteController {
   /**
    * Save a recipe as a user's favorite
    */
   async saveFavorite(req: Request, res: Response): Promise<void> {
     try {
-      const { userId, recipeId } = req.body as SaveFavoriteRequest;
+      const { userId, recipeId, recipeName, recipeData } =
+        req.body as SaveFavoriteRequest;
 
       // Validate required fields
-      if (!userId || !recipeId) {
+      if (!userId || !recipeId || !recipeName) {
         res.status(400).json({
           success: false,
-          error: "userId and recipeId are required",
+          error: "userId, recipeId, and recipeName are required",
         });
         return;
       }
 
       // Validate input types
-      if (typeof userId !== "string" || typeof recipeId !== "string") {
+      if (
+        typeof userId !== "string" ||
+        typeof recipeId !== "string" ||
+        typeof recipeName !== "string"
+      ) {
         res.status(400).json({
           success: false,
-          error: "userId and recipeId must be strings",
+          error: "userId, recipeId, and recipeName must be strings",
         });
         return;
       }
 
-      // Get or create user's favorites set
-      if (!userFavorites.has(userId)) {
-        userFavorites.set(userId, new Set<string>());
-      }
-
-      const userFavoriteSet = userFavorites.get(userId)!;
-
       // Check if already favorited
-      if (userFavoriteSet.has(recipeId)) {
+      const existingFavorite = await query(
+        "SELECT * FROM favorites WHERE user_id = $1 AND recipe_id = $2",
+        [userId, recipeId],
+      );
+
+      if (existingFavorite.rows.length > 0) {
         res.status(200).json({
           success: true,
           message: "Recipe already in favorites",
           data: {
             userId,
             recipeId,
-            savedAt: new Date().toISOString(),
+            savedAt: existingFavorite.rows[0].created_at,
           },
         });
         return;
       }
 
       // Add to favorites
-      userFavoriteSet.add(recipeId);
+      const result = await query(
+        "INSERT INTO favorites (user_id, recipe_id, recipe_name, recipe_data) VALUES ($1, $2, $3, $4) RETURNING *",
+        [userId, recipeId, recipeName, JSON.stringify(recipeData || {})],
+      );
 
       res.status(201).json({
         success: true,
@@ -80,7 +86,7 @@ class FavoriteController {
         data: {
           userId,
           recipeId,
-          savedAt: new Date().toISOString(),
+          savedAt: result.rows[0].created_at,
         },
       });
     } catch (error) {
@@ -118,10 +124,13 @@ class FavoriteController {
         return;
       }
 
-      // Get user's favorites set
-      const userFavoriteSet = userFavorites.get(userId);
+      // Check if favorite exists
+      const existingFavorite = await query(
+        "SELECT * FROM favorites WHERE user_id = $1 AND recipe_id = $2",
+        [userId, recipeId],
+      );
 
-      if (!userFavoriteSet || !userFavoriteSet.has(recipeId)) {
+      if (existingFavorite.rows.length === 0) {
         res.status(404).json({
           success: false,
           error: "Recipe not found in user's favorites",
@@ -130,7 +139,10 @@ class FavoriteController {
       }
 
       // Remove from favorites
-      userFavoriteSet.delete(recipeId);
+      await query(
+        "DELETE FROM favorites WHERE user_id = $1 AND recipe_id = $2",
+        [userId, recipeId],
+      );
 
       res.status(200).json({
         success: true,
@@ -161,8 +173,19 @@ class FavoriteController {
         return;
       }
 
-      const userFavoriteSet = userFavorites.get(userId);
-      const favorites = userFavoriteSet ? Array.from(userFavoriteSet) : [];
+      // Fetch favorites from database
+      const result = await query(
+        "SELECT recipe_id, recipe_name, recipe_data, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC",
+        [userId],
+      );
+
+      // Parse recipe_data from JSONB to object
+      const favorites = result.rows.map((row) => ({
+        ...row.recipe_data,
+        id: row.recipe_id,
+        name: row.recipe_name,
+        savedAt: row.created_at,
+      }));
 
       res.status(200).json({
         success: true,

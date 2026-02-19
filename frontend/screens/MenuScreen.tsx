@@ -2,19 +2,17 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { clearAuthFromStorage } from "../hooks/useAuthRestore";
-import { clearOnboardingFromStorage } from "../hooks/useOnboardingStorage";
 import { selectAuthUser, signOut } from "../redux/authSlice";
-import { setOnboardingCompleted } from "../redux/pantrySlice";
 import { apiUrl } from "../services/config";
 
 const MenuScreen: React.FC = () => {
@@ -95,13 +93,11 @@ const MenuScreen: React.FC = () => {
 
       console.log("[SignOut] Clearing auth storage...");
       await clearAuthFromStorage();
+      // Note: Onboarding data will be reloaded from backend on next sign in
 
-      console.log("[SignOut] Clearing onboarding storage...");
-      await clearOnboardingFromStorage();
-
-      console.log("[SignOut] Dispatching Redux actions...");
-      dispatch(setOnboardingCompleted(false));
+      console.log("[SignOut] Dispatching Redux sign out...");
       dispatch(signOut());
+      // Note: onboardingCompleted will be set based on backend data on next sign in
 
       console.log("[SignOut] Resetting navigation...");
       // Reset navigation immediately

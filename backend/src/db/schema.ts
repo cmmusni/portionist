@@ -96,6 +96,31 @@ export const initializeDatabase = async (): Promise<void> => {
       )
     `);
 
+    // Create user_recipe_history table to track all recipe interactions
+    await query(`
+      CREATE TABLE IF NOT EXISTS user_recipe_history (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        recipe_id VARCHAR(255) NOT NULL,
+        recipe_data JSONB NOT NULL,
+        interaction_type VARCHAR(50) NOT NULL,
+        searched_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        UNIQUE(user_id, recipe_id, interaction_type)
+      )
+    `);
+
+    // Create index for faster queries on user_recipe_history
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_user_recipe_history_user_id 
+      ON user_recipe_history(user_id)
+    `);
+
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_user_recipe_history_searched_at 
+      ON user_recipe_history(searched_at DESC)
+    `);
+
     console.log("✅ Database schema initialized successfully");
   } catch (error) {
     console.error("❌ Error initializing database schema:", error);

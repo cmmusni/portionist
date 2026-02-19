@@ -10,6 +10,7 @@ import { initializeDatabase } from "./db/schema.js";
 import authRouter from "./routes/auth.js";
 import favoritesRouter from "./routes/favorites.js";
 import profileRouter from "./routes/profile.js";
+import recipeLogRouter from "./routes/recipeLog.js";
 import recipesRouter from "./routes/recipes.js";
 
 const app: Express = express();
@@ -34,6 +35,7 @@ app.use("/recipes", recipesRouter); // /recipes uses /getRecipes as default POST
 app.use("/getRecipes", recipesRouter); // Keep old path for backward compatibility
 app.use("/saveFavorite", favoritesRouter);
 app.use("/profile", profileRouter);
+app.use("/recipe-log", recipeLogRouter);
 
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {
