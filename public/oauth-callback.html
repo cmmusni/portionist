@@ -72,24 +72,16 @@
       } else if (code) {
         // Redirect back to Expo app with the code (no path, just query params)
         const redirectUrl = `exp://172.20.10.3:8081?code=${encodeURIComponent(code)}`;
-
+        
+        // Immediate redirect
+        window.location.replace(redirectUrl);
+        
+        // Show UI with manual fallback
         document.querySelector(".container").innerHTML = `
           <h1>✓ Success!</h1>
           <p>Returning to app...</p>
+          <p style="margin-top: 20px;"><a href="${redirectUrl}" style="color: white; text-decoration: underline;">Click here if not redirected</a></p>
         `;
-
-        // Try to redirect to the app
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 500);
-
-        // If redirect fails, show manual close message
-        setTimeout(() => {
-          document.querySelector(".container").innerHTML = `
-            <h1>✓ Success!</h1>
-            <p>You can close this window and return to the app</p>
-          `;
-        }, 3000);
       } else {
         document.querySelector(".container").innerHTML = `
                 <h1>⚠ No authentication code</h1>
