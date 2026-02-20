@@ -112,6 +112,17 @@ export const pantrySlice = createSlice({
     setOnboardingCompleted: (state, action: PayloadAction<boolean>) => {
       state.onboardingCompleted = action.payload;
     },
+    resetPantryData: (state) => {
+      state.mainIngredient = null;
+      state.sideIngredients = [];
+      state.targetWeight = null;
+      state.currentWeight = null;
+      state.mealType = null;
+      state.cuisine = null;
+      state.userAge = null;
+      state.favorites = [];
+      state.onboardingCompleted = false;
+    },
   },
 });
 
@@ -125,6 +136,7 @@ export const {
   addFavorite,
   removeFavorite,
   setOnboardingCompleted,
+  resetPantryData,
 } = pantrySlice.actions;
 
 // Selectors

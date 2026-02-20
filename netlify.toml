@@ -1,5 +1,5 @@
 [build]
-  command = "npx expo export --platform web --output-dir dist"
+  command = "npx expo export --platform web --output-dir dist && cp -r overview dist/"
   publish = "dist"
 
 [build.environment]

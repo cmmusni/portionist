@@ -14,6 +14,7 @@ export const initializeDatabase = async (): Promise<void> => {
         email VARCHAR(255) UNIQUE,
         password VARCHAR(255),
         facebook_id VARCHAR(255) UNIQUE,
+        google_id VARCHAR(255) UNIQUE,
         full_name VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -119,6 +120,50 @@ export const initializeDatabase = async (): Promise<void> => {
     await query(`
       CREATE INDEX IF NOT EXISTS idx_user_recipe_history_searched_at 
       ON user_recipe_history(searched_at DESC)
+    `);
+
+    // Add google_id column if it doesn't exist (migration)
+    await query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE
+    `);
+
+    // Create daily_motivations table
+    await query(`
+      CREATE TABLE IF NOT EXISTS daily_motivations (
+        id SERIAL PRIMARY KEY,
+        motivation_text TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create index for faster duplicate checks
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_daily_motivations_text 
+      ON daily_motivations(motivation_text)
+    `);
+
+    // Create diary_entries table for tracking daily macros
+    await query(`
+      CREATE TABLE IF NOT EXISTS diary_entries (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        protein FLOAT DEFAULT 0,
+        carbs FLOAT DEFAULT 0,
+        veg FLOAT DEFAULT 0,
+        fat FLOAT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        UNIQUE(user_id, entry_date)
+      )
+    `);
+
+    // Create index for faster queries on diary_entries
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_diary_entries_user_date 
+      ON diary_entries(user_id, entry_date DESC)
     `);
 
     console.log("✅ Database schema initialized successfully");

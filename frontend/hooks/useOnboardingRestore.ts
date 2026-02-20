@@ -1,21 +1,25 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { selectUserId } from "../redux/authSlice";
 import {
-  setOnboardingCompleted,
-  setOnboardingData,
+    setOnboardingCompleted,
+    setOnboardingData,
 } from "../redux/pantrySlice";
 import { loadOnboardingFromStorage } from "./useOnboardingStorage";
 
 export const useOnboardingRestore = () => {
   const dispatch = useDispatch();
+  const userId = useSelector(selectUserId);
 
   useEffect(() => {
-    restoreOnboardingFromStorage();
-  }, []);
+    if (userId) {
+      restoreOnboardingFromStorage(userId);
+    }
+  }, [userId]);
 
-  const restoreOnboardingFromStorage = async () => {
+  const restoreOnboardingFromStorage = async (userId: string) => {
     try {
-      const storedData = await loadOnboardingFromStorage();
+      const storedData = await loadOnboardingFromStorage(userId);
       if (storedData) {
         dispatch(
           setOnboardingData({

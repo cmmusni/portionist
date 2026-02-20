@@ -8,7 +8,9 @@ import express from "express";
 import { ensureConnection } from "./db/connection.js";
 import { initializeDatabase } from "./db/schema.js";
 import authRouter from "./routes/auth.js";
+import diaryRouter from "./routes/diary.js";
 import favoritesRouter from "./routes/favorites.js";
+import motivationRouter from "./routes/motivation.js";
 import profileRouter from "./routes/profile.js";
 import recipeLogRouter from "./routes/recipeLog.js";
 import recipesRouter from "./routes/recipes.js";
@@ -36,6 +38,8 @@ app.use("/getRecipes", recipesRouter); // Keep old path for backward compatibili
 app.use("/saveFavorite", favoritesRouter);
 app.use("/profile", profileRouter);
 app.use("/recipe-log", recipeLogRouter);
+app.use("/motivation", motivationRouter);
+app.use("/api/diary", diaryRouter);
 
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {

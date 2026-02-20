@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ONBOARDING_STORAGE_KEY = "portionist_onboarding";
+const getOnboardingStorageKey = (userId: string) =>
+  `portionist_onboarding_${userId}`;
 
 export interface OnboardingStorageData {
   userAge: number;
@@ -11,31 +12,38 @@ export interface OnboardingStorageData {
   onboardingCompleted?: boolean;
 }
 
-export const saveOnboardingToStorage = async (data: OnboardingStorageData) => {
+export const saveOnboardingToStorage = async (
+  userId: string,
+  data: OnboardingStorageData,
+) => {
   try {
-    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(data));
+    const key = getOnboardingStorageKey(userId);
+    await AsyncStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
     console.error("Failed to save onboarding data to storage:", error);
   }
 };
 
-export const loadOnboardingFromStorage =
-  async (): Promise<OnboardingStorageData | null> => {
-    try {
-      const data = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (data) {
-        return JSON.parse(data);
-      }
-      return null;
-    } catch (error) {
-      console.error("Failed to load onboarding data from storage:", error);
-      return null;
-    }
-  };
-
-export const clearOnboardingFromStorage = async () => {
+export const loadOnboardingFromStorage = async (
+  userId: string,
+): Promise<OnboardingStorageData | null> => {
   try {
-    await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    const key = getOnboardingStorageKey(userId);
+    const data = await AsyncStorage.getItem(key);
+    if (data) {
+      return JSON.parse(data);
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to load onboarding data from storage:", error);
+    return null;
+  }
+};
+
+export const clearOnboardingFromStorage = async (userId: string) => {
+  try {
+    const key = getOnboardingStorageKey(userId);
+    await AsyncStorage.removeItem(key);
   } catch (error) {
     console.error("Failed to clear onboarding data from storage:", error);
   }

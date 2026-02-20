@@ -19,6 +19,11 @@ router.post("/facebook", async (req: Request, res: Response) => {
   await authController.facebookAuth(req, res);
 });
 
+// POST /auth/google - Sign in/up via Google
+router.post("/google", async (req: Request, res: Response) => {
+  await authController.googleAuth(req, res);
+});
+
 // POST /auth/signout - Sign out a user
 router.post("/signout", async (req: Request, res: Response) => {
   await authController.signOut(req, res);

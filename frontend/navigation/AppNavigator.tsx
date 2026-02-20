@@ -87,7 +87,7 @@ function AppDrawer() {
         component={DashboardScreen}
         options={{
           title: "Portionist",
-          drawerLabel: "Home",
+          drawerLabel: "Dashboard",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
         }}
       />
@@ -133,7 +133,7 @@ function AppDrawer() {
         options={{
           title: "Sign Out",
           drawerLabel: "Sign Out",
-          drawerIcon: () => <Text style={{ fontSize: 20 }}>🚪</Text>,
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>⏻</Text>,
         }}
       />
     </Drawer.Navigator>
@@ -346,7 +346,7 @@ function SignInScreenWrapper() {
           dispatch(setOnboardingCompleted(true));
 
           // Save to local storage
-          await saveOnboardingToStorage({
+          await saveOnboardingToStorage(user.userId, {
             userAge: onboardingData.userAge,
             currentWeight: onboardingData.currentWeight,
             targetWeight: onboardingData.targetWeight,
@@ -437,7 +437,7 @@ function SignUpScreenWrapper() {
           dispatch(setOnboardingCompleted(true));
 
           // Save to local storage
-          await saveOnboardingToStorage({
+          await saveOnboardingToStorage(user.userId, {
             userAge: onboardingData.userAge,
             currentWeight: onboardingData.currentWeight,
             targetWeight: onboardingData.targetWeight,
@@ -492,14 +492,16 @@ function OnboardingScreenWrapper() {
   }) => {
     try {
       // Save to AsyncStorage for persistence
-      saveOnboardingToStorage({
-        userAge: values.age,
-        currentWeight: values.currentWeight,
-        targetWeight: values.targetWeight,
-        cuisine: values.cuisine,
-        savedAt: new Date().toISOString(),
-        onboardingCompleted: true,
-      });
+      if (user?.userId) {
+        saveOnboardingToStorage(user.userId, {
+          userAge: values.age,
+          currentWeight: values.currentWeight,
+          targetWeight: values.targetWeight,
+          cuisine: values.cuisine,
+          savedAt: new Date().toISOString(),
+          onboardingCompleted: true,
+        });
+      }
 
       // Save to backend if user is authenticated
       if (user?.userId) {
@@ -974,6 +976,13 @@ export default function AppNavigator() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Set document title for web
+  React.useEffect(() => {
+    if (Platform.OS === "web") {
+      document.title = "Portionist";
+    }
+  }, []);
+
   React.useEffect(() => {
     // Load any runtime API_BASE_URL override stored in AsyncStorage
     loadOverride().catch((e) =>
@@ -1047,9 +1056,16 @@ export default function AppNavigator() {
                 component={SignInScreenWrapper}
                 options={{
                   animationTypeForReplace: "push",
+                  title: "Portionist",
                 }}
               />
-              <Stack.Screen name="SignUp" component={SignUpScreenWrapper} />
+              <Stack.Screen
+                name="SignUp"
+                component={SignUpScreenWrapper}
+                options={{
+                  title: "Portionist",
+                }}
+              />
             </>
           ) : (
             // App Stack with Drawer
@@ -1059,6 +1075,7 @@ export default function AppNavigator() {
                 component={OnboardingScreenWrapper}
                 options={{
                   animationTypeForReplace: "push",
+                  title: "Portionist",
                 }}
               />
               {/* Main App with Drawer Navigation */}
@@ -1067,6 +1084,7 @@ export default function AppNavigator() {
                 component={AppDrawer}
                 options={{
                   headerShown: false,
+                  title: "Portionist",
                 }}
               />
               {/* Modal Screens (outside drawer) */}
@@ -1075,6 +1093,7 @@ export default function AppNavigator() {
                 component={RecipeDisplayScreenWrapper}
                 options={{
                   presentation: "modal",
+                  title: "Portionist",
                 }}
               />
             </>

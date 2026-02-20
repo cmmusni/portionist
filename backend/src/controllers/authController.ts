@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { query } from "../db/connection.js";
 
 interface SignUpRequest {
@@ -16,6 +17,12 @@ interface FacebookAuthRequest {
   facebookId: string;
   fullName: string;
   email?: string;
+}
+
+interface GoogleAuthRequest {
+  googleId: string;
+  fullName: string;
+  email: string;
 }
 
 interface AuthResponse {
@@ -61,8 +68,9 @@ const authController = {
         [userId, email, password, fullName],
       );
 
-      // Generate token (TODO: Use JWT in production)
-      const token = "token-" + Date.now() + "-" + Math.random();
+      // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-this";
+      const token = jwt.sign({ userId, email }, jwtSecret, { expiresIn: "7d" });
 
       const response: AuthResponse = {
         userId,
@@ -116,8 +124,13 @@ const authController = {
         return;
       }
 
-      // Generate token (TODO: Use JWT in production)
-      const token = "token-" + Date.now() + "-" + Math.random();
+      // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-this";
+      const token = jwt.sign(
+        { userId: user.user_id, email: user.email },
+        jwtSecret,
+        { expiresIn: "7d" },
+      );
 
       const response: AuthResponse = {
         userId: user.user_id,
@@ -177,8 +190,13 @@ const authController = {
         };
       }
 
-      // Generate token (TODO: Use JWT in production)
-      const token = "token-" + Date.now() + "-" + Math.random();
+      // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-this";
+      const token = jwt.sign(
+        { userId: user.user_id, email: user.email || "" },
+        jwtSecret,
+        { expiresIn: "7d" },
+      );
 
       const response: AuthResponse = {
         userId: user.user_id,
@@ -193,6 +211,87 @@ const authController = {
       });
     } catch (error) {
       console.error("Facebook auth error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+
+  /**
+   * Sign in/up via Google
+   * POST /auth/google
+   * Body: { googleId, fullName, email }
+   */
+  async googleAuth(req: Request, res: Response): Promise<void> {
+    try {
+      const { googleId, fullName, email } = req.body as GoogleAuthRequest;
+
+      // Validation
+      if (!googleId || !fullName || !email) {
+        res.status(400).json({
+          error: "Missing required fields: googleId, fullName, email",
+        });
+        return;
+      }
+
+      // Check if user already exists by Google ID
+      let result = await query("SELECT * FROM users WHERE google_id = $1", [
+        googleId,
+      ]);
+
+      let user = result.rows[0];
+      let isNewUser = false;
+
+      // If user doesn't exist, create them
+      if (!user) {
+        // Check if email already exists
+        const emailCheck = await query("SELECT * FROM users WHERE email = $1", [
+          email,
+        ]);
+
+        if (emailCheck.rows.length > 0) {
+          // Email exists, update with Google ID
+          await query("UPDATE users SET google_id = $1 WHERE email = $2", [
+            googleId,
+            email,
+          ]);
+          user = emailCheck.rows[0];
+        } else {
+          // Create new user
+          const userId = "user-" + Date.now();
+          await query(
+            "INSERT INTO users (user_id, google_id, email, full_name) VALUES ($1, $2, $3, $4)",
+            [userId, googleId, email, fullName],
+          );
+          isNewUser = true;
+          user = {
+            user_id: userId,
+            google_id: googleId,
+            email: email,
+            full_name: fullName,
+          };
+        }
+      }
+
+      // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-this";
+      const token = jwt.sign(
+        { userId: user.user_id, email: user.email || email },
+        jwtSecret,
+        { expiresIn: "7d" },
+      );
+
+      const response: AuthResponse = {
+        userId: user.user_id,
+        email: user.email || email,
+        fullName: user.full_name,
+        token,
+      };
+
+      res.status(isNewUser ? 201 : 200).json({
+        message: isNewUser ? "User created successfully" : "Sign in successful",
+        data: response,
+      });
+    } catch (error) {
+      console.error("Google auth error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   },

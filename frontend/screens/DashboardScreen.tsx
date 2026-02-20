@@ -64,6 +64,39 @@ const DashboardScreen: React.FC = () => {
   const [suggestedMeals, setSuggestedMeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [dailyMotivation, setDailyMotivation] = useState<string>("");
+  const [motivationLoading, setMotivationLoading] = useState(true);
+
+  const fetchDailyMotivation = async () => {
+    try {
+      setMotivationLoading(true);
+      const response = await fetch(apiUrl("/motivation/daily"));
+      const result = await response.json();
+
+      if (result.success && result.data?.motivation) {
+        setDailyMotivation(result.data.motivation);
+      } else {
+        // Fallback motivations if API fails
+        const fallbackMotivations = [
+          "Nourish your body, fuel your dreams with every healthy bite.",
+          "Every healthy meal is a step towards a better you.",
+          "Choose foods that make your body thank you later.",
+          "Healthy eating today creates a stronger tomorrow.",
+          "Your body deserves the best fuel you can give it.",
+        ];
+        setDailyMotivation(
+          fallbackMotivations[
+            Math.floor(Math.random() * fallbackMotivations.length)
+          ],
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching daily motivation:", error);
+      setDailyMotivation("Eat well, feel great, live better!");
+    } finally {
+      setMotivationLoading(false);
+    }
+  };
 
   const fetchSuggestedMeals = async (forceRefresh: boolean = false) => {
     try {
@@ -241,11 +274,13 @@ const DashboardScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchDailyMotivation();
     fetchSuggestedMeals(false); // Don't force refresh on mount
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
+    fetchDailyMotivation();
     fetchSuggestedMeals(true); // Force refresh when user manually refreshes
   };
 
@@ -278,6 +313,23 @@ const DashboardScreen: React.FC = () => {
           Here are your personalized meal suggestions
         </Text>
       </LinearGradient>
+
+      {/* Daily Motivation Section */}
+      <View style={styles.motivationSection}>
+        <View style={styles.motivationCard}>
+          <View style={styles.motivationHeader}>
+            <Text style={styles.motivationIcon}>💪</Text>
+            <Text style={styles.motivationTitle}>Daily Motivation</Text>
+          </View>
+          {motivationLoading ? (
+            <View style={styles.motivationLoadingContainer}>
+              <ActivityIndicator size="small" color={BrandColors.primary} />
+            </View>
+          ) : (
+            <Text style={styles.motivationText}>{dailyMotivation}</Text>
+          )}
+        </View>
+      </View>
 
       {/* Suggested Meals Header */}
       <View style={styles.sectionHeader}>
@@ -398,6 +450,54 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "500",
     opacity: 0.9,
+  },
+  motivationSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  motivationCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+    borderLeftWidth: 4,
+    borderLeftColor: BrandColors.primary,
+  },
+  motivationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  motivationIcon: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  motivationTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: BrandColors.primary,
+  },
+  motivationText: {
+    fontSize: 15,
+    color: "#374151",
+    lineHeight: 22,
+    fontStyle: "italic",
+    fontWeight: "500",
+  },
+  motivationLoadingContainer: {
+    paddingVertical: 8,
+    alignItems: "flex-start",
   },
   sectionHeader: {
     paddingHorizontal: 20,
