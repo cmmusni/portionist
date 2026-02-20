@@ -92,12 +92,12 @@ const DashboardScreen: React.FC = () => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
+
       const response = await fetch(apiUrl("/health"), {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         setBackendAvailable(true);
         setConnectionError(null);
@@ -108,9 +108,11 @@ const DashboardScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Backend health check failed:", error);
       setBackendAvailable(false);
-      
-      if (error.name === 'AbortError') {
-        setConnectionError("Connection timeout - backend may be slow or unavailable");
+
+      if (error.name === "AbortError") {
+        setConnectionError(
+          "Connection timeout - backend may be slow or unavailable",
+        );
       } else {
         setConnectionError("Cannot connect to backend server");
       }
@@ -122,11 +124,11 @@ const DashboardScreen: React.FC = () => {
     try {
       setMotivationLoading(true);
       const response = await fetch(apiUrl("/motivation/daily"));
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      
+
       const result = await response.json();
 
       if (result.success && result.data?.motivation) {
@@ -149,7 +151,10 @@ const DashboardScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Error fetching daily motivation:", error);
       // Check if it's a connection error
-      if (error.message.includes('fetch') || error.message.includes('network')) {
+      if (
+        error.message.includes("fetch") ||
+        error.message.includes("network")
+      ) {
         await checkBackendHealth();
       }
       setDailyMotivation("Eat well, feel great, live better!");
@@ -222,7 +227,10 @@ const DashboardScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Error fetching plate balance:", error);
       // Check if it's a connection error
-      if (error.message && (error.message.includes('fetch') || error.message.includes('network'))) {
+      if (
+        error.message &&
+        (error.message.includes("fetch") || error.message.includes("network"))
+      ) {
         await checkBackendHealth();
       }
     } finally {
@@ -472,19 +480,24 @@ const DashboardScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error fetching suggested meals:", error);
-      
+
       // Check backend health if it's a network error
-      if (error.message && (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch'))) {
+      if (
+        error.message &&
+        (error.message.includes("fetch") ||
+          error.message.includes("network") ||
+          error.message.includes("Failed to fetch"))
+      ) {
         const isBackendUp = await checkBackendHealth();
         if (!isBackendUp) {
           Alert.alert(
             "Backend Unavailable",
             "Unable to connect to the recipe server. Please check your internet connection or try again later.",
-            [{ text: "OK" }]
+            [{ text: "OK" }],
           );
         }
       }
-      
+
       const currentMealType = getCurrentMealType();
       // Fallback suggestions
       setSuggestedMeals([
