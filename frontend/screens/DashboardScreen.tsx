@@ -1,12 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
-  Keyboard,
   Platform,
   RefreshControl,
   ScrollView,
@@ -70,6 +69,8 @@ const DashboardScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [dailyMotivation, setDailyMotivation] = useState<string>("");
   const [motivationLoading, setMotivationLoading] = useState(true);
+  const [backendAvailable, setBackendAvailable] = useState<boolean>(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Plate Balance state
   const [plateBalanceTotals, setPlateBalanceTotals] = useState({
@@ -84,20 +85,48 @@ const DashboardScreen: React.FC = () => {
   });
   const [plateBalanceLoading, setPlateBalanceLoading] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
-
   // Search and Entries state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [loadingSearch, setLoadingSearch] = useState(false);
   const [entries, setEntries] = useState<any[]>([]);
-  const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+
+  const checkBackendHealth = async (): Promise<boolean> => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(apiUrl("/health"), {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        setBackendAvailable(true);
+        setConnectionError(null);
+        return true;
+      } else {
+        throw new Error("Backend returned non-OK status");
+      }
+    } catch (error: any) {
+      console.error("Backend health check failed:", error);
+      setBackendAvailable(false);
+      
+      if (error.name === 'AbortError') {
+        setConnectionError("Connection timeout - backend may be slow or unavailable");
+      } else {
+        setConnectionError("Cannot connect to backend server");
+      }
+      return false;
+    }
+  };
 
   const fetchDailyMotivation = async () => {
     try {
       setMotivationLoading(true);
       const response = await fetch(apiUrl("/motivation/daily"));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
       const result = await response.json();
 
       if (result.success && result.data?.motivation) {
@@ -117,8 +146,12 @@ const DashboardScreen: React.FC = () => {
           ],
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching daily motivation:", error);
+      // Check if it's a connection error
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        await checkBackendHealth();
+      }
       setDailyMotivation("Eat well, feel great, live better!");
     } finally {
       setMotivationLoading(false);
@@ -186,88 +219,14 @@ const DashboardScreen: React.FC = () => {
           useNativeDriver: true,
         }).start();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching plate balance:", error);
+      // Check if it's a connection error
+      if (error.message && (error.message.includes('fetch') || error.message.includes('network'))) {
+        await checkBackendHealth();
+      }
     } finally {
       setPlateBalanceLoading(false);
-    }
-  };
-
-  const fetchSearchResults = useCallback(
-    async (query: string) => {
-      if (!query.trim() || !token) {
-        setSearchResults([]);
-        return;
-      }
-
-      try {
-        setLoadingSearch(true);
-        const response = await fetch(
-          apiUrl(`/api/recipes/search?q=${encodeURIComponent(query)}`),
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setSearchResults(data.results || data || []);
-        } else {
-          setSearchResults([]);
-        }
-      } catch (error) {
-        console.error("Error searching recipes:", error);
-        setSearchResults([]);
-      } finally {
-        setLoadingSearch(false);
-      }
-    },
-    [token],
-  );
-
-  const addMeal = async (recipe: any) => {
-    if (!token) {
-      Alert.alert("Error", "Please sign in to log meals");
-      return;
-    }
-
-    try {
-      const response = await fetch(apiUrl("/api/food/log"), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipeId: parseInt(recipe.id),
-        }),
-      });
-
-      if (response.ok) {
-        Alert.alert("Success! 🎉", `${recipe.title} added to your plate!`);
-        fetchPlateBalance(); // Refresh the data
-        setSearchQuery(""); // Clear search
-        setSearchResults([]); // Clear results
-        Keyboard.dismiss();
-      } else {
-        const errorData = await response.json();
-        // Handle duplicate error specifically
-        if (response.status === 409) {
-          Alert.alert(
-            "Already Logged",
-            "You've already logged this recipe today. Each recipe can only be logged once per day.",
-          );
-        } else {
-          Alert.alert("Error", errorData.error || "Failed to add meal");
-        }
-      }
-    } catch (error) {
-      console.error("Error adding meal:", error);
-      Alert.alert("Error", "Could not add meal. Please try again.");
     }
   };
 
@@ -511,8 +470,21 @@ const DashboardScreen: React.FC = () => {
         await AsyncStorage.setItem(cacheKey, JSON.stringify(fallbackMeals));
         await AsyncStorage.setItem(cacheTimestampKey, Date.now().toString());
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching suggested meals:", error);
+      
+      // Check backend health if it's a network error
+      if (error.message && (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch'))) {
+        const isBackendUp = await checkBackendHealth();
+        if (!isBackendUp) {
+          Alert.alert(
+            "Backend Unavailable",
+            "Unable to connect to the recipe server. Please check your internet connection or try again later.",
+            [{ text: "OK" }]
+          );
+        }
+      }
+      
       const currentMealType = getCurrentMealType();
       // Fallback suggestions
       setSuggestedMeals([
@@ -532,8 +504,11 @@ const DashboardScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    // fetchDailyMotivation();
-    fetchSuggestedMeals(false); // Don't force refresh on mount
+    (async () => {
+      await checkBackendHealth(); // Check backend availability on mount
+      fetchDailyMotivation();
+      fetchSuggestedMeals(false); // Don't force refresh on mount
+    })();
   }, []);
 
   // Refresh Today's Meals every time Dashboard screen comes into focus
@@ -542,29 +517,6 @@ const DashboardScreen: React.FC = () => {
       fetchPlateBalance();
     }, [token]),
   );
-
-  // Debounced search
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        fetchSearchResults(searchQuery);
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
-
-    debounceTimerRef.current = timer;
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery, fetchSearchResults]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -602,6 +554,28 @@ const DashboardScreen: React.FC = () => {
         />
       }
     >
+      {/* Backend Connection Error Banner */}
+      {!backendAvailable && connectionError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <View style={styles.errorTextContainer}>
+            <Text style={styles.errorTitle}>Connection Issue</Text>
+            <Text style={styles.errorMessage}>{connectionError}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={async () => {
+                const isUp = await checkBackendHealth();
+                if (isUp) {
+                  onRefresh();
+                }
+              }}
+            >
+              <Text style={styles.retryButtonText}>Retry Connection</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* Today's Plate Balance */}
       {token && (
         <View style={styles.plateBalanceSection}>
@@ -780,6 +754,11 @@ const DashboardScreen: React.FC = () => {
             Improve Your Plate Balance with our {getCurrentMealType()}{" "}
             Suggestions
           </Text>
+        </View>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.sectionSubtitle}>
+            Personalized for this meal time
+          </Text>
           <Text style={styles.mealTimeBadge}>
             {new Date().toLocaleTimeString([], {
               hour: "2-digit",
@@ -787,9 +766,6 @@ const DashboardScreen: React.FC = () => {
             })}
           </Text>
         </View>
-        <Text style={styles.sectionSubtitle}>
-          Personalized for this meal time • Cached to save API quota
-        </Text>
       </View>
 
       {/* Loading State */}
@@ -875,6 +851,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BrandColors.warmWhite,
+  },
+  errorBanner: {
+    backgroundColor: "#FEF2F2",
+    borderLeftWidth: 4,
+    borderLeftColor: "#EF4444",
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    shadowColor: "#EF4444",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  errorIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  errorTextContainer: {
+    flex: 1,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#991B1B",
+    marginBottom: 4,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: "#DC2626",
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  retryButton: {
+    backgroundColor: "#EF4444",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
   },
   welcomeSection: {
     paddingHorizontal: 20,

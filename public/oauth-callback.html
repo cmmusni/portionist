@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0;url=exp://172.20.10.3:8081" id="refresh-meta" />
+    <meta
+      http-equiv="refresh"
+      content="0;url=exp://172.20.10.3:8081"
+      id="refresh-meta"
+    />
     <title>Signing in...</title>
     <style>
       body {
@@ -66,7 +70,7 @@
 
       if (error) {
         // Remove the meta refresh
-        document.getElementById('refresh-meta')?.remove();
+        document.getElementById("refresh-meta")?.remove();
         document.querySelector(".container").innerHTML = `
                 <h1>❌ Authentication Failed</h1>
                 <p>${error}</p>
@@ -75,16 +79,16 @@
       } else if (code) {
         // Build redirect URL with code
         const redirectUrl = `exp://172.20.10.3:8081?code=${encodeURIComponent(code)}`;
-        
+
         // Update meta refresh with the code
-        const metaTag = document.getElementById('refresh-meta');
+        const metaTag = document.getElementById("refresh-meta");
         if (metaTag) {
-          metaTag.setAttribute('content', `0;url=${redirectUrl}`);
+          metaTag.setAttribute("content", `0;url=${redirectUrl}`);
         }
-        
+
         // Also use JavaScript redirect as fallback
         window.location.replace(redirectUrl);
-        
+
         // Show UI with manual fallback
         document.querySelector(".container").innerHTML = `
           <h1>✓ Success!</h1>
@@ -93,7 +97,7 @@
         `;
       } else {
         // Remove the meta refresh
-        document.getElementById('refresh-meta')?.remove();
+        document.getElementById("refresh-meta")?.remove();
         document.querySelector(".container").innerHTML = `
                 <h1>⚠ No authentication code</h1>
                 <p>You can close this window</p>
