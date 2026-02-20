@@ -353,16 +353,11 @@ class AIRecipeController {
               return;
             }
 
-            // No recipes generated - return error
-            res.status(429).json({
-              success: false,
-              message:
-                "AI recipe generator is temporarily at capacity. Free tier limit: 15 requests/minute, 1500/day. Please try again in a few minutes or use recipe search instead.",
-              error: "RATE_LIMIT_EXCEEDED",
-              suggestion: "Try searching for recipes using the search feature",
-              retryAfter: "1-5 minutes",
-            });
-            return;
+            // No recipes generated - throw error so Spoonacular fallback can be attempted
+            const rateLimitError: any = new Error("AI rate limit exceeded");
+            rateLimitError.status = 429;
+            rateLimitError.code = "RATE_LIMIT_EXCEEDED";
+            throw rateLimitError;
           }
 
           console.error(
@@ -374,16 +369,11 @@ class AIRecipeController {
       }
 
       if (generatedRecipes.length === 0) {
-        res.status(503).json({
-          success: false,
-          message:
-            "AI recipe generator is currently unavailable. This is normal with free tier API limits (15 requests/minute, 1500/day).",
-          error: "SERVICE_UNAVAILABLE",
-          suggestion:
-            "Please try again in 1-5 minutes, or use the recipe search feature instead.",
-          retryAfter: "1-5 minutes",
-        });
-        return;
+        // No recipes generated - throw error so Spoonacular fallback can be attempted
+        const serviceError: any = new Error("AI service unavailable");
+        serviceError.status = 503;
+        serviceError.code = "SERVICE_UNAVAILABLE";
+        throw serviceError;
       }
 
       // Save generated recipes to user history (if userId is provided)
