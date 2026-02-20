@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0;url=exp://172.20.10.3:8081" id="refresh-meta" />
     <title>Signing in...</title>
     <style>
       body {
@@ -64,16 +65,24 @@
       const error = urlParams.get("error");
 
       if (error) {
+        // Remove the meta refresh
+        document.getElementById('refresh-meta')?.remove();
         document.querySelector(".container").innerHTML = `
                 <h1>❌ Authentication Failed</h1>
                 <p>${error}</p>
                 <p style="margin-top: 20px; font-size: 14px;">You can close this window</p>
             `;
       } else if (code) {
-        // Redirect back to Expo app with the code (no path, just query params)
+        // Build redirect URL with code
         const redirectUrl = `exp://172.20.10.3:8081?code=${encodeURIComponent(code)}`;
         
-        // Immediate redirect
+        // Update meta refresh with the code
+        const metaTag = document.getElementById('refresh-meta');
+        if (metaTag) {
+          metaTag.setAttribute('content', `0;url=${redirectUrl}`);
+        }
+        
+        // Also use JavaScript redirect as fallback
         window.location.replace(redirectUrl);
         
         // Show UI with manual fallback
@@ -83,6 +92,8 @@
           <p style="margin-top: 20px;"><a href="${redirectUrl}" style="color: white; text-decoration: underline;">Click here if not redirected</a></p>
         `;
       } else {
+        // Remove the meta refresh
+        document.getElementById('refresh-meta')?.remove();
         document.querySelector(".container").innerHTML = `
                 <h1>⚠ No authentication code</h1>
                 <p>You can close this window</p>
