@@ -3,13 +3,13 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { BrandColors } from "../../constants/theme";
 import { apiUrl } from "../services/config";
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#3b82f6",
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -390,7 +390,9 @@ export default function RecipeInputScreen({
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerIcon}>🔍</Text>
-            <Text style={styles.headerTitle}>Search Recipe</Text>
+            <Text style={styles.headerTitle}>
+              What can I cook with these ingredients?
+            </Text>
           </View>
         </View>
         <Text style={styles.headerSubtitle}>

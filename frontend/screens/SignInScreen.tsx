@@ -361,7 +361,7 @@ export default function SignInScreen({
         >
           <View style={styles.content}>
             <Image
-              source={require("../../assets/images/portionis-icon.png")}
+              source={require("../../assets/images/icon.png")}
               style={styles.logo}
               resizeMode="contain"
             />

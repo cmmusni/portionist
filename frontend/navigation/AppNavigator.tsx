@@ -11,7 +11,9 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Platform,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -42,6 +44,7 @@ import {
 import type { AppDispatch, RootState } from "../redux/store";
 import DashboardScreen from "../screens/DashboardScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
+import MealHistoryScreen from "../screens/MealHistoryScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RecipeDisplayScreen from "../screens/RecipeDisplayScreen";
@@ -86,16 +89,27 @@ function AppDrawer() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: "Portionist",
+          title: "Portionist - Dashboard",
+          headerTitle() {
+            return <Text style={styles.title}>Dashboard</Text>;
+          },
           drawerLabel: "Dashboard",
-          drawerIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
+          drawerIcon: () => (
+            <Image
+              source={require("../../assets/images/icon.png")}
+              style={{ width: 24, height: 16 }}
+            />
+          ),
         }}
       />
       <Drawer.Screen
         name="RecipeInput"
         component={RecipeInputScreenWrapper}
         options={{
-          title: "Search Recipe",
+          title: "Portionist - Search Recipe",
+          headerTitle() {
+            return <Text style={styles.title}>Search Recipe</Text>;
+          },
           drawerLabel: "Search Recipe",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>🔍</Text>,
         }}
@@ -104,7 +118,10 @@ function AppDrawer() {
         name="Favorites"
         component={FavoritesScreen}
         options={{
-          title: "Favorites",
+          title: "Portionist - Favorites",
+          headerTitle() {
+            return <Text style={styles.title}>Favorites</Text>;
+          },
           drawerLabel: "Favorites",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>❤️</Text>,
         }}
@@ -113,7 +130,10 @@ function AppDrawer() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: "Profile",
+          title: "Portionist - Profile",
+          headerTitle() {
+            return <Text style={styles.title}>Profile</Text>;
+          },
           drawerLabel: "Profile",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
@@ -122,16 +142,31 @@ function AppDrawer() {
         name="RecipeLog"
         component={RecipeLogScreen}
         options={{
-          title: "Recipe Log",
+          title: "Portionist - Recipe Log",
+          headerTitle() {
+            return <Text style={styles.title}>Recipe Log</Text>;
+          },
           drawerLabel: "Recipe Log",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Drawer.Screen
+        name="MealHistory"
+        component={MealHistoryScreen}
+        options={{
+          title: "Portionist - Meal History",
+          headerTitle() {
+            return <Text style={styles.title}>Meal History</Text>;
+          },
+          drawerLabel: "Meal History",
+          drawerIcon: () => <Text style={{ fontSize: 20 }}>🍽️</Text>,
         }}
       />
       <Drawer.Screen
         name="SignOut"
         component={SignOutScreenWrapper}
         options={{
-          title: "Sign Out",
+          title: "Portionist | Sign Out",
           drawerLabel: "Sign Out",
           drawerIcon: () => <Text style={{ fontSize: 20 }}>⏻</Text>,
         }}
@@ -891,9 +926,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
         }}
       >
         <ActivityIndicator size="large" color={BrandColors.primary} />
-        <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 16 }}>
-          Fetching recipes...
-        </Text>
+        <Text style={{ fontSize: 18, marginTop: 16 }}>Fetching recipes...</Text>
       </View>
     );
   }
@@ -913,7 +946,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
         />
         <TouchableOpacity
           style={{
-            backgroundColor: BrandColors.primary,
+            backgroundColor: BrandColors.gray500,
             paddingVertical: 14,
             paddingHorizontal: 20,
             marginHorizontal: 20,
@@ -938,7 +971,7 @@ function RecipeDisplayScreenWrapper({ route }: any) {
           activeOpacity={0.8}
         >
           <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
-            ← {route?.params?.recipe ? "Back to Dashboard" : "Back to recipes"}
+            ← {route?.params?.recipe ? "Back to Dashboard" : "Back to Recipes"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1031,7 +1064,7 @@ export default function AppNavigator() {
           backgroundColor: "#f8fafc",
         }}
       >
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={BrandColors.primary} />
         <Text style={{ marginTop: 16, fontSize: 16, color: "#6b7280" }}>
           Loading...
         </Text>
@@ -1056,14 +1089,14 @@ export default function AppNavigator() {
                 component={SignInScreenWrapper}
                 options={{
                   animationTypeForReplace: "push",
-                  title: "Portionist",
+                  title: "Portionist | Sign In",
                 }}
               />
               <Stack.Screen
                 name="SignUp"
                 component={SignUpScreenWrapper}
                 options={{
-                  title: "Portionist",
+                  title: "Portionist | Sign Up",
                 }}
               />
             </>
@@ -1075,7 +1108,7 @@ export default function AppNavigator() {
                 component={OnboardingScreenWrapper}
                 options={{
                   animationTypeForReplace: "push",
-                  title: "Portionist",
+                  title: "Portionist | Get Started",
                 }}
               />
               {/* Main App with Drawer Navigation */}
@@ -1093,7 +1126,7 @@ export default function AppNavigator() {
                 component={RecipeDisplayScreenWrapper}
                 options={{
                   presentation: "modal",
-                  title: "Portionist",
+                  title: "Portionist | Recipe Details",
                 }}
               />
             </>
@@ -1103,3 +1136,11 @@ export default function AppNavigator() {
     </NavigationIndependentTree>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+});

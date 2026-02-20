@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputFocused: {
-    borderColor: "#3b82f6",
+    borderColor: BrandColors.primary,
   },
   inputError: {
     borderColor: "#f87171",

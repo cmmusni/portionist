@@ -152,6 +152,7 @@
         top: 20px;
         z-index: 100;
         border: 2px solid var(--primary-light);
+        opacity: 0.95;
       }
 
       nav ul {
@@ -178,7 +179,7 @@
           var(--primary) 0%,
           var(--secondary) 100%
         );
-        color: white;
+        color: white !important;
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(92, 138, 111, 0.4);
       }
@@ -557,13 +558,12 @@
         <ul>
           <li><a href="#overview">Overview</a></li>
           <li><a href="#features">Features</a></li>
-          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#database">Data</a></li>
           <li><a href="#tech-stack">Tech Stack</a></li>
-          <li><a href="#api">API Documentation</a></li>
-          <li><a href="#database">Database</a></li>
           <li><a href="#deployment">Deployment</a></li>
           <li><a href="#apis-used">External APIs</a></li>
           <li><a href="#future">Future Plans</a></li>
+          <li><a id="getting-started" href="#getting-started" style="font-weight: bold; color: #ff9900;">Try Now!</a></li>
         </ul>
       </nav>
 
@@ -601,7 +601,7 @@
           </li>
           <li>
             <strong>Access Anywhere:</strong> Use it on your computer through any web browser.
-            Mobile apps coming in 2026!
+            Mobile apps coming soon!
           </li>
         </ul>
       </section>
@@ -639,19 +639,11 @@
 
           <div class="feature-card">
             <span class="icon">🔍</span>
-            <h4>Recipe Search</h4>
+            <h4>Recipe Search via API and AI</h4>
             <p>
-              Search from over 500,000 recipes! Filter by ingredients, cuisine type,
-              and nutrition needs to find exactly what you want.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🤖</span>
-            <h4>AI Recipe Generator</h4>
-            <p>
-              Tell the AI what ingredients you have, and it'll create a unique
-              recipe just for you - complete with cooking instructions!
+              Search from over 500,000 recipes!
+              Tell the ingredients you have, meal type, cuisine type
+              and it'll search/generate a recipe for you - complete with cooking instructions!
             </p>
           </div>
 
@@ -699,143 +691,7 @@
               preferences anytime - we'll update your recommendations!
             </p>
           </div>
-
-          <div class="feature-card">
-            <span class="icon">🎨</span>
-            <h4>Beautiful Design</h4>
-            <p>
-              Enjoy a clean, modern interface with smooth colors and easy
-              navigation - making healthy eating simple and enjoyable!
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🌐</span>
-            <h4>Always Available</h4>
-            <p>
-              The app works even when we reach our daily recipe limits -
-              we'll show you sample recipes so you can keep exploring!
-            </p>
-          </div>
         </div>
-
-        <h3>🔄 Recent Updates</h3>
-        <ul>
-          <li>✅ Improved recipe loading speed with smart caching</li>
-          <li>✅ Better navigation with clear page titles</li>
-          <li>✅ Enhanced AI recipe generation accuracy</li>
-          <li>✅ More reliable performance and uptime</li>
-          <li>✅ Cleaner, more intuitive user interface</li>
-        </ul>
-      </section>
-
-      <section id="architecture">
-        <h2>🏗️ Architecture</h2>
-
-        <div class="architecture-diagram">
-          <h3>System Architecture</h3>
-          <pre style="text-align: left; background: white; color: #333">
-┌─────────────────────────────────────────────────────────────────┐
-│                     CLIENT LAYER                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   iOS App    │  │ Android App  │  │   Web App    │         │
-│  │  (Expo Go)   │  │  (Expo Go)   │  │  (Browser)   │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-│         └──────────────────┴──────────────────┘                 │
-│                            │                                    │
-│                   ┌────────▼────────┐                          │
-│                   │  React Native   │                          │
-│                   │   Frontend      │                          │
-│                   │  (Redux Store)  │                          │
-│                   └────────┬────────┘                          │
-└────────────────────────────┼────────────────────────────────────┘
-                             │ REST API
-                             │ (HTTP/JSON)
-┌────────────────────────────▼────────────────────────────────────┐
-│                     BACKEND LAYER                               │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │            Express.js Server (TypeScript)                │  │
-│  │  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐  │  │
-│  │  │   Routes    │  │ Controllers  │  │   Middleware   │  │  │
-│  │  │ /auth       │  │ Auth Logic   │  │ API Tracker    │  │  │
-│  │  │ /recipes    │  │ Recipe Logic │  │ Error Handler  │  │  │
-│  │  │ /profile    │  │ Food Logic   │  │ CORS           │  │  │
-│  │  │ /favorites  │  │ Profile Mgmt │  └────────────────┘  │  │
-│  │  │ /api/food   │  └──────────────┘                      │  │
-│  │  │ /api/usage  │                                        │  │
-│  │  └─────────────┘                                        │  │
-│  └────────────────────────┬─────────────────────────────────┘  │
-│                           │                                    │
-│                  ┌────────▼─────────┐                         │
-│                  │   Drizzle ORM    │                         │
-│                  └────────┬─────────┘                         │
-└───────────────────────────┼────────────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────────────┐
-│                     DATABASE LAYER                             │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │          PostgreSQL Database (Railway)                   │  │
-│  │  ┌────────┐  ┌──────────┐  ┌──────────┐  ┌───────────┐  │  │
-│  │  │ users  │  │onboarding│  │favorites │  │food_logs  │  │  │
-│  │  └────────┘  └──────────┘  └──────────┘  └───────────┘  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                  EXTERNAL SERVICES                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ Spoonacular  │  │  Google AI   │  │Google Search │         │
-│  │  Recipe API  │  │  Gemini 1.5  │  │ Custom API   │         │
-│  │  (150/day)   │  │  (1500/day)  │  │  (100/day)   │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
-└─────────────────────────────────────────────────────────────────┘
-                </pre
-          >
-        </div>
-
-        <h3>📱 Frontend Architecture</h3>
-        <ul>
-          <li>
-            <strong>React Native with Expo:</strong> Cross-platform mobile/web
-            development
-          </li>
-          <li>
-            <strong>Redux Toolkit:</strong> State management for auth, pantry,
-            and favorites
-          </li>
-          <li>
-            <strong>React Navigation:</strong> Drawer + Stack navigation with
-            auth flow
-          </li>
-          <li>
-            <strong>AsyncStorage:</strong> Persistent local storage for auth
-            tokens
-          </li>
-          <li>
-            <strong>Custom Hooks:</strong> Reusable logic for auth restore,
-            onboarding, storage
-          </li>
-        </ul>
-
-        <h3>🔧 Backend Architecture</h3>
-        <ul>
-          <li>
-            <strong>Express.js:</strong> RESTful API server with TypeScript
-          </li>
-          <li>
-            <strong>Drizzle ORM:</strong> Type-safe database queries with
-            PostgreSQL
-          </li>
-          <li>
-            <strong>Modular Design:</strong> Separated routes, controllers, and
-            utilities
-          </li>
-          <li>
-            <strong>API Tracking:</strong> Singleton tracker with 24-hour
-            rolling window
-          </li>
-          <li><strong>Error Handling:</strong> Centralized error middleware</li>
-        </ul>
       </section>
 
       <section id="tech-stack">
@@ -855,61 +711,6 @@
           <span class="tech-badge">Railway (Backend Hosting)</span>
           <span class="tech-badge">Netlify (Web Hosting)</span>
           <span class="tech-badge">Cloud Storage (Your Data)</span>
-        </div>
-      </section>
-
-      <section id="api">
-        <h2>� Your Account & Features</h2>
-
-        <h3>What You Can Do with Portionist</h3>
-        <div class="feature-grid">
-          <div class="feature-card">
-            <span class="icon">👤</span>
-            <h4>Create Your Account</h4>
-            <p>Sign up with your email - it's free and takes less than a minute!</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🔍</span>
-            <h4>Search Recipes</h4>
-            <p>Find meals by name, ingredient, cuisine type, or nutrition goals.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🎯</span>
-            <h4>Get Suggestions</h4>
-            <p>Receive personalized recipe recommendations based on your preferences.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">❤️</span>
-            <h4>Save Favorites</h4>
-            <p>Bookmark recipes you love for quick access anytime.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">📝</span>
-            <h4>Log Your Meals</h4>
-            <p>Track what you eat throughout the day with nutrition totals.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">📊</span>
-            <h4>View History</h4>
-            <p>See your eating patterns over time and track your progress.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">⚙️</span>
-            <h4>Update Your Profile</h4>
-            <p>Change your goals, weight, or food preferences anytime.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🤖</span>
-            <h4>Generate Recipes</h4>
-            <p>Use AI to create custom recipes from ingredients you have.</p>
-          </div>
         </div>
       </section>
 
@@ -979,7 +780,7 @@
           <li><strong>Always Updated:</strong> Latest features automatically available</li>
         </ul>
 
-        <h3>Mobile Apps (Coming in 2026!)</h3>
+        <h3>Mobile Apps (Coming Soon!)</h3>
         <div class="note">
           <strong>📱 In Development:</strong> Native iOS and Android apps are currently being built
         </div>
@@ -987,15 +788,6 @@
           <li><strong>iPhone & iPad:</strong> iOS app coming to the App Store</li>
           <li><strong>Android Devices:</strong> Android app coming to Google Play Store</li>
           <li><strong>Features:</strong> Same great experience, optimized for mobile</li>
-          <li><strong>Stay Tuned:</strong> Sign up to get notified when apps launch!</li>
-        </ul>
-
-        <h3>How Your Data is Protected</h3>
-        <ul>
-          <li><strong>Secure Servers:</strong> Hosted on Railway's reliable cloud platform</li>
-          <li><strong>Database:</strong> PostgreSQL database with encrypted storage</li>
-          <li><strong>Safe Connections:</strong> HTTPS encryption for all data transfer</li>
-          <li><strong>Privacy First:</strong> Your personal info is never shared</li>
         </ul>
       </section>
 
@@ -1049,36 +841,12 @@
 
         <h3>Planned Features</h3>
         <div class="feature-grid">
-          <div class="feature-card">
-            <span class="icon">🏋️</span>
-            <h4>Exercise Tracking</h4>
-            <p>
-              Log workouts and adjust calorie goals based on activity level.
-            </p>
-          </div>
 
           <div class="feature-card">
-            <span class="icon">📈</span>
-            <h4>Progress Charts</h4>
+            <span class="icon">🌍</span>
+            <h4>More Cuisines</h4>
             <p>
-              Visualize weight trends, calories, and macros over time with
-              beautiful charts.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🛒</span>
-            <h4>Shopping List</h4>
-            <p>
-              Generate grocery lists from planned meals and favorite recipes.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">📅</span>
-            <h4>Meal Planning</h4>
-            <p>
-              Plan meals for the week with drag-and-drop calendar interface.
+              Expand cuisine options to include more international varieties.
             </p>
           </div>
 
@@ -1086,6 +854,12 @@
             <span class="icon">🔔</span>
             <h4>Push Notifications</h4>
             <p>Reminders for meal logging, hydration, and daily goals.</p>
+          </div>
+
+          <div class="feature-card">
+            <span class="icon">🏆</span>
+            <h4>Achievements</h4>
+            <p>Gamification with badges, streaks, and milestone rewards.</p>
           </div>
 
           <div class="feature-card">
@@ -1101,59 +875,17 @@
           </div>
 
           <div class="feature-card">
-            <span class="icon">🏆</span>
-            <h4>Achievements</h4>
-            <p>Gamification with badges, streaks, and milestone rewards.</p>
-          </div>
-
-          <div class="feature-card">
             <span class="icon">📸</span>
             <h4>Photo Upload</h4>
             <p>Take photos of meals and use AI to estimate nutrition.</p>
           </div>
-
-          <div class="feature-card">
-            <span class="icon">🔍</span>
-            <h4>Barcode Scanner</h4>
-            <p>Scan product barcodes for instant nutrition lookup.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">💬</span>
-            <h4>AI Nutrition Coach</h4>
-            <p>Chat with AI for personalized nutrition advice and tips.</p>
-          </div>
-
-          <div class="feature-card">
-            <span class="icon">🌍</span>
-            <h4>More Cuisines</h4>
-            <p>
-              Expand cuisine options to include more international varieties.
-            </p>
-          </div>
         </div>
-
-        <h3>Technical Improvements</h3>
-        <ul>
-          <li>📱 Native iOS and Android apps (instead of Expo Go)</li>
-          <li>⚡ GraphQL API for more efficient data fetching</li>
-          <li>🔐 OAuth integration (Google, Facebook, Apple Sign In)</li>
-          <li>📊 Analytics dashboard for usage insights</li>
-          <li>🧪 Comprehensive test coverage (Jest, React Testing Library)</li>
-          <li>🚀 CI/CD pipeline with GitHub Actions</li>
-          <li>💾 Redis caching for frequently accessed data</li>
-          <li>🔍 ElasticSearch for advanced recipe search</li>
-        </ul>
       </section>
 
       <section id="getting-started">
         <h2>🏁 How to Start Using Portionist</h2>
 
-        <h3>Step 1: Visit the Website</h3>
-        <p>
-          Open your web browser and go to:
-          <code>https://portionist.netlify.app</code>
-        </p>
+        <h3>Step 1: Visit the Website by clicking this URL: <a href="https://portionist.netlify.app" target="_blank" style="color: #5c8a6f; text-decoration: none;">https://portionist.netlify.app</a></h3>
 
         <h3>Step 2: Create Your Free Account</h3>
         <ul>
@@ -1169,14 +901,13 @@
           <li>Tell us your current weight and target weight</li>
           <li>Enter your age</li>
           <li>Select your favorite cuisine types</li>
-          <li>Click "Continue"</li>
+          <li>Click "Complete"</li>
         </ul>
 
         <h3>Step 4: Start Exploring!</h3>
         <ul>
           <li><strong>Dashboard:</strong> See personalized recipe recommendations</li>
-          <li><strong>Search:</strong> Find recipes by name or ingredient</li>
-          <li><strong>AI Generator:</strong> Create custom recipes with AI</li>
+          <li><strong>Search Recipes:</strong> Find recipes by ingredients. AI creates custom recipes based on your ingredients.</li>
           <li><strong>Log Meals:</strong> Track what you eat throughout the day</li>
           <li><strong>Favorites:</strong> Save recipes you love</li>
         </ul>
@@ -1187,115 +918,15 @@
         </div>
       </section>
 
-      <section id="documentation">
-        <h2>📚 Need Help or Have Questions?</h2>
-
-        <h3>Helpful Resources</h3>
-        <ul>
-          <li>
-            <strong>Tutorial Videos:</strong> Watch quick guides on how to use each feature
-          </li>
-          <li>
-            <strong>FAQ:</strong> Common questions and answers about Portionist
-          </li>
-          <li>
-            <strong>Support:</strong> Contact our team if you need assistance
-          </li>
-          <li>
-            <strong>Blog:</strong> Tips for healthy eating and meal planning
-          </li>
-        </ul>
-
-        <h3>Tips for Success</h3>
-        <ul>
-          <li>✅ Log your meals daily for best results</li>
-          <li>✅ Explore different cuisines to keep meals exciting</li>
-          <li>✅ Save your favorite recipes for quick meal planning</li>
-          <li>✅ Use the AI generator when you have random ingredients</li>
-          <li>✅ Check your meal history to track progress</li>
-          <li>✅ Update your profile as your goals change</li>
-        </ul>
-      </section>
-
-      <section id="additional-docs">
-        <h2>🔧 For Developers</h2>
-
-        <p>
-          Are you a developer interested in the technical details? Visit our
-          <strong>GitHub repository</strong> for:
-        </p>
-
-        <ul>
-          <li>Complete source code and documentation</li>
-          <li>Setup instructions for local development</li>
-          <li>API documentation and database schemas</li>
-          <li>Contributing guidelines</li>
-          <li>Technical architecture overview</li>
-        </ul>
-
-        <div class="note">
-          <strong>📖 Developer Docs:</strong> Check out README.md, API_RATE_LIMIT_GUIDE.md,
-          and other technical documentation in the project repository.
-        </div>
-      </section>
-
-      <section id="documentation-old" style="display: none;">
-        <h2>📚 Additional Documentation</h2>
-
-        <h3>Project Documentation Files</h3>
-        <ul>
-          <li>
-            <strong>README.md</strong> - Main project readme with quick start
-            guide
-          </li>
-          <li>
-            <strong>API_RATE_LIMIT_GUIDE.md</strong> - API usage monitoring and
-            optimization tips
-          </li>
-          <li>
-            <strong>API_TRACKING_TEST_GUIDE.md</strong> - Testing guide for API
-            tracking system
-          </li>
-          <li>
-            <strong>DEMO_MODE_GUIDE.md</strong> - Demo mode features and mock
-            recipe system
-          </li>
-          <li>
-            <strong>DEMO_MODE_SUMMARY.md</strong> - Quick reference for demo
-            mode implementation
-          </li>
-          <li>
-            <strong>README-DEPLOY.md</strong> - Deployment instructions for
-            Railway and other platforms
-          </li>
-        </ul>
-
-        <h3>Code Documentation</h3>
-        <ul>
-          <li>
-            <strong>Inline Comments:</strong> Detailed comments throughout
-            codebase
-          </li>
-          <li>
-            <strong>TypeScript Types:</strong> Full type coverage for type
-            safety
-          </li>
-          <li>
-            <strong>API Comments:</strong> JSDoc-style comments for all API
-            endpoints
-          </li>
-        </ul>
-      </section>
-
       <section id="team">
         <h2>👥 Team & Credits</h2>
 
         <h3>Development Team</h3>
         <ul>
           <li><strong>Lead Developer:</strong> Clifford Mark Musni</li>
-          <li><strong>Project Type:</strong> Training/Portfolio Project</li>
+          <li><strong>Project Type:</strong> Portfolio Project</li>
           <li>
-            <strong>Development Period:</strong> January 2026 - February 2026
+            <strong>Development Period:</strong> February 2026
           </li>
         </ul>
 
@@ -1318,9 +949,9 @@
       </section>
 
     <footer>
-      <h2>🍽️ Portionist</h2>
+      <img src="../assets/images/icon.png" alt="Portionist Logo" style="height: 60px; vertical-align: middle; margin-bottom: 10px;">
       <p style="margin-top: 10px; opacity: 0.9">
-        Smart Meal Planning, Simplified
+        Every portion counts. Balance your plate.
       </p>
       <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.7">
         © 2026 Portionist | Built with ❤️ using React Native & Express.js

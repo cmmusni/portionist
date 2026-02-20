@@ -297,6 +297,130 @@ const authController = {
   },
 
   /**
+   * Google OAuth callback - exchange code for user info
+   * POST /auth/google/callback
+   * Body: { code }
+   */
+  async googleCallback(req: Request, res: Response): Promise<void> {
+    try {
+      const { code } = req.body;
+
+      if (!code) {
+        res.status(400).json({ error: "Missing authorization code" });
+        return;
+      }
+
+      // Exchange code for tokens
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID || "",
+          client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
+          redirect_uri: "https://portionist.netlify.app/oauth-callback.html",
+          grant_type: "authorization_code",
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.text();
+        console.error("Token exchange failed:", errorData);
+        res
+          .status(500)
+          .json({ error: "Failed to exchange authorization code" });
+        return;
+      }
+
+      const tokens: any = await tokenResponse.json();
+
+      // Get user info from Google
+      const userInfoResponse = await fetch(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        },
+      );
+
+      if (!userInfoResponse.ok) {
+        res.status(500).json({ error: "Failed to fetch user info" });
+        return;
+      }
+
+      const userInfo: any = await userInfoResponse.json();
+
+      // Use the existing googleAuth logic
+      const googleId = userInfo.id;
+      const email = userInfo.email;
+      const fullName = userInfo.name;
+
+      // Check if user already exists by Google ID
+      let result = await query("SELECT * FROM users WHERE google_id = $1", [
+        googleId,
+      ]);
+
+      let user = result.rows[0];
+      let isNewUser = false;
+
+      // If user doesn't exist, create them
+      if (!user) {
+        // Check if email already exists
+        const emailCheck = await query("SELECT * FROM users WHERE email = $1", [
+          email,
+        ]);
+
+        if (emailCheck.rows.length > 0) {
+          // Email exists, update with Google ID
+          await query("UPDATE users SET google_id = $1 WHERE email = $2", [
+            googleId,
+            email,
+          ]);
+          user = emailCheck.rows[0];
+        } else {
+          // Create new user
+          const userId = "user-" + Date.now();
+          await query(
+            "INSERT INTO users (user_id, google_id, email, full_name) VALUES ($1, $2, $3, $4)",
+            [userId, googleId, email, fullName],
+          );
+          isNewUser = true;
+          user = {
+            user_id: userId,
+            google_id: googleId,
+            email: email,
+            full_name: fullName,
+          };
+        }
+      }
+
+      // Generate JWT token
+      const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-this";
+      const token = jwt.sign(
+        { userId: user.user_id, email: user.email || email },
+        jwtSecret,
+        { expiresIn: "7d" },
+      );
+
+      const response: AuthResponse = {
+        userId: user.user_id,
+        email: user.email || email,
+        fullName: user.full_name,
+        token,
+      };
+
+      res.status(isNewUser ? 201 : 200).json({
+        message: isNewUser ? "User created successfully" : "Sign in successful",
+        data: response,
+      });
+    } catch (error) {
+      console.error("Google callback error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+
+  /**
    * Sign out a user
    * POST /auth/signout
    * Body: { userId }

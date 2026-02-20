@@ -2,15 +2,16 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { BrandColors } from "../../constants/theme";
 import { clearAuthFromStorage } from "../hooks/useAuthRestore";
 import { clearOnboardingFromStorage } from "../hooks/useOnboardingStorage";
 import { selectAuthUser, signOut } from "../redux/authSlice";
@@ -40,7 +41,7 @@ const MenuScreen: React.FC = () => {
       title: "🔍 Recipe Search",
       description: "Search for recipes based on ingredients",
       screen: "RecipeInput",
-      color: "#3b82f6",
+      color: BrandColors.primary,
     },
     {
       id: "favorites",
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 20,
-    shadowColor: "#3b82f6",
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

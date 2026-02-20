@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/theme";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useSelector } from "react-redux";
@@ -26,7 +27,7 @@ export default function RootLayoutContent() {
   if (isRestoring) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={BrandColors.primary} />
       </View>
     );
   }

@@ -143,27 +143,26 @@ export const initializeDatabase = async (): Promise<void> => {
       ON daily_motivations(motivation_text)
     `);
 
-    // Create diary_entries table for tracking daily macros
+    // Create food_entries table for food logging with nutrition tracking
     await query(`
-      CREATE TABLE IF NOT EXISTS diary_entries (
+      CREATE TABLE IF NOT EXISTS food_entries (
         id SERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
-        entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        recipe_id INT NOT NULL,
+        title TEXT,
         protein FLOAT DEFAULT 0,
         carbs FLOAT DEFAULT 0,
-        veg FLOAT DEFAULT 0,
         fat FLOAT DEFAULT 0,
+        calories FLOAT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-        UNIQUE(user_id, entry_date)
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
       )
     `);
 
-    // Create index for faster queries on diary_entries
+    // Create index for faster queries on food_entries
     await query(`
-      CREATE INDEX IF NOT EXISTS idx_diary_entries_user_date 
-      ON diary_entries(user_id, entry_date DESC)
+      CREATE INDEX IF NOT EXISTS idx_food_entries_user_date 
+      ON food_entries(user_id, created_at DESC)
     `);
 
     console.log("✅ Database schema initialized successfully");

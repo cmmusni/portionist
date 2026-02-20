@@ -1,15 +1,16 @@
+import { BrandColors } from "@/constants/theme";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
@@ -53,15 +54,6 @@ interface RecipeLogEntry {
   interaction_type: "search" | "suggested" | "viewed";
   searched_at: string;
 }
-
-const BrandColors = {
-  primary: "#5C8A6F",
-  secondary: "#A8D24E",
-  accent: "#FF9933",
-  background: "#F5F5F5",
-  text: "#2C3E2F",
-  white: "#FFFFFF",
-};
 
 export default function RecipeLogScreen({ navigation }: any) {
   const userId = useSelector((state: RootState) => state.auth.userId);
@@ -343,7 +335,7 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#3b82f6",
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

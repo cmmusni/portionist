@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { query } from "../db/connection.js";
+import { apiTracker } from "../utils/apiTracker.js";
+import { getMockRecipesByMealType } from "../utils/mockRecipes.js";
 import { saveRecipeToHistory } from "./recipeLogController.js";
 
 interface Ingredient {
@@ -333,6 +335,13 @@ class RecipeController {
       const query = `${mainIngredient} ${cuisine}`.trim();
       const response = await fetch(
         `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=5&addRecipeInformation=true&addRecipeInstructions=true&apiKey=${process.env.SPOONACULAR_API_KEY}`,
+      );
+
+      // Track API call
+      apiTracker.logCall(
+        "spoonacular",
+        "/recipes/complexSearch (suggestions)",
+        response.status,
       );
 
       if (!response.ok) {
@@ -803,6 +812,21 @@ class RecipeController {
           );
 
           const response = await fetch(spoonacularUrl);
+
+          // Handle rate limit - return mock data for demo
+          if (response.status === 429 || response.status === 402) {
+            console.warn(
+              "⚠️ Spoonacular rate limit reached - returning mock recipes for demo",
+            );
+            const mockRecipes = getMockRecipesByMealType(mealType, limit);
+            res.json({
+              success: true,
+              data: mockRecipes,
+              demo: true,
+              message: "Using demo data - API limit reached",
+            });
+            return;
+          }
 
           if (response.ok) {
             const data = (await response.json()) as any;

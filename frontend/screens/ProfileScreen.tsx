@@ -3,20 +3,19 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { BrandColors } from "../../constants/theme";
-import { clearAuthFromStorage } from "../hooks/useAuthRestore";
-import { selectAuthUser, signOut } from "../redux/authSlice";
+import { selectAuthUser } from "../redux/authSlice";
 import { apiUrl } from "../services/config";
 
 interface ProfileData {
@@ -221,73 +220,6 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    showAlert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", onPress: () => {}, style: "cancel" },
-      {
-        text: "Sign Out",
-        onPress: () => {
-          performSignOut();
-        },
-        style: "destructive",
-      },
-    ]);
-  };
-
-  const performSignOut = async () => {
-    try {
-      console.log("Starting sign out process...");
-      console.log("User ID:", user?.userId);
-
-      // Call backend sign out API
-      if (user?.userId) {
-        try {
-          console.log("Calling sign out API...");
-          const response = await fetch(apiUrl("/auth/signout"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: user.userId,
-            }),
-          });
-
-          console.log("Sign out API response:", response.status);
-          if (!response.ok) {
-            console.error("Backend sign out failed:", response.status);
-            // Continue with local sign out even if API fails
-          }
-        } catch (apiError) {
-          console.error("Sign out API error:", apiError);
-          // Continue with local sign out even if API fails
-        }
-      }
-
-      console.log("Clearing auth from storage...");
-      // Clear auth from storage
-      await clearAuthFromStorage();
-      // Note: Onboarding data will be reloaded from backend on next sign in
-
-      console.log("Dispatching sign out...");
-      // Dispatch sign out action
-      dispatch(signOut());
-      // Note: onboardingCompleted will be set based on backend data on next sign in
-
-      console.log("Navigating to SignIn...");
-      // Explicitly navigate to SignIn with reset
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "SignIn" as never }],
-        });
-      }, 200);
-    } catch (error) {
-      console.error("Sign out error:", error);
-      showAlert("Error", "Failed to sign out: " + String(error));
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -418,20 +350,12 @@ const ProfileScreen: React.FC = () => {
         {/* Action Buttons */}
         <View style={styles.buttonsSection}>
           {!editing ? (
-            <>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => setEditing(true)}
-              >
-                <Text style={styles.buttonText}>Edit Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.dangerButton}
-                onPress={handleLogout}
-              >
-                <Text style={styles.buttonText}>Sign Out</Text>
-              </TouchableOpacity>
-            </>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => setEditing(true)}
+            >
+              <Text style={styles.buttonText}>Edit Profile</Text>
+            </TouchableOpacity>
           ) : (
             <>
               <TouchableOpacity
@@ -498,7 +422,7 @@ const styles = StyleSheet.create({
     paddingTop: 36,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#3b82f6",
+    shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -24,6 +24,11 @@ router.post("/google", async (req: Request, res: Response) => {
   await authController.googleAuth(req, res);
 });
 
+// POST /auth/google/callback - Google OAuth callback (code exchange)
+router.post("/google/callback", async (req: Request, res: Response) => {
+  await authController.googleCallback(req, res);
+});
+
 // POST /auth/signout - Sign out a user
 router.post("/signout", async (req: Request, res: Response) => {
   await authController.signOut(req, res);

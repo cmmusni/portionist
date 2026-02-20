@@ -81,6 +81,7 @@ export const BrandColors = {
   textSecondary: "#6B7280",
   textLight: "#9CA3AF",
   textWhite: "#FFFFFF",
+  background: "#F5F5F5",
 };
 
 export const Fonts = Platform.select({
