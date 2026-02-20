@@ -13,40 +13,40 @@
 
       :root {
         /* Portionist Brand Colors - From logo (green bowl with fresh vegetables) */
-        --primary: #5C8A6F;
-        --primary-light: #E8F3ED;
-        --primary-very-light: #F5FAF7;
-        --primary-dark: #2D5016;
-        
-        --secondary: #A8D24E;
-        --secondary-light: #C4E17F;
-        --secondary-very-light: #F0F9E3;
-        
-        --accent: #FF9933;
-        --accent-light: #FFB366;
-        --accent-very-light: #FFF0E0;
-        
-        --success: #6BBF59;
-        --success-light: #8FD882;
-        --success-very-light: #E8F8E5;
-        
-        --danger: #E94B4B;
-        --danger-light: #F07777;
-        --danger-very-light: #FDEAEA;
-        
-        --gray-50: #F9FAFB;
-        --gray-100: #F3F4F6;
-        --gray-200: #E5E7EB;
-        --gray-300: #D1D5DB;
-        --gray-400: #9CA3AF;
-        --gray-500: #6B7280;
-        --gray-600: #4B5563;
+        --primary: #5c8a6f;
+        --primary-light: #e8f3ed;
+        --primary-very-light: #f5faf7;
+        --primary-dark: #2d5016;
+
+        --secondary: #a8d24e;
+        --secondary-light: #c4e17f;
+        --secondary-very-light: #f0f9e3;
+
+        --accent: #ff9933;
+        --accent-light: #ffb366;
+        --accent-very-light: #fff0e0;
+
+        --success: #6bbf59;
+        --success-light: #8fd882;
+        --success-very-light: #e8f8e5;
+
+        --danger: #e94b4b;
+        --danger-light: #f07777;
+        --danger-very-light: #fdeaea;
+
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
         --gray-700: #374151;
-        --gray-800: #1F2937;
+        --gray-800: #1f2937;
         --gray-900: #111827;
-        
-        --text-primary: #2D5016;
-        --text-secondary: #6B7280;
+
+        --text-primary: #2d5016;
+        --text-secondary: #6b7280;
       }
 
       body {
@@ -55,7 +55,12 @@
           "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
         color: var(--text-primary);
-        background: linear-gradient(135deg, #FDFEFB 0%, #E8F3ED 50%, #F0F9E3 100%);
+        background: linear-gradient(
+          135deg,
+          #fdfefb 0%,
+          #e8f3ed 50%,
+          #f0f9e3 100%
+        );
         min-height: 100vh;
       }
 
@@ -81,21 +86,29 @@
         position: relative;
         overflow: hidden;
       }
-      
+
       header::before {
-        content: '';
+        content: "";
         position: absolute;
         top: -50%;
         left: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
         animation: shimmer 15s infinite linear;
       }
-      
+
       @keyframes shimmer {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
 
       header h1 {
@@ -160,7 +173,11 @@
       }
 
       nav a:hover {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
         color: white;
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(92, 138, 111, 0.4);
@@ -175,7 +192,7 @@
         border: 1px solid var(--primary-very-light);
         transition: all 0.3s ease;
       }
-      
+
       section:hover {
         box-shadow: 0 8px 30px rgba(92, 138, 111, 0.15);
         transform: translateY(-2px);
@@ -187,14 +204,19 @@
         margin-bottom: 25px;
         padding-bottom: 15px;
         border-bottom: 4px solid transparent;
-        border-image: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 50%, transparent 100%);
+        border-image: linear-gradient(
+          90deg,
+          var(--primary) 0%,
+          var(--secondary) 50%,
+          transparent 100%
+        );
         border-image-slice: 1;
         font-weight: 700;
         position: relative;
       }
-      
+
       h2::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         bottom: -4px;
@@ -213,16 +235,20 @@
         position: relative;
         padding-left: 15px;
       }
-      
+
       h3::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         top: 50%;
         transform: translateY(-50%);
         width: 4px;
         height: 70%;
-        background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        background: linear-gradient(
+          180deg,
+          var(--secondary) 0%,
+          var(--primary) 100%
+        );
         border-radius: 2px;
       }
 
@@ -242,7 +268,11 @@
       }
 
       .feature-card {
-        background: linear-gradient(135deg, var(--primary-very-light) 0%, white 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary-very-light) 0%,
+          white 100%
+        );
         padding: 25px;
         border-radius: 20px;
         border-left: 5px solid var(--primary);
@@ -250,15 +280,19 @@
         position: relative;
         overflow: hidden;
       }
-      
+
       .feature-card::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         right: 0;
         width: 100px;
         height: 100px;
-        background: radial-gradient(circle, var(--secondary-very-light) 0%, transparent 70%);
+        background: radial-gradient(
+          circle,
+          var(--secondary-very-light) 0%,
+          transparent 70%
+        );
         opacity: 0.5;
         border-radius: 50%;
       }
@@ -267,7 +301,11 @@
         transform: translateY(-5px) scale(1.02);
         box-shadow: 0 12px 30px rgba(92, 138, 111, 0.2);
         border-left-color: var(--secondary);
-        background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary-light) 0%,
+          white 100%
+        );
       }
 
       .feature-card .icon {
@@ -277,7 +315,7 @@
         filter: drop-shadow(2px 2px 4px rgba(92, 138, 111, 0.2));
         transition: all 0.3s ease;
       }
-      
+
       .feature-card:hover .icon {
         transform: scale(1.1) rotate(5deg);
         filter: drop-shadow(4px 4px 8px rgba(168, 210, 78, 0.3));
@@ -314,7 +352,11 @@
       }
 
       .tech-badge:hover {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
         color: white;
         transform: translateY(-2px) scale(1.05);
         box-shadow: 0 6px 20px rgba(92, 138, 111, 0.3);
@@ -363,7 +405,7 @@
       }
 
       pre {
-        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
         color: var(--secondary-light);
         padding: 25px;
         border-radius: 15px;
@@ -407,7 +449,11 @@
       }
 
       .architecture-diagram {
-        background: linear-gradient(135deg, var(--primary-very-light) 0%, white 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary-very-light) 0%,
+          white 100%
+        );
         border: 3px solid var(--primary);
         border-radius: 20px;
         padding: 40px;
@@ -465,7 +511,12 @@
       footer {
         text-align: center;
         padding: 60px 20px;
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--secondary) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary-dark) 0%,
+          var(--primary) 50%,
+          var(--secondary) 100%
+        );
         color: white;
         margin-top: 50px;
         border-radius: 40px 40px 0 0;
@@ -494,7 +545,7 @@
   </head>
   <body>
     <header>
-      <h1>🍽️ Portionist</h1>
+      <img src="../assets/images/icon.png" alt="Portionist Logo" style="height: 150px; vertical-align: middle;"> 
       <p class="tagline">
         AI-Powered Meal Planning & Nutrition Tracking Platform
       </p>
@@ -519,40 +570,38 @@
       <section id="overview">
         <h2>📋 Overview</h2>
         <p>
-          <strong>Portionist</strong> is a modern, AI-powered mobile and web
-          application designed to help users manage their meal planning, track
-          nutrition, and achieve their health goals. The app combines recipe
-          discovery, personalized meal suggestions, and comprehensive nutrition
-          tracking in one seamless platform.
+          <strong>Portionist</strong> is a smart, AI-powered web application
+          that helps you plan meals, track nutrition, and reach your health goals.
+          Discover recipes, get personalized suggestions, and monitor your daily
+          food intake - all in one easy-to-use platform.
         </p>
 
         <div class="success">
-          <strong>✅ Production Ready:</strong> Fully functional app with
-          backend deployed on Railway and frontend supporting iOS, Android, and
-          Web platforms.
+          <strong>✅ Live Now:</strong> Web app currently available at portionist.netlify.app.
+          Mobile apps for iOS and Android coming soon!
         </div>
 
-        <h3>🎯 Core Purpose</h3>
+        <h3>🎯 What Can You Do?</h3>
         <ul>
           <li>
-            <strong>Personalized Nutrition:</strong> Get meal suggestions based
-            on your weight goals, dietary preferences, and cuisine choices
+            <strong>Get Personalized Meals:</strong> Receive recipe suggestions
+            tailored to your weight goals and favorite cuisines
           </li>
           <li>
-            <strong>Recipe Discovery:</strong> Search from thousands of recipes
-            with detailed nutritional information
+            <strong>Find Recipes:</strong> Search thousands of recipes with complete
+            nutrition information for each meal
           </li>
           <li>
-            <strong>Meal Logging:</strong> Track your daily food intake and
-            monitor progress
+            <strong>Track Your Meals:</strong> Log what you eat throughout the day
+            and see your progress
           </li>
           <li>
-            <strong>AI-Powered:</strong> Generate custom recipes using Google's
-            Gemini AI
+            <strong>AI Recipe Generator:</strong> Create custom recipes using smart
+            AI technology based on ingredients you have
           </li>
           <li>
-            <strong>Cross-Platform:</strong> Available on iOS, Android, and Web
-            browsers
+            <strong>Access Anywhere:</strong> Use it on your computer through any web browser.
+            Mobile apps coming in 2026!
           </li>
         </ul>
       </section>
@@ -563,28 +612,28 @@
         <div class="feature-grid">
           <div class="feature-card">
             <span class="icon">🔐</span>
-            <h4>Authentication</h4>
+            <h4>Secure Login</h4>
             <p>
-              Secure sign up/sign in with email and password. Session management
-              with persistent storage.
+              Create your free account with email and password. Your data is
+              safely stored and synced across all your devices.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">🎯</span>
-            <h4>Onboarding</h4>
+            <h4>Easy Setup</h4>
             <p>
-              Personalized setup flow to capture user goals, current/target
-              weight, age, and cuisine preferences.
+              Quick 2-minute setup to tell us about your goals, current weight,
+              target weight, and favorite cuisines. We'll personalize everything for you!
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">🏠</span>
-            <h4>Dashboard</h4>
+            <h4>Daily Dashboard</h4>
             <p>
-              View daily suggested recipes based on meal type (Breakfast, Lunch,
-              Dinner, Snack) with 6-hour caching.
+              See your personalized recipe recommendations for breakfast, lunch,
+              dinner, and snacks - updated throughout the day.
             </p>
           </div>
 
@@ -592,91 +641,91 @@
             <span class="icon">🔍</span>
             <h4>Recipe Search</h4>
             <p>
-              Search 500,000+ recipes from Spoonacular API with nutrition
-              filtering and real-time results.
+              Search from over 500,000 recipes! Filter by ingredients, cuisine type,
+              and nutrition needs to find exactly what you want.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">🤖</span>
-            <h4>AI Recipe Generation</h4>
+            <h4>AI Recipe Generator</h4>
             <p>
-              Generate custom recipes using Google Gemini AI based on available
-              ingredients and preferences.
+              Tell the AI what ingredients you have, and it'll create a unique
+              recipe just for you - complete with cooking instructions!
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">📊</span>
-            <h4>Nutrition Tracking</h4>
+            <h4>Nutrition Info</h4>
             <p>
-              Complete macro breakdown (protein, carbs, fat, calories) for every
-              recipe and meal.
+              See exactly how much protein, carbs, fat, and calories are in
+              every recipe - helping you stay on track with your goals.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">❤️</span>
-            <h4>Favorites</h4>
+            <h4>Save Favorites</h4>
             <p>
-              Save your favorite recipes for quick access. Synced across all
-              devices.
+              Found a recipe you love? Save it to your favorites for easy access
+              anytime you need cooking inspiration.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">📝</span>
-            <h4>Meal Logging</h4>
+            <h4>Log Your Meals</h4>
             <p>
-              Log meals for Breakfast, Lunch, Dinner, or Snacks. Track
-              consumption by meal type and date.
+              Keep track of what you eat throughout the day. Log breakfast, lunch,
+              dinner, and snacks to monitor your nutrition intake.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">📅</span>
-            <h4>Meal History</h4>
+            <h4>View History</h4>
             <p>
-              View complete history of logged meals with date filtering and
-              nutrition totals.
+              Look back at your eating patterns. See what you ate yesterday, last
+              week, or last month with detailed nutrition summaries.
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">👤</span>
-            <h4>Profile Management</h4>
+            <h4>Update Your Profile</h4>
             <p>
-              Update personal information, weight goals, and dietary preferences
-              anytime.
+              Change your goals, update your weight, or adjust your dietary
+              preferences anytime - we'll update your recommendations!
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">🎨</span>
-            <h4>Beautiful UI</h4>
+            <h4>Beautiful Design</h4>
             <p>
-              Clean, modern interface with gradient colors, shadows, and smooth
-              animations.
+              Enjoy a clean, modern interface with smooth colors and easy
+              navigation - making healthy eating simple and enjoyable!
             </p>
           </div>
 
           <div class="feature-card">
             <span class="icon">🌐</span>
-            <h4>Demo Mode</h4>
+            <h4>Always Available</h4>
             <p>
-              Automatic fallback to mock recipes when API limits reached -
-              perfect for demos!
+              The app works even when we reach our daily recipe limits -
+              we'll show you sample recipes so you can keep exploring!
             </p>
           </div>
         </div>
 
-        <h3>🔄 Recent Enhancements</h3>
+        <h3>🔄 Recent Updates</h3>
         <ul>
-          <li>✅ API usage tracking system with 24-hour rolling window</li>
-          <li>✅ Mock recipe fallback for seamless demo experience</li>
-          <li>✅ Browser tab titles with "Portionist | " prefix</li>
-          <li>✅ Reduced API calls with 6-hour caching on dashboard</li>
-          <li>✅ Real-time API monitoring endpoints</li>
+          <li>✅ Improved recipe loading speed with smart caching</li>
+          <li>✅ Better navigation with clear page titles</li>
+          <li>✅ Enhanced AI recipe generation accuracy</li>
+          <li>✅ More reliable performance and uptime</li>
+          <li>✅ Cleaner, more intuitive user interface</li>
         </ul>
       </section>
 
@@ -790,621 +839,209 @@
       </section>
 
       <section id="tech-stack">
-        <h2>💻 Tech Stack</h2>
+        <h2>💻 Built With Love</h2>
 
-        <h3>Frontend</h3>
+        <h3>What Makes the App Work</h3>
         <div class="tech-stack">
-          <span class="tech-badge">React Native</span>
-          <span class="tech-badge">Expo SDK 52</span>
-          <span class="tech-badge">TypeScript</span>
-          <span class="tech-badge">Redux Toolkit</span>
-          <span class="tech-badge">React Navigation</span>
-          <span class="tech-badge">AsyncStorage</span>
-          <span class="tech-badge">Expo Linear Gradient</span>
-          <span class="tech-badge">React Native Picker</span>
+          <span class="tech-badge">React (Modern Web Framework)</span>
+          <span class="tech-badge">Node.js (Server)</span>
+          <span class="tech-badge">PostgreSQL (Database)</span>
+          <span class="tech-badge">Google AI (Smart Recommendations)</span>
+          <span class="tech-badge">Spoonacular (Recipe Source)</span>
         </div>
 
-        <h3>Backend</h3>
+        <h3>Where It Lives</h3>
         <div class="tech-stack">
-          <span class="tech-badge">Node.js</span>
-          <span class="tech-badge">Express.js</span>
-          <span class="tech-badge">TypeScript</span>
-          <span class="tech-badge">Drizzle ORM</span>
-          <span class="tech-badge">PostgreSQL</span>
-          <span class="tech-badge">bcrypt</span>
-          <span class="tech-badge">cors</span>
-        </div>
-
-        <h3>External APIs</h3>
-        <div class="tech-stack">
-          <span class="tech-badge">Spoonacular API</span>
-          <span class="tech-badge">Google Gemini AI</span>
-          <span class="tech-badge">Google Custom Search</span>
-        </div>
-
-        <h3>Development Tools</h3>
-        <div class="tech-stack">
-          <span class="tech-badge">ESLint</span>
-          <span class="tech-badge">Git</span>
-          <span class="tech-badge">npm</span>
-          <span class="tech-badge">Expo CLI</span>
-        </div>
-
-        <h3>Deployment</h3>
-        <div class="tech-stack">
-          <span class="tech-badge">Railway (Backend)</span>
-          <span class="tech-badge">Expo Go (Mobile)</span>
-          <span class="tech-badge">Web Browser (PWA)</span>
+          <span class="tech-badge">Railway (Backend Hosting)</span>
+          <span class="tech-badge">Netlify (Web Hosting)</span>
+          <span class="tech-badge">Cloud Storage (Your Data)</span>
         </div>
       </section>
 
       <section id="api">
-        <h2>🔌 API Documentation</h2>
+        <h2>� Your Account & Features</h2>
 
-        <h3>Authentication Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/auth/signup</td>
-              <td>Create new user account</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/auth/signin</td>
-              <td>User login with email/password</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/auth/signout</td>
-              <td>User logout</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <h3>What You Can Do with Portionist</h3>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <span class="icon">👤</span>
+            <h4>Create Your Account</h4>
+            <p>Sign up with your email - it's free and takes less than a minute!</p>
+          </div>
 
-        <h3>Recipe Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/recipes</td>
-              <td>Get suggested recipes by meal type</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/recipes/search</td>
-              <td>Search recipes by query</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/recipes/generate</td>
-              <td>Generate AI recipe with Gemini</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="feature-card">
+            <span class="icon">🔍</span>
+            <h4>Search Recipes</h4>
+            <p>Find meals by name, ingredient, cuisine type, or nutrition goals.</p>
+          </div>
 
-        <h3>Profile Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/profile/:userId</td>
-              <td>Get user profile</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>PUT</code></td>
-              <td>/profile/:userId</td>
-              <td>Update user profile</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/profile/:userId/onboarding</td>
-              <td>Get onboarding data</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>PUT</code></td>
-              <td>/profile/:userId/onboarding</td>
-              <td>Update onboarding data</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="feature-card">
+            <span class="icon">🎯</span>
+            <h4>Get Suggestions</h4>
+            <p>Receive personalized recipe recommendations based on your preferences.</p>
+          </div>
 
-        <h3>Favorites Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/favorites/:userId</td>
-              <td>Get all favorited recipes</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/favorites</td>
-              <td>Add recipe to favorites</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>DELETE</code></td>
-              <td>/favorites/:userId/:recipeId</td>
-              <td>Remove recipe from favorites</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="feature-card">
+            <span class="icon">❤️</span>
+            <h4>Save Favorites</h4>
+            <p>Bookmark recipes you love for quick access anytime.</p>
+          </div>
 
-        <h3>Food Logging Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/api/food/log</td>
-              <td>Log a meal with nutrition data</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/api/food/history/:userId</td>
-              <td>Get meal history with filters</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/api/food/today/:userId</td>
-              <td>Get today's logged meals</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="feature-card">
+            <span class="icon">📝</span>
+            <h4>Log Your Meals</h4>
+            <p>Track what you eat throughout the day with nutrition totals.</p>
+          </div>
 
-        <h3>Monitoring Endpoints</h3>
-        <table class="api-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Endpoint</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/health</td>
-              <td>Health check endpoint</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/api/usage/summary</td>
-              <td>Get API usage summary</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>GET</code></td>
-              <td>/api/usage/detailed</td>
-              <td>Get detailed API usage report</td>
-              <td><span class="status-badge status-active">Active</span></td>
-            </tr>
-            <tr>
-              <td><code>POST</code></td>
-              <td>/api/usage/reset</td>
-              <td>Reset API usage tracker (testing)</td>
-              <td>
-                <span class="status-badge status-demo">Testing Only</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="feature-card">
+            <span class="icon">📊</span>
+            <h4>View History</h4>
+            <p>See your eating patterns over time and track your progress.</p>
+          </div>
+
+          <div class="feature-card">
+            <span class="icon">⚙️</span>
+            <h4>Update Your Profile</h4>
+            <p>Change your goals, weight, or food preferences anytime.</p>
+          </div>
+
+          <div class="feature-card">
+            <span class="icon">🤖</span>
+            <h4>Generate Recipes</h4>
+            <p>Use AI to create custom recipes from ingredients you have.</p>
+          </div>
+        </div>
       </section>
 
       <section id="database">
-        <h2>🗄️ Database Schema</h2>
+        <h2>🔒 Your Privacy & Data</h2>
+
+        <h3>What Information We Store</h3>
+        <p>
+          Portionist keeps your data safe and secure. Here's what we save to make
+          your experience personalized and helpful:
+        </p>
 
         <div class="db-schema">
-          <h4>users</h4>
-          <table class="api-table">
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Constraints</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>user_id</td>
-                <td>UUID</td>
-                <td>PRIMARY KEY, DEFAULT gen_random_uuid()</td>
-              </tr>
-              <tr>
-                <td>email</td>
-                <td>VARCHAR(255)</td>
-                <td>UNIQUE, NOT NULL</td>
-              </tr>
-              <tr>
-                <td>password_hash</td>
-                <td>TEXT</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>full_name</td>
-                <td>VARCHAR(255)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>created_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-              <tr>
-                <td>updated_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-            </tbody>
-          </table>
+          <h4>Account Information</h4>
+          <ul>
+            <li><strong>Email Address:</strong> For logging in and account recovery</li>
+            <li><strong>Password:</strong> Encrypted and securely stored</li>
+            <li><strong>Full Name:</strong> To personalize your experience</li>
+          </ul>
         </div>
 
         <div class="db-schema">
-          <h4>onboarding</h4>
-          <table class="api-table">
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Constraints</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>onboarding_id</td>
-                <td>UUID</td>
-                <td>PRIMARY KEY, DEFAULT gen_random_uuid()</td>
-              </tr>
-              <tr>
-                <td>user_id</td>
-                <td>UUID</td>
-                <td>FOREIGN KEY → users(user_id), UNIQUE</td>
-              </tr>
-              <tr>
-                <td>current_weight</td>
-                <td>NUMERIC(5,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>target_weight</td>
-                <td>NUMERIC(5,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>cuisine</td>
-                <td>VARCHAR(100)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>user_age</td>
-                <td>INTEGER</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>created_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-              <tr>
-                <td>updated_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-            </tbody>
-          </table>
+          <h4>Your Health Goals</h4>
+          <ul>
+            <li><strong>Current & Target Weight:</strong> To provide appropriate meal suggestions</li>
+            <li><strong>Age:</strong> Helps calculate nutrition needs</li>
+            <li><strong>Favorite Cuisines:</strong> To recommend recipes you'll enjoy</li>
+          </ul>
         </div>
 
         <div class="db-schema">
-          <h4>favorites</h4>
-          <table class="api-table">
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Constraints</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>favorite_id</td>
-                <td>UUID</td>
-                <td>PRIMARY KEY, DEFAULT gen_random_uuid()</td>
-              </tr>
-              <tr>
-                <td>user_id</td>
-                <td>UUID</td>
-                <td>FOREIGN KEY → users(user_id)</td>
-              </tr>
-              <tr>
-                <td>recipe_id</td>
-                <td>VARCHAR(255)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>recipe_title</td>
-                <td>TEXT</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>recipe_image</td>
-                <td>TEXT</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>protein</td>
-                <td>NUMERIC(6,2)</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>carbs</td>
-                <td>NUMERIC(6,2)</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>fat</td>
-                <td>NUMERIC(6,2)</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>calories</td>
-                <td>NUMERIC(6,2)</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>created_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-            </tbody>
-          </table>
+          <h4>Saved Recipes</h4>
+          <ul>
+            <li><strong>Favorite Recipes:</strong> Your bookmarked meals with nutrition info</li>
+            <li><strong>Recipe Images:</strong> Photos of dishes you've saved</li>
+          </ul>
         </div>
 
         <div class="db-schema">
-          <h4>food_logs</h4>
-          <table class="api-table">
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Constraints</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>log_id</td>
-                <td>UUID</td>
-                <td>PRIMARY KEY, DEFAULT gen_random_uuid()</td>
-              </tr>
-              <tr>
-                <td>user_id</td>
-                <td>UUID</td>
-                <td>FOREIGN KEY → users(user_id)</td>
-              </tr>
-              <tr>
-                <td>recipe_id</td>
-                <td>VARCHAR(255)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>recipe_title</td>
-                <td>TEXT</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>meal_type</td>
-                <td>VARCHAR(50)</td>
-                <td>NOT NULL (Breakfast/Lunch/Dinner/Snack)</td>
-              </tr>
-              <tr>
-                <td>protein</td>
-                <td>NUMERIC(6,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>carbs</td>
-                <td>NUMERIC(6,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>fat</td>
-                <td>NUMERIC(6,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>calories</td>
-                <td>NUMERIC(6,2)</td>
-                <td>NOT NULL</td>
-              </tr>
-              <tr>
-                <td>source</td>
-                <td>VARCHAR(50)</td>
-                <td>DEFAULT 'spoonacular'</td>
-              </tr>
-              <tr>
-                <td>logged_at</td>
-                <td>TIMESTAMP</td>
-                <td>DEFAULT NOW()</td>
-              </tr>
-            </tbody>
-          </table>
+          <h4>Meal History</h4>
+          <ul>
+            <li><strong>Logged Meals:</strong> What you ate and when</li>
+            <li><strong>Nutrition Totals:</strong> Daily protein, carbs, fat, and calories</li>
+            <li><strong>Meal Types:</strong> Whether it was breakfast, lunch, dinner, or a snack</li>
+          </ul>
         </div>
 
-        <div class="note">
-          <strong>💡 Note:</strong> All tables use UUID for primary keys.
-          Foreign key relationships ensure data integrity. Timestamps track
-          creation and update times.
+        <div class="success">
+          <strong>✅ Your Privacy Matters:</strong> We never sell your personal information
+          or share it with third parties. Your data is encrypted and stored securely on
+          protected cloud servers.
         </div>
       </section>
 
       <section id="deployment">
-        <h2>🚀 Deployment</h2>
+        <h2>🚀 Where to Find Portionist</h2>
 
-        <h3>Backend (Railway)</h3>
+        <h3>Web App (Available Now!)</h3>
         <div class="success">
-          <strong>Production URL:</strong>
-          <code>https://portionist-backend.railway.app</code>
+          <strong>Live URL:</strong>
+          <code>https://portionist.netlify.app</code>
         </div>
         <ul>
-          <li><strong>Platform:</strong> Railway.app</li>
-          <li><strong>Database:</strong> PostgreSQL on Railway</li>
-          <li><strong>Build Command:</strong> <code>npm run build</code></li>
-          <li>
-            <strong>Start Command:</strong> <code>node dist/index.js</code>
-          </li>
-          <li>
-            <strong>Environment Variables:</strong> DATABASE_URL, PORT, API keys
-          </li>
+          <li><strong>Access:</strong> Open in any web browser (Chrome, Safari, Firefox, Edge)</li>
+          <li><strong>Devices:</strong> Works on desktop computers, laptops, and tablets</li>
+          <li><strong>No Download:</strong> Just visit the website and start using it</li>
+          <li><strong>Always Updated:</strong> Latest features automatically available</li>
         </ul>
 
-        <h3>Frontend (Mobile)</h3>
+        <h3>Mobile Apps (Coming in 2026!)</h3>
+        <div class="note">
+          <strong>📱 In Development:</strong> Native iOS and Android apps are currently being built
+        </div>
         <ul>
-          <li><strong>Platform:</strong> Expo Go</li>
-          <li><strong>iOS:</strong> Scan QR code in Expo Go app</li>
-          <li><strong>Android:</strong> Scan QR code in Expo Go app</li>
-          <li><strong>Development:</strong> <code>npx expo start</code></li>
+          <li><strong>iPhone & iPad:</strong> iOS app coming to the App Store</li>
+          <li><strong>Android Devices:</strong> Android app coming to Google Play Store</li>
+          <li><strong>Features:</strong> Same great experience, optimized for mobile</li>
+          <li><strong>Stay Tuned:</strong> Sign up to get notified when apps launch!</li>
         </ul>
 
-        <h3>Frontend (Web)</h3>
+        <h3>How Your Data is Protected</h3>
         <ul>
-          <li><strong>Platform:</strong> Web Browser</li>
-          <li>
-            <strong>URL:</strong> Local development or Netlify/Vercel deployment
-          </li>
-          <li><strong>Command:</strong> <code>npx expo start --web</code></li>
+          <li><strong>Secure Servers:</strong> Hosted on Railway's reliable cloud platform</li>
+          <li><strong>Database:</strong> PostgreSQL database with encrypted storage</li>
+          <li><strong>Safe Connections:</strong> HTTPS encryption for all data transfer</li>
+          <li><strong>Privacy First:</strong> Your personal info is never shared</li>
         </ul>
-
-        <h3>Environment Setup</h3>
-        <pre><code># Backend .env
-DATABASE_URL=postgresql://user:pass@host:port/db
-PORT=3000
-SPOONACULAR_API_KEY=your_key_here
-GEMINI_API_KEY=your_key_here
-GOOGLE_SEARCH_API_KEY=your_key_here
-GOOGLE_SEARCH_ENGINE_ID=your_id_here
-
-# Frontend (built into app)
-API_BASE_URL=https://portionist-backend.railway.app</code></pre>
       </section>
 
       <section id="apis-used">
-        <h2>🔗 External APIs</h2>
+        <h2>🔗 Where We Get Recipes</h2>
 
-        <h3>Spoonacular Recipe API</h3>
-        <div class="warning">
-          <strong>⚠️ Rate Limit:</strong> 150 calls per day (Free tier)
-        </div>
-        <ul>
-          <li>
-            <strong>Usage:</strong> Recipe search, suggestions, nutrition data
-          </li>
-          <li>
-            <strong>Endpoints Used:</strong> /recipes/complexSearch,
-            /recipes/{id}/information
-          </li>
-          <li>
-            <strong>Current Usage:</strong> ~60-110 calls/day (tracked in
-            real-time)
-          </li>
-          <li>
-            <strong>Fallback:</strong> Demo mode with 13 mock recipes when limit
-            reached
-          </li>
-        </ul>
-
-        <h3>Google Gemini AI (1.5 Flash)</h3>
+        <h3>Spoonacular Recipe Database</h3>
         <div class="success">
-          <strong>✅ Generous Limit:</strong> 1,500 calls per day (Free tier)
+          <strong>✅ 500,000+ Recipes:</strong> Huge collection of delicious meals from around the world
         </div>
         <ul>
-          <li><strong>Usage:</strong> AI-powered recipe generation</li>
           <li>
-            <strong>Features:</strong> Custom recipes based on ingredients,
-            cuisine, goals
+            <strong>What It Does:</strong> Provides recipes with complete nutrition information,
+            cooking instructions, and ingredients
           </li>
-          <li><strong>Current Usage:</strong> Minimal (~5-10 calls/day)</li>
-          <li><strong>Model:</strong> gemini-1.5-flash</li>
+          <li>
+            <strong>How It Helps You:</strong> Powers our recipe search and daily suggestions
+          </li>
+          <li>
+            <strong>Always Available:</strong> Backup recipes ensure you can always browse,
+            even if we hit our daily limit
+          </li>
         </ul>
 
-        <h3>Google Custom Search API</h3>
-        <div class="note">
-          <strong>📊 Limit:</strong> 100 calls per day (Free tier)
+        <h3>Google AI Chef</h3>
+        <div class="success">
+          <strong>✅ Smart AI Technology:</strong> Creates custom recipes just for you
         </div>
         <ul>
-          <li><strong>Usage:</strong> Fallback recipe image search</li>
-          <li><strong>Current Usage:</strong> Rarely used (backup only)</li>
-          <li><strong>Status:</strong> Configured but not primary</li>
+          <li><strong>What It Does:</strong> Uses artificial intelligence to generate unique recipes</li>
+          <li>
+            <strong>How It Helps You:</strong> Tell it what ingredients you have, and it creates
+            a custom recipe with instructions
+          </li>
+          <li><strong>Super Smart:</strong> Considers your cuisine preferences and dietary goals</li>
         </ul>
 
-        <h3>API Monitoring</h3>
-        <p>Track API usage in real-time:</p>
-        <pre><code># Get usage summary
-curl http://localhost:3000/api/usage/summary
-
-# Get detailed report
-curl http://localhost:3000/api/usage/detailed
-
-# Response includes:
-# - Calls in last 24 hours
-# - Percentage of limit used
-# - Status: OK (0-59%), WARNING (60-79%), CRITICAL (80-100%)
-# - Breakdown by endpoint</code></pre>
+        <h3>Google Image Search</h3>
+        <div class="note">
+          <strong>📸 Beautiful Photos:</strong> Finds appetizing recipe images
+        </div>
+        <ul>
+          <li><strong>What It Does:</strong> Searches for high-quality food photos</li>
+          <li><strong>How It Helps You:</strong> Shows you what dishes look like before you cook</li>
+          <li><strong>Backup Only:</strong> Used occasionally when other images aren't available</li>
+        </ul>
       </section>
 
       <section id="future">
@@ -1510,67 +1147,99 @@ curl http://localhost:3000/api/usage/detailed
       </section>
 
       <section id="getting-started">
-        <h2>🏁 Getting Started</h2>
+        <h2>🏁 How to Start Using Portionist</h2>
 
-        <h3>Prerequisites</h3>
-        <pre><code>Node.js >= 18.x
-npm >= 9.x
-Expo CLI
-Git</code></pre>
+        <h3>Step 1: Visit the Website</h3>
+        <p>
+          Open your web browser and go to:
+          <code>https://portionist.netlify.app</code>
+        </p>
 
-        <h3>Backend Setup</h3>
-        <pre><code># Clone repository
-git clone https://github.com/yourusername/portionist.git
-cd portionist/backend
+        <h3>Step 2: Create Your Free Account</h3>
+        <ul>
+          <li>Click "Sign Up" on the homepage</li>
+          <li>Enter your email address</li>
+          <li>Choose a secure password</li>
+          <li>Add your full name</li>
+          <li>Click "Create Account"</li>
+        </ul>
 
-# Install dependencies
-npm install
+        <h3>Step 3: Set Up Your Profile</h3>
+        <ul>
+          <li>Tell us your current weight and target weight</li>
+          <li>Enter your age</li>
+          <li>Select your favorite cuisine types</li>
+          <li>Click "Continue"</li>
+        </ul>
 
-# Create .env file
-cp .env.example .env
-# Add your API keys and DATABASE_URL
+        <h3>Step 4: Start Exploring!</h3>
+        <ul>
+          <li><strong>Dashboard:</strong> See personalized recipe recommendations</li>
+          <li><strong>Search:</strong> Find recipes by name or ingredient</li>
+          <li><strong>AI Generator:</strong> Create custom recipes with AI</li>
+          <li><strong>Log Meals:</strong> Track what you eat throughout the day</li>
+          <li><strong>Favorites:</strong> Save recipes you love</li>
+        </ul>
 
-# Build TypeScript
-npm run build
-
-# Run migrations
-npm run migrate
-
-# Start development server
-npm run dev
-
-# Server runs on http://localhost:3000</code></pre>
-
-        <h3>Frontend Setup</h3>
-        <pre><code># From project root
-cd portionist
-
-# Install dependencies
-npm install
-
-# Start Expo development server
-npx expo start
-
-# Options:
-# - Press 'w' to open in web browser
-# - Scan QR code with Expo Go (iOS/Android)
-# - Press 'i' for iOS simulator
-# - Press 'a' for Android emulator</code></pre>
-
-        <h3>Database Setup</h3>
-        <pre><code># Option 1: Railway (Recommended)
-1. Create Railway account
-2. Create new PostgreSQL database
-3. Copy DATABASE_URL to .env
-
-# Option 2: Local PostgreSQL
-1. Install PostgreSQL
-2. Create database: createdb portionist
-3. Set DATABASE_URL in .env
-4. Run migrations: npm run migrate</code></pre>
+        <div class="success">
+          <strong>✅ That's It!</strong> You're ready to start your healthy eating journey
+          with Portionist. Explore recipes, log your meals, and reach your goals!
+        </div>
       </section>
 
       <section id="documentation">
+        <h2>📚 Need Help or Have Questions?</h2>
+
+        <h3>Helpful Resources</h3>
+        <ul>
+          <li>
+            <strong>Tutorial Videos:</strong> Watch quick guides on how to use each feature
+          </li>
+          <li>
+            <strong>FAQ:</strong> Common questions and answers about Portionist
+          </li>
+          <li>
+            <strong>Support:</strong> Contact our team if you need assistance
+          </li>
+          <li>
+            <strong>Blog:</strong> Tips for healthy eating and meal planning
+          </li>
+        </ul>
+
+        <h3>Tips for Success</h3>
+        <ul>
+          <li>✅ Log your meals daily for best results</li>
+          <li>✅ Explore different cuisines to keep meals exciting</li>
+          <li>✅ Save your favorite recipes for quick meal planning</li>
+          <li>✅ Use the AI generator when you have random ingredients</li>
+          <li>✅ Check your meal history to track progress</li>
+          <li>✅ Update your profile as your goals change</li>
+        </ul>
+      </section>
+
+      <section id="additional-docs">
+        <h2>🔧 For Developers</h2>
+
+        <p>
+          Are you a developer interested in the technical details? Visit our
+          <strong>GitHub repository</strong> for:
+        </p>
+
+        <ul>
+          <li>Complete source code and documentation</li>
+          <li>Setup instructions for local development</li>
+          <li>API documentation and database schemas</li>
+          <li>Contributing guidelines</li>
+          <li>Technical architecture overview</li>
+        </ul>
+
+        <div class="note">
+          <strong>📖 Developer Docs:</strong> Check out README.md, API_RATE_LIMIT_GUIDE.md,
+          and other technical documentation in the project repository.
+        </div>
+      </section>
+
+      <section id="documentation-old" style="display: none;">
         <h2>📚 Additional Documentation</h2>
 
         <h3>Project Documentation Files</h3>
@@ -1647,29 +1316,6 @@ npx expo start
           </li>
         </ul>
       </section>
-
-      <section id="license">
-        <h2>⚖️ License & Usage</h2>
-        <p><strong>License:</strong> MIT License (Open Source)</p>
-        <p>
-          This project is available for educational and portfolio purposes. Feel
-          free to use, modify, and learn from the code.
-        </p>
-
-        <div class="warning">
-          <strong>⚠️ API Keys:</strong> Remember to use your own API keys if
-          deploying. Never commit API keys to version control.
-        </div>
-
-        <h3>Attribution</h3>
-        <ul>
-          <li>Recipe data powered by Spoonacular</li>
-          <li>AI generation powered by Google Gemini</li>
-          <li>Icons and emojis from system fonts</li>
-          <li>Mock recipe images from Unsplash</li>
-        </ul>
-      </section>
-    </div>
 
     <footer>
       <h2>🍽️ Portionist</h2>
