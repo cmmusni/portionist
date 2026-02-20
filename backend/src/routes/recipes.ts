@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import aiRecipeController from "../controllers/aiRecipeController.js";
 import recipeController from "../controllers/recipeController.js";
+import { MOCK_RECIPES } from "../data/mockRecipes.js";
 import { apiTracker } from "../utils/apiTracker.js";
 import { mockSearchResults } from "../utils/mockRecipes.js";
 
@@ -106,70 +107,37 @@ router.post("/", async (req: Request, res: Response) => {
   await recipeController.getRecipes(req, res);
 });
 
-// POST /recipes/generate - Generate recipe using AI with Spoonacular fallback
+// POST /recipes/generate - Generate recipe using Spoonacular (primary), AI (fallback), Mock (last resort)
 router.post("/generate", async (req: Request, res: Response) => {
+  const { ingredients, cuisine, mealType, count } = req.body;
+  const recipeCount = Math.min(count || 2, 4);
+
+  // PRIORITY 1: Try Spoonacular API first
   try {
-    // First, try AI generation
-    await aiRecipeController.generateRecipe(req, res);
-    
-    // If response was already sent successfully, we're done
-    if (res.headersSent) {
-      return;
+    const apiKey = process.env.SPOONACULAR_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("Spoonacular API key not configured");
     }
-  } catch (aiError: any) {
-    console.warn("⚠️ AI generation failed, attempting Spoonacular fallback...", aiError.message);
-    
-    // AI failed, try Spoonacular as fallback
-    try {
-      const { ingredients, cuisine, mealType, count } = req.body;
-      const apiKey = process.env.SPOONACULAR_API_KEY;
 
-      if (!apiKey) {
-        res.status(503).json({
-          success: false,
-          message: "Both AI and recipe search services are unavailable. Please try again later.",
-          error: "ALL_SERVICES_DOWN",
-        });
-        return;
-      }
+    // Build search query from ingredients and cuisine
+    const ingredientNames =
+      ingredients?.map((i: any) => i.name).join(",") || "";
+    const searchQuery = ingredientNames || cuisine || "dinner";
 
-      // Build search query from ingredients and cuisine
-      const ingredientNames = ingredients?.map((i: any) => i.name).join(",") || "";
-      const searchQuery = ingredientNames || cuisine || "dinner";
-      const recipeCount = Math.min(count || 2, 4);
+    // Search Spoonacular for recipes
+    const spoonacularUrl = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${apiKey}&query=${encodeURIComponent(searchQuery)}&cuisine=${encodeURIComponent(cuisine || "")}&type=${encodeURIComponent(mealType?.toLowerCase() || "")}&addRecipeNutrition=true&addRecipeInstructions=true&number=${recipeCount}`;
 
-      // Search Spoonacular for recipes
-      const spoonacularUrl = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${apiKey}&query=${encodeURIComponent(searchQuery)}&cuisine=${encodeURIComponent(cuisine || "")}&type=${encodeURIComponent(mealType?.toLowerCase() || "")}&addRecipeNutrition=true&addRecipeInstructions=true&number=${recipeCount}`;
+    const response = await fetch(spoonacularUrl);
 
-      const response = await fetch(spoonacularUrl);
-      
-      // Track API call
-      apiTracker.logCall(
-        "spoonacular",
-        "/recipes/complexSearch (fallback)",
-        response.status,
-      );
+    // Track API call
+    apiTracker.logCall(
+      "spoonacular",
+      "/recipes/complexSearch",
+      response.status,
+    );
 
-      if (response.status === 429 || response.status === 402) {
-        // Both APIs are rate limited
-        res.status(503).json({
-          success: false,
-          message: "Recipe services are temporarily at capacity. Both AI and recipe search have reached their daily limits. Please try again later.",
-          error: "ALL_SERVICES_DOWN",
-          retryAfter: "Try again tomorrow when quotas reset",
-        });
-        return;
-      }
-
-      if (!response.ok) {
-        res.status(503).json({
-          success: false,
-          message: "Recipe services are temporarily unavailable. Please try again later.",
-          error: "ALL_SERVICES_DOWN",
-        });
-        return;
-      }
-
+    if (response.ok) {
       const data: any = await response.json();
       const recipes = (data.results || []).map((recipe: any) => {
         const nutrients = recipe.nutrition?.nutrients || [];
@@ -179,18 +147,21 @@ router.post("/generate", async (req: Request, res: Response) => {
         };
 
         // Get instructions
-        const instructions = recipe.analyzedInstructions?.[0]?.steps?.map((step: any, idx: number) => ({
-          stepNumber: idx + 1,
-          instruction: step.step,
-        })) || [{ stepNumber: 1, instruction: "Watch video" }];
+        const instructions = recipe.analyzedInstructions?.[0]?.steps?.map(
+          (step: any, idx: number) => ({
+            stepNumber: idx + 1,
+            instruction: step.step,
+          }),
+        ) || [{ stepNumber: 1, instruction: "Watch video" }];
 
         // Get ingredients
-        const recipeIngredients = recipe.nutrition?.ingredients?.map((ing: any, idx: number) => ({
-          id: `spoon-${recipe.id}-${idx}`,
-          name: ing.name,
-          quantity: ing.amount || 0,
-          unit: ing.unit || "g",
-        })) || [];
+        const recipeIngredients =
+          recipe.nutrition?.ingredients?.map((ing: any, idx: number) => ({
+            id: `spoon-${recipe.id}-${idx}`,
+            name: ing.name,
+            quantity: ing.amount || 0,
+            unit: ing.unit || "g",
+          })) || [];
 
         return {
           id: `spoonacular-${recipe.id}`,
@@ -203,7 +174,8 @@ router.post("/generate", async (req: Request, res: Response) => {
           instructions,
           mealType: mealType || "Lunch",
           cuisine: cuisine || "American",
-          portionSize: recipe.servings > 0 ? Math.round(400 / recipe.servings) : 400,
+          portionSize:
+            recipe.servings > 0 ? Math.round(400 / recipe.servings) : 400,
           portionUnit: "g",
           prepTime: recipe.preparationMinutes || 30,
           cookTime: recipe.cookingMinutes || 20,
@@ -213,31 +185,125 @@ router.post("/generate", async (req: Request, res: Response) => {
         };
       });
 
-      if (recipes.length === 0) {
-        res.status(503).json({
-          success: false,
-          message: "No recipes found. Both AI and recipe search are temporarily unavailable.",
-          error: "ALL_SERVICES_DOWN",
+      if (recipes.length > 0) {
+        console.log(
+          `✅ Spoonacular primary success: ${recipes.length} recipes`,
+        );
+        res.status(200).json({
+          success: true,
+          data: recipes,
+          source: "spoonacular",
+          message: `Generated ${recipes.length} recipe(s) from Spoonacular`,
         });
         return;
       }
+    }
 
-      console.log(`✅ Spoonacular fallback successful: ${recipes.length} recipes`);
-      res.status(200).json({
-        success: true,
-        data: recipes,
-        source: "spoonacular-fallback",
-        message: `Generated ${recipes.length} recipe(s) using recipe search (AI temporarily at capacity)`,
-        fallback: true,
-      });
-    } catch (spoonacularError: any) {
-      console.error("❌ Both AI and Spoonacular failed:", spoonacularError);
-      res.status(503).json({
-        success: false,
-        message: "Recipe services are temporarily down. Both AI and recipe search are unavailable. Please try again later.",
-        error: "ALL_SERVICES_DOWN",
-        retryAfter: "5-10 minutes",
-      });
+    // If we get here, Spoonacular didn't return good results
+    throw new Error(
+      `Spoonacular failed: ${response.status} ${response.statusText}`,
+    );
+  } catch (spoonacularError: any) {
+    console.warn(
+      "⚠️ Spoonacular failed, attempting Google AI fallback...",
+      spoonacularError.message,
+    );
+
+    // PRIORITY 2: Try Google AI as fallback
+    try {
+      await aiRecipeController.generateRecipe(req, res);
+
+      // If response was already sent successfully, we're done
+      if (res.headersSent) {
+        console.log("✅ Google AI fallback successful");
+        return;
+      }
+
+      // If we get here, AI didn't send a response, fall through to mock
+      throw new Error("AI generation did not return recipes");
+    } catch (aiError: any) {
+      console.warn(
+        "⚠️ Both Spoonacular and AI failed, returning mock recipes...",
+        aiError.message,
+      );
+
+      // PRIORITY 3: Return mock recipes as last resort
+      try {
+        // Filter mock recipes by cuisine and mealType if provided
+        let filteredMockRecipes = MOCK_RECIPES;
+
+        if (cuisine) {
+          filteredMockRecipes = filteredMockRecipes.filter(
+            (r) =>
+              r.cuisine?.toLowerCase() === cuisine.toLowerCase() || !r.cuisine,
+          );
+        }
+
+        if (mealType) {
+          filteredMockRecipes = filteredMockRecipes.filter(
+            (r) =>
+              r.mealType?.toLowerCase() === mealType.toLowerCase() ||
+              !r.mealType,
+          );
+        }
+
+        // If no matches, use all mock recipes
+        if (filteredMockRecipes.length === 0) {
+          filteredMockRecipes = MOCK_RECIPES;
+        }
+
+        // Get the requested number of recipes
+        const mockRecipes = filteredMockRecipes.slice(0, recipeCount);
+
+        // Format mock recipes to match expected structure
+        const formattedMockRecipes = mockRecipes.map(
+          (recipe: any, idx: number) => ({
+            ...recipe,
+            id: recipe.id || `mock-${Date.now()}-${idx}`,
+            source: "mock",
+            image:
+              recipe.image ||
+              "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+            ingredients: recipe.ingredients || [],
+            instructions: Array.isArray(recipe.instructions)
+              ? recipe.instructions.map(
+                  (
+                    inst: string | { stepNumber: number; instruction: string },
+                    i: number,
+                  ) =>
+                    typeof inst === "string"
+                      ? { stepNumber: i + 1, instruction: inst }
+                      : inst,
+                )
+              : [],
+            portionUnit: recipe.portionUnit || "g",
+            prepTime: recipe.prepTime || 20,
+            cookTime: recipe.cookTime || 25,
+            totalTime: recipe.totalTime || 45,
+            servings: recipe.servings || 2,
+            calories: recipe.calories || 450,
+          }),
+        );
+
+        console.log(
+          `✅ Returning ${formattedMockRecipes.length} mock recipes as fallback`,
+        );
+        res.status(200).json({
+          success: true,
+          data: formattedMockRecipes,
+          source: "mock",
+          message: `Showing ${formattedMockRecipes.length} sample recipe(s) (external services temporarily unavailable)`,
+          fallback: true,
+        });
+      } catch (mockError: any) {
+        console.error("❌ Even mock recipes failed:", mockError);
+        res.status(500).json({
+          success: false,
+          message:
+            "Unable to generate recipes at this time. Please try again later.",
+          error: "INTERNAL_ERROR",
+        });
+      }
     }
   }
 });
