@@ -1,5 +1,9 @@
+import * as WebBrowser from "expo-web-browser";
 import { Alert, Platform } from "react-native";
 import { apiUrl } from "./config";
+
+// Required for web browser to close properly after authentication
+WebBrowser.maybeCompleteAuthSession();
 
 export interface GoogleUser {
   userId: string;
@@ -10,9 +14,9 @@ export interface GoogleUser {
 
 // Google OAuth client ID - you'll need to get this from Google Cloud Console
 // For development, using a placeholder - will use demo mode
-const GOOGLE_CLIENT_ID =
+const GOOGLE_WEB_CLIENT_ID =
   "601524642960-3vr1q7noraptm283am3olhsslgn0v9fb.apps.googleusercontent.com";
-const USE_DEMO_MODE = GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE";
+const USE_DEMO_MODE = false; // Set to true to enable demo mode for testing
 
 declare global {
   interface Window {
@@ -47,8 +51,8 @@ export const initializeGoogle = async (): Promise<void> => {
     return;
   }
 
-  // For native apps, you would initialize @react-native-google-signin/google-signin
-  console.log("Google Sign-In ready for native");
+  // For native apps using expo-auth-session, no configuration needed
+  console.log("Google Sign-In ready for native using expo-auth-session");
 };
 
 /**
@@ -59,12 +63,7 @@ export const googleLogin = async (): Promise<GoogleUser | null> => {
     if (Platform.OS === "web") {
       return await googleLoginWeb();
     } else {
-      // For native, would use @react-native-google-signin/google-signin
-      Alert.alert(
-        "Coming Soon",
-        "Google Sign-In on mobile will be available in the next update.",
-      );
-      return null;
+      return await googleLoginNative();
     }
   } catch (error) {
     console.error("Google login error:", error);
@@ -106,12 +105,12 @@ async function googleLoginWeb(): Promise<GoogleUser | null> {
 
     console.log(
       "Initializing Google Sign-In with client ID:",
-      GOOGLE_CLIENT_ID,
+      GOOGLE_WEB_CLIENT_ID,
     );
 
     // Initialize Google Sign-In
     window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
+      client_id: GOOGLE_WEB_CLIENT_ID,
       callback: async (response: any) => {
         try {
           console.log("Google Sign-In callback received");
@@ -300,6 +299,72 @@ async function googleLoginDemo(): Promise<GoogleUser | null> {
     Alert.alert(
       "Authentication Error",
       "Failed to complete Google sign-in. Please try again.",
+    );
+    return null;
+  }
+}
+
+/**
+ * Google Sign-In for Native (iOS/Android)
+ * Opens Google OAuth in browser, redirects to a web page that can communicate back
+ */
+async function googleLoginNative(): Promise<GoogleUser | null> {
+  try {
+    console.log("Opening Google Sign-In in browser...");
+
+    // Redirect URI for Expo - no path, just base URL
+    const redirectBase = "exp://172.20.10.3:8081";
+
+    const authUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${GOOGLE_WEB_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent("https://portionist.netlify.app/oauth-callback.html")}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent("openid profile email")}&` +
+      `access_type=offline`;
+
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectBase);
+
+    console.log("Browser result:", result);
+
+    if (result.type !== "success") {
+      console.log("Authentication cancelled or failed");
+      return null;
+    }
+
+    // Parse the redirect URL to get the authorization code
+    const url = result.url;
+    const codeMatch = url.match(/[?&]code=([^&]+)/);
+
+    if (!codeMatch) {
+      throw new Error("No authorization code received");
+    }
+
+    const code = decodeURIComponent(codeMatch[1]);
+    console.log("Got authorization code, exchanging for user info...");
+
+    // Exchange code for tokens via backend
+    const backendResponse = await fetch(apiUrl("/auth/google/callback"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code }),
+    });
+
+    if (!backendResponse.ok) {
+      const errorData = await backendResponse.json();
+      throw new Error(errorData.error || "Backend authentication failed");
+    }
+
+    const data = await backendResponse.json();
+    console.log("Google Sign-In successful");
+    return data.data;
+  } catch (error: any) {
+    console.error("Native Google login error:", error);
+    Alert.alert(
+      "Authentication Error",
+      error.message || "Failed to complete Google sign-in. Please try again.",
     );
     return null;
   }
