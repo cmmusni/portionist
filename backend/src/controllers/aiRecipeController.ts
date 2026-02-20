@@ -110,6 +110,7 @@ class AIRecipeController {
     mealType: string,
     cuisine: string,
     recipeIndex: number = 0,
+    retryCount: number = 0,
   ): Promise<Recipe> {
     const ingredientsText =
       ingredients.length > 0
@@ -157,62 +158,82 @@ class AIRecipeController {
       `Generating recipe ${recipeIndex + 1} with ${ingredients.length} ingredients (${cuisine} ${mealType})`,
     );
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    console.log("Gemini response received, length:", responseText.length);
+    try {
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      console.log("Gemini response received, length:", responseText.length);
 
-    // Parse JSON from response (handle markdown code blocks)
-    let jsonString = responseText;
+      // Parse JSON from response (handle markdown code blocks)
+      let jsonString = responseText;
 
-    // Check if response is wrapped in markdown code blocks
-    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch && jsonMatch[1]) {
-      jsonString = jsonMatch[1].trim();
+      // Check if response is wrapped in markdown code blocks
+      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch && jsonMatch[1]) {
+        jsonString = jsonMatch[1].trim();
+      }
+
+      const recipeData = JSON.parse(jsonString);
+
+      // Fetch a proper food image for the recipe
+      const imageUrl = this.generateImageUrl(recipeData.name);
+
+      // Format recipe to match expected schema
+      const finalPortionSize = recipeData.portionSize || portionSize;
+      const finalMealType = recipeData.mealType || mealType;
+
+      // Get first ingredient for display purposes (backward compatibility)
+      const displayIngredient = ingredients[0] || { id: "", name: "Unknown" };
+
+      const generatedRecipe: Recipe = {
+        id: recipeData.recipeId || `ai-recipe-${Date.now()}-${recipeIndex}`,
+        name: recipeData.name,
+        image: imageUrl,
+        source: "ai",
+        mainIngredient: displayIngredient,
+        sideIngredients: ingredients.slice(1),
+        ingredients: (recipeData.ingredients || []).map((ing: any) => ({
+          id: ing.id || ing.name.toLowerCase().replace(/\s+/g, "_"),
+          name: ing.name,
+          quantity: ing.quantity || 0,
+          unit: ing.unit || "g",
+        })),
+        instructions: (recipeData.instructions || []).map(
+          (instruction: string, idx: number) => ({
+            stepNumber: idx + 1,
+            instruction,
+          }),
+        ),
+        mealType: finalMealType,
+        cuisine: recipeData.cuisine || cuisine,
+        portionSize: finalPortionSize,
+        portionUnit: recipeData.portionUnit || "g",
+        prepTime: recipeData.prepTime || 15,
+        cookTime: recipeData.cookTime || 20,
+        totalTime: recipeData.totalTime || 35,
+        servings: recipeData.servings || 1,
+        calories: this.calculateCalories(finalPortionSize, finalMealType),
+      };
+
+      return generatedRecipe;
+    } catch (error: any) {
+      // Handle 429 rate limit with exponential backoff
+      if (error.status === 429 && retryCount < 2) {
+        const waitTime = Math.pow(2, retryCount + 1) * 1000; // 2s, 4s
+        console.warn(
+          `⚠️  Rate limit hit, retrying in ${waitTime / 1000}s (attempt ${retryCount + 1}/2)`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        return this.generateSingleRecipe(
+          ingredients,
+          portionSize,
+          mealType,
+          cuisine,
+          recipeIndex,
+          retryCount + 1,
+        );
+      }
+      throw error;
     }
-
-    const recipeData = JSON.parse(jsonString);
-
-    // Fetch a proper food image for the recipe
-    const imageUrl = this.generateImageUrl(recipeData.name);
-
-    // Format recipe to match expected schema
-    const finalPortionSize = recipeData.portionSize || portionSize;
-    const finalMealType = recipeData.mealType || mealType;
-
-    // Get first ingredient for display purposes (backward compatibility)
-    const displayIngredient = ingredients[0] || { id: "", name: "Unknown" };
-
-    const generatedRecipe: Recipe = {
-      id: recipeData.recipeId || `ai-recipe-${Date.now()}-${recipeIndex}`,
-      name: recipeData.name,
-      image: imageUrl,
-      source: "ai",
-      mainIngredient: displayIngredient,
-      sideIngredients: ingredients.slice(1),
-      ingredients: (recipeData.ingredients || []).map((ing: any) => ({
-        id: ing.id || ing.name.toLowerCase().replace(/\s+/g, "_"),
-        name: ing.name,
-        quantity: ing.quantity || 0,
-        unit: ing.unit || "g",
-      })),
-      instructions: (recipeData.instructions || []).map(
-        (instruction: string, idx: number) => ({
-          stepNumber: idx + 1,
-          instruction,
-        }),
-      ),
-      mealType: finalMealType,
-      cuisine: recipeData.cuisine || cuisine,
-      portionSize: finalPortionSize,
-      portionUnit: recipeData.portionUnit || "g",
-      prepTime: recipeData.prepTime || 15,
-      cookTime: recipeData.cookTime || 20,
-      totalTime: recipeData.totalTime || 35,
-      servings: recipeData.servings || 1,
-      calories: this.calculateCalories(finalPortionSize, finalMealType),
-    };
-
-    return generatedRecipe;
   }
 
   async generateRecipe(
@@ -313,14 +334,33 @@ class AIRecipeController {
         } catch (err: any) {
           console.error(`Failed to generate recipe ${i + 1}:`, err);
 
-          // If it's a rate limit error, return immediately instead of continuing
+          // If it's a rate limit error, return what we have with a helpful message
           if (err.status === 429) {
+            console.warn(
+              `🚫 Gemini API rate limit exhausted after retries. Generated ${generatedRecipes.length} recipes.`,
+            );
+
+            // Return partial results if we got at least one recipe
+            if (generatedRecipes.length > 0) {
+              res.status(200).json({
+                success: true,
+                data: generatedRecipes,
+                source: "ai",
+                message: `Generated ${generatedRecipes.length} recipe(s). AI is temporarily at capacity - quota resets hourly.`,
+                partial: true,
+                rateLimitReached: true,
+              });
+              return;
+            }
+
+            // No recipes generated - return error
             res.status(429).json({
               success: false,
               message:
-                "API rate limit reached. Please try again in a few minutes.",
+                "AI recipe generator is temporarily at capacity. Free tier limit: 15 requests/minute, 1500/day. Please try again in a few minutes or use recipe search instead.",
               error: "RATE_LIMIT_EXCEEDED",
-              generatedCount: generatedRecipes.length,
+              suggestion: "Try searching for recipes using the search feature",
+              retryAfter: "1-5 minutes",
             });
             return;
           }
@@ -337,8 +377,11 @@ class AIRecipeController {
         res.status(503).json({
           success: false,
           message:
-            "AI service temporarily unavailable due to rate limits. Please try again in a few minutes.",
-          error: "RATE_LIMIT_EXCEEDED",
+            "AI recipe generator is currently unavailable. This is normal with free tier API limits (15 requests/minute, 1500/day).",
+          error: "SERVICE_UNAVAILABLE",
+          suggestion:
+            "Please try again in 1-5 minutes, or use the recipe search feature instead.",
+          retryAfter: "1-5 minutes",
         });
         return;
       }
