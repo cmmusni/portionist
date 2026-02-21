@@ -749,12 +749,22 @@ function RecipeDisplayScreenWrapper({ route }: any) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
-          }).then((res) => res.json()),
+          }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          }),
           fetch(apiUrl("/recipes/generate"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
-          }).then((res) => res.json()),
+          }).then(async (res) => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          }),
         ]);
 
         if (!mounted) return;
@@ -874,34 +884,17 @@ function RecipeDisplayScreenWrapper({ route }: any) {
             // For now, we silently continue since we have results
           }
         } else {
-          // No recipes at all
-          if (failedAPIs.length === 2) {
-            // Both APIs failed
-            Alert.alert(
-              "Service Temporarily Unavailable",
-              "Recipe sources are currently experiencing issues. Please try again in a few minutes.",
-              [{ text: "OK", onPress: () => navigation.goBack() }],
-            );
-          } else if (failedAPIs.length === 1) {
-            // One API failed, but the other returned no results
-            Alert.alert(
-              "No Recipes Found",
-              `No matching recipes were found. Note: ${failedAPIs[0]} is currently unavailable.`,
-              [{ text: "OK", onPress: () => navigation.goBack() }],
-            );
-          } else {
-            // Both APIs succeeded but returned no results
-            Alert.alert(
-              "No Recipes Found",
-              "No matching recipes were found for your selection. Try different ingredients or cuisine.",
-              [{ text: "OK", onPress: () => navigation.goBack() }],
-            );
-          }
+          // No recipes at all - set empty array and let the screen handle it
+          console.warn("No recipes returned from any source");
+          setRecipes([]);
+
+          // Don't block navigation - let the RecipeDisplayScreen show an empty state
+          // The screen will display a friendly message to the user
         }
       } catch (err) {
         console.error("Failed to fetch recipes:", err);
-        Alert.alert("Error", "Failed to load recipes from server.");
-        navigation.goBack();
+        // Don't block navigation - set empty recipes and let the screen handle it
+        setRecipes([]);
       } finally {
         setLoading(false);
       }
@@ -989,7 +982,62 @@ function RecipeDisplayScreenWrapper({ route }: any) {
     );
   }
 
-  return null;
+  // No recipes found - show error state
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+        backgroundColor: "#fff",
+      }}
+    >
+      <Text style={{ fontSize: 48, marginBottom: 16 }}>🍽️</Text>
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          color: "#1f2937",
+          marginBottom: 8,
+          textAlign: "center",
+        }}
+      >
+        No Recipes Found
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          color: "#6b7280",
+          marginBottom: 24,
+          textAlign: "center",
+          lineHeight: 24,
+        }}
+      >
+        We couldn't find any recipes matching your criteria.{"\n"}
+        Try different ingredients or settings.
+      </Text>
+      <TouchableOpacity
+        style={{
+          backgroundColor: BrandColors.primary,
+          paddingVertical: 14,
+          paddingHorizontal: 32,
+          borderRadius: 16,
+          shadowColor: BrandColors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        }}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.8}
+      >
+        <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
+          ← Try Again
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 // ============ MAIN NAVIGATOR ============
