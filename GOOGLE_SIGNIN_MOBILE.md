@@ -150,7 +150,7 @@ This same Web Client ID is used for both web and mobile platforms.
 
 **Fix**:
 
-1. Make sure backend is running: `http://172.20.10.3:3000/health`
+1. Make sure backend is running: `http://192.168.1.70:8081/health`
 2. Verify phone is on same network (or hotspot)
 3. Check [.env](.env) has correct `EXPO_PUBLIC_API_BASE_URL`
 

@@ -684,7 +684,8 @@ export default function RecipeDisplayScreen({
             <FlatList
               data={recipe.ingredients}
               keyExtractor={(item) => item.id}
-              scrollEnabled={false}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
               renderItem={({ item }) => (
                 <View style={styles.ingredientItem}>
                   <Text style={styles.ingredientName}>{item.name}</Text>
@@ -719,7 +720,8 @@ export default function RecipeDisplayScreen({
             <FlatList
               data={normalizedInstructions}
               keyExtractor={(item) => item.stepNumber.toString()}
-              scrollEnabled={false}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
               renderItem={({ item }) => (
                 <View style={styles.instructionStep}>
                   <Text style={styles.stepNumber}>Step {item.stepNumber}</Text>

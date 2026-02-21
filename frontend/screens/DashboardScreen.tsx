@@ -56,6 +56,129 @@ const getTodayDateString = (): string => {
   return new Date().toISOString().split("T")[0];
 };
 
+// Create complete fallback meal with ingredients and instructions
+const createFallbackMeal = (
+  mealType: string,
+  cuisine: string,
+  index: number,
+): any => {
+  const mealConfigs: Record<
+    string,
+    {
+      name: string;
+      ingredients: {
+        id: string;
+        name: string;
+        quantity: number;
+        unit: string;
+      }[];
+      instructions: { stepNumber: number; instruction: string }[];
+    }
+  > = {
+    Breakfast: {
+      name: "Healthy Breakfast Bowl",
+      ingredients: [
+        { id: "i1", name: "Oats", quantity: 50, unit: "g" },
+        { id: "i2", name: "Banana", quantity: 1, unit: "piece" },
+        { id: "i3", name: "Almonds", quantity: 20, unit: "g" },
+        { id: "i4", name: "Honey", quantity: 1, unit: "tbsp" },
+        { id: "i5", name: "Milk", quantity: 200, unit: "ml" },
+      ],
+      instructions: [
+        { stepNumber: 1, instruction: "Add oats to a bowl" },
+        { stepNumber: 2, instruction: "Pour milk over the oats" },
+        { stepNumber: 3, instruction: "Slice the banana and add to bowl" },
+        { stepNumber: 4, instruction: "Sprinkle almonds on top" },
+        { stepNumber: 5, instruction: "Drizzle honey and enjoy" },
+      ],
+    },
+    Lunch: {
+      name: "Grilled Chicken & Vegetables",
+      ingredients: [
+        { id: "i1", name: "Chicken Breast", quantity: 150, unit: "g" },
+        { id: "i2", name: "Mixed Vegetables", quantity: 200, unit: "g" },
+        { id: "i3", name: "Olive Oil", quantity: 1, unit: "tbsp" },
+        { id: "i4", name: "Garlic", quantity: 2, unit: "cloves" },
+        { id: "i5", name: "Salt & Pepper", quantity: 1, unit: "to taste" },
+      ],
+      instructions: [
+        { stepNumber: 1, instruction: "Season chicken with salt and pepper" },
+        { stepNumber: 2, instruction: "Heat olive oil in a pan" },
+        {
+          stepNumber: 3,
+          instruction: "Grill chicken for 6-7 minutes each side",
+        },
+        { stepNumber: 4, instruction: "Sauté vegetables with garlic" },
+        { stepNumber: 5, instruction: "Serve hot with vegetables" },
+      ],
+    },
+    Dinner: {
+      name: "Salmon with Rice",
+      ingredients: [
+        { id: "i1", name: "Salmon Fillet", quantity: 150, unit: "g" },
+        { id: "i2", name: "Brown Rice", quantity: 100, unit: "g" },
+        { id: "i3", name: "Broccoli", quantity: 150, unit: "g" },
+        { id: "i4", name: "Lemon", quantity: 1, unit: "piece" },
+        { id: "i5", name: "Olive Oil", quantity: 1, unit: "tbsp" },
+      ],
+      instructions: [
+        { stepNumber: 1, instruction: "Cook brown rice according to package" },
+        { stepNumber: 2, instruction: "Season salmon with lemon juice" },
+        {
+          stepNumber: 3,
+          instruction: "Pan-fry salmon in olive oil for 4 minutes each side",
+        },
+        { stepNumber: 4, instruction: "Steam broccoli until tender" },
+        { stepNumber: 5, instruction: "Serve salmon with rice and broccoli" },
+      ],
+    },
+    Snack: {
+      name: "Protein Smoothie",
+      ingredients: [
+        { id: "i1", name: "Greek Yogurt", quantity: 150, unit: "g" },
+        { id: "i2", name: "Mixed Berries", quantity: 100, unit: "g" },
+        { id: "i3", name: "Protein Powder", quantity: 1, unit: "scoop" },
+        { id: "i4", name: "Spinach", quantity: 30, unit: "g" },
+        { id: "i5", name: "Almond Milk", quantity: 200, unit: "ml" },
+      ],
+      instructions: [
+        { stepNumber: 1, instruction: "Add all ingredients to blender" },
+        { stepNumber: 2, instruction: "Blend on high for 30 seconds" },
+        {
+          stepNumber: 3,
+          instruction: "Check consistency and add more milk if needed",
+        },
+        { stepNumber: 4, instruction: "Pour into a glass" },
+        { stepNumber: 5, instruction: "Enjoy immediately" },
+      ],
+    },
+  };
+
+  const config = mealConfigs[mealType] || mealConfigs.Lunch;
+  const names = [
+    config.name,
+    `Protein-Packed ${mealType}`,
+    `Light ${mealType}`,
+  ];
+
+  return {
+    id: `fallback-${Date.now()}-${index}`,
+    name: names[index] || config.name,
+    description: "Balanced meal for your goals",
+    calories: 400,
+    cuisine: cuisine || "International",
+    mealType: mealType,
+    ingredients: config.ingredients,
+    instructions: config.instructions,
+    portionSize: 350,
+    portionUnit: "g",
+    prepTime: 10,
+    cookTime: 20,
+    totalTime: 30,
+    servings: 1,
+  };
+};
+
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
   const user = useSelector(selectAuthUser);
@@ -455,22 +578,8 @@ const DashboardScreen: React.FC = () => {
 
         // Fallback to sample data (only 2 to match new limit)
         const fallbackMeals = [
-          {
-            id: `fallback-${Date.now()}-1`,
-            name: `Healthy ${currentMealType} Bowl`,
-            description: "Balanced meal for your goals",
-            calories: 400,
-            cuisine: cuisine || "International",
-            mealType: currentMealType,
-          },
-          {
-            id: `fallback-${Date.now()}-2`,
-            name: `Protein-Packed ${currentMealType}`,
-            description: "High protein meal",
-            calories: 450,
-            cuisine: cuisine || "International",
-            mealType: currentMealType,
-          },
+          createFallbackMeal(currentMealType, cuisine || "International", 0),
+          createFallbackMeal(currentMealType, cuisine || "International", 1),
         ];
         setSuggestedMeals(fallbackMeals);
 
@@ -501,14 +610,7 @@ const DashboardScreen: React.FC = () => {
       const currentMealType = getCurrentMealType();
       // Fallback suggestions
       setSuggestedMeals([
-        {
-          id: `error-fallback-${Date.now()}`,
-          name: `${currentMealType} Special`,
-          description: "Balanced meal for your goals",
-          calories: 400,
-          cuisine: cuisine || "International",
-          mealType: currentMealType,
-        },
+        createFallbackMeal(currentMealType, cuisine || "International", 0),
       ]);
     } finally {
       setLoading(false);

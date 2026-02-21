@@ -237,7 +237,7 @@ The backend endpoint `/auth/google` is already set up to handle Google authentic
 ### General Issues
 
 1. **"Backend authentication failed"**
-   - Check backend is running: `http://172.20.10.3:3000/health`
+   - Check backend is running: `http://192.168.1.70:8081/health`
    - Verify network connectivity
    - Check backend logs for errors
 
