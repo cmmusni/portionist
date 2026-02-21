@@ -296,12 +296,47 @@ router.post("/generate", async (req: Request, res: Response) => {
           fallback: true,
         });
       } catch (mockError: any) {
+        // CRITICAL: Never return 500 - always return something
         console.error("❌ Even mock recipes failed:", mockError);
-        res.status(500).json({
-          success: false,
+
+        // Return a minimal valid response with basic recipe
+        const emergencyRecipe = {
+          id: `emergency-${Date.now()}`,
+          name: "Sample Healthy Meal",
+          source: "mock",
+          image:
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+          mainIngredient: { id: "emergency", name: "Mixed Ingredients" },
+          sideIngredients: [],
+          ingredients: [
+            { id: "ing1", name: "Protein source", quantity: 150, unit: "g" },
+            { id: "ing2", name: "Vegetables", quantity: 200, unit: "g" },
+            { id: "ing3", name: "Grains", quantity: 100, unit: "g" },
+          ],
+          instructions: [
+            { stepNumber: 1, instruction: "Prepare your ingredients" },
+            { stepNumber: 2, instruction: "Cook according to your preference" },
+            { stepNumber: 3, instruction: "Enjoy your meal" },
+          ],
+          mealType: mealType || "Lunch",
+          cuisine: cuisine || "International",
+          portionSize: 450,
+          portionUnit: "g",
+          prepTime: 15,
+          cookTime: 20,
+          totalTime: 35,
+          servings: 1,
+          calories: 450,
+        };
+
+        res.status(200).json({
+          success: true,
+          data: [emergencyRecipe],
+          source: "emergency",
           message:
-            "Unable to generate recipes at this time. Please try again later.",
-          error: "INTERNAL_ERROR",
+            "Showing basic recipe template. Please try again later for personalized recipes.",
+          fallback: true,
+          emergency: true,
         });
       }
     }
