@@ -319,14 +319,16 @@ export default function RecipeInputScreen({
     const fetchIngredients = async () => {
       try {
         setIngredientsLoading(true);
-        // Use the new ingredients API endpoint with pantry filter
-        const response = await fetch(apiUrl("/api/ingredients?pantryOnly=true&limit=100"));
+        // Fetch common ingredients (734 items) for better selection
+        const response = await fetch(
+          apiUrl("/api/ingredients?common=true&limit=1000"),
+        );
         const result = await response.json();
         if (result.success && result.data?.ingredients) {
           const ingredients = result.data.ingredients;
           setAllIngredients(ingredients);
 
-          // Pre-select garlic, salt, and ground black pepper from Spoonacular
+          // Pre-select ONLY garlic, salt, and ground black pepper
           const preSelectedIngredients = ingredients.filter(
             (ing: any) =>
               ing.name?.toLowerCase() === "salt" ||
