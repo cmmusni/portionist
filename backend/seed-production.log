@@ -1,0 +1,29 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+Using DATABASE_URL for Postgres connection
+🌱 Starting Spoonacular ingredients seed...
+📊 Found 3439 ingredients in CSV file
+✅ Parsed 3439 valid ingredients
+🗑️  Clearing existing ingredients...
+Database query error {
+  text: 'DELETE FROM recipe_ingredients',
+  error: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+      at /Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/node_modules/pg-pool/index.js:45:11
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at query (/Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/src/db/connection.ts:68:20)
+      at seedSpoonacularIngredients (/Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/src/seed/seedSpoonacularIngredients.ts:218:5) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'postgres.railway.internal'
+  }
+}
+❌ Error seeding Spoonacular ingredients: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+    at /Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at query (/Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/src/db/connection.ts:68:20)
+    at seedSpoonacularIngredients (/Users/CliffordMark.Musni/CliffordsFiles/Training/Portionist/backend/src/seed/seedSpoonacularIngredients.ts:218:5) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'postgres.railway.internal'
+}

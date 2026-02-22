@@ -326,11 +326,11 @@ export default function RecipeInputScreen({
 
           // Pre-select only garlic, salt, and pepper
           const preSelectedIngredients = result.data.filter(
-            (ing: any) => 
+            (ing: any) =>
               ing.name?.toLowerCase() === "salt" ||
               ing.name?.toLowerCase() === "garlic" ||
               ing.name?.toLowerCase() === "black pepper" ||
-              ing.name?.toLowerCase() === "pepper"
+              ing.name?.toLowerCase() === "pepper",
           );
           if (preSelectedIngredients.length > 0) {
             setSelectedIngredients(preSelectedIngredients);

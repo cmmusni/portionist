@@ -34,6 +34,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Routes
+app.use("/admin", adminRouter); // Admin endpoints (seed, etc.)
 app.use("/auth", authRouter);
 app.use("/recipes", recipesRouter); // /recipes uses /getRecipes as default POST
 app.use("/getRecipes", recipesRouter); // Keep old path for backward compatibility
