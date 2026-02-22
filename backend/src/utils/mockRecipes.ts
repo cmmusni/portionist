@@ -168,7 +168,7 @@ export const mockSuggestions = [
 ];
 
 export function getMockRecipesByMealType(mealType: string, count: number = 2) {
-  const mealTypeRecipes: { [key: string]: typeof mockSuggestions } = {
+  const mealTypeRecipes: { [key: string]: any[] } = {
     Breakfast: [
       {
         id: "mock-674291",
@@ -180,6 +180,33 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 130,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Egg Whites", quantity: 4, unit: "large" },
+          { id: "i2", name: "Spinach", quantity: 50, unit: "g" },
+          { id: "i3", name: "Mushrooms", quantity: 30, unit: "g" },
+          { id: "i4", name: "Olive Oil", quantity: 1, unit: "tsp" },
+          { id: "i5", name: "Salt & Pepper", quantity: 1, unit: "to taste" },
+        ],
+        instructions: [
+          {
+            stepNumber: 1,
+            instruction: "Heat olive oil in a non-stick pan over medium heat",
+          },
+          {
+            stepNumber: 2,
+            instruction: "Add mushrooms and spinach, sauté for 2-3 minutes",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Pour in egg whites and let cook for 2 minutes",
+          },
+          { stepNumber: 4, instruction: "Season with salt and pepper" },
+          { stepNumber: 5, instruction: "Fold omelette in half and serve hot" },
+        ],
+        mealType: "Breakfast",
+        portionSize: 200,
+        portionUnit: "g",
+        cuisine: "International",
       },
       {
         id: "mock-pancake-01",
@@ -191,6 +218,37 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 250,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Banana", quantity: 1, unit: "medium" },
+          { id: "i2", name: "Eggs", quantity: 2, unit: "large" },
+          { id: "i3", name: "Protein Powder", quantity: 1, unit: "scoop" },
+          { id: "i4", name: "Oats", quantity: 30, unit: "g" },
+          { id: "i5", name: "Cinnamon", quantity: 1, unit: "tsp" },
+        ],
+        instructions: [
+          { stepNumber: 1, instruction: "Mash banana in a bowl until smooth" },
+          {
+            stepNumber: 2,
+            instruction: "Add eggs, protein powder, oats, and cinnamon",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Mix all ingredients until well combined",
+          },
+          {
+            stepNumber: 4,
+            instruction: "Heat a non-stick pan over medium heat",
+          },
+          {
+            stepNumber: 5,
+            instruction:
+              "Pour batter to form pancakes, cook 2-3 minutes each side",
+          },
+        ],
+        mealType: "Breakfast",
+        portionSize: 250,
+        portionUnit: "g",
+        cuisine: "International",
       },
     ],
     Lunch: [
@@ -204,6 +262,39 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 165,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Chicken Breast", quantity: 150, unit: "g" },
+          { id: "i2", name: "Mixed Greens", quantity: 100, unit: "g" },
+          { id: "i3", name: "Olive Oil", quantity: 1, unit: "tbsp" },
+          { id: "i4", name: "Lemon Juice", quantity: 1, unit: "tbsp" },
+          { id: "i5", name: "Garlic Powder", quantity: 1, unit: "tsp" },
+        ],
+        instructions: [
+          {
+            stepNumber: 1,
+            instruction: "Season chicken with garlic powder, salt, and pepper",
+          },
+          {
+            stepNumber: 2,
+            instruction: "Heat grill or grill pan to medium-high heat",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Grill chicken for 6-7 minutes per side until cooked",
+          },
+          {
+            stepNumber: 4,
+            instruction: "Let chicken rest for 5 minutes, then slice",
+          },
+          {
+            stepNumber: 5,
+            instruction: "Serve over mixed greens with lemon juice drizzle",
+          },
+        ],
+        mealType: "Lunch",
+        portionSize: 250,
+        portionUnit: "g",
+        cuisine: "International",
       },
       {
         id: "mock-782601",
@@ -215,6 +306,36 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 280,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Quinoa", quantity: 60, unit: "g" },
+          { id: "i2", name: "Chickpeas", quantity: 80, unit: "g" },
+          { id: "i3", name: "Avocado", quantity: 50, unit: "g" },
+          { id: "i4", name: "Cherry Tomatoes", quantity: 50, unit: "g" },
+          { id: "i5", name: "Tahini Dressing", quantity: 2, unit: "tbsp" },
+        ],
+        instructions: [
+          {
+            stepNumber: 1,
+            instruction: "Cook quinoa according to package directions",
+          },
+          {
+            stepNumber: 2,
+            instruction: "Roast chickpeas in oven at 400°F for 20 minutes",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Slice avocado and halve cherry tomatoes",
+          },
+          { stepNumber: 4, instruction: "Assemble bowl with quinoa base" },
+          {
+            stepNumber: 5,
+            instruction: "Top with chickpeas, avocado, tomatoes, and tahini",
+          },
+        ],
+        mealType: "Lunch",
+        portionSize: 350,
+        portionUnit: "g",
+        cuisine: "International",
       },
     ],
     Dinner: [
@@ -228,6 +349,37 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 260,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Salmon Fillet", quantity: 150, unit: "g" },
+          { id: "i2", name: "Broccoli", quantity: 100, unit: "g" },
+          { id: "i3", name: "Carrots", quantity: 80, unit: "g" },
+          { id: "i4", name: "Lemon", quantity: 1, unit: "piece" },
+          { id: "i5", name: "Olive Oil", quantity: 1, unit: "tbsp" },
+        ],
+        instructions: [
+          { stepNumber: 1, instruction: "Preheat oven to 400°F (200°C)" },
+          {
+            stepNumber: 2,
+            instruction: "Season salmon with salt, pepper, and lemon juice",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Chop vegetables into bite-sized pieces",
+          },
+          {
+            stepNumber: 4,
+            instruction: "Arrange salmon and vegetables on baking sheet",
+          },
+          {
+            stepNumber: 5,
+            instruction:
+              "Bake for 18-20 minutes until salmon is cooked through",
+          },
+        ],
+        mealType: "Dinner",
+        portionSize: 330,
+        portionUnit: "g",
+        cuisine: "International",
       },
       {
         id: "mock-895342",
@@ -239,6 +391,36 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 265,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Chicken Breast", quantity: 150, unit: "g" },
+          { id: "i2", name: "Bell Peppers", quantity: 100, unit: "g" },
+          { id: "i3", name: "Snap Peas", quantity: 80, unit: "g" },
+          { id: "i4", name: "Soy Sauce", quantity: 2, unit: "tbsp" },
+          { id: "i5", name: "Ginger", quantity: 1, unit: "tsp" },
+        ],
+        instructions: [
+          { stepNumber: 1, instruction: "Cut chicken into bite-sized pieces" },
+          {
+            stepNumber: 2,
+            instruction: "Heat wok or large pan over high heat",
+          },
+          {
+            stepNumber: 3,
+            instruction: "Stir-fry chicken for 5-6 minutes until golden",
+          },
+          {
+            stepNumber: 4,
+            instruction: "Add vegetables and ginger, cook for 3-4 minutes",
+          },
+          {
+            stepNumber: 5,
+            instruction: "Add soy sauce, toss to coat, and serve hot",
+          },
+        ],
+        mealType: "Dinner",
+        portionSize: 330,
+        portionUnit: "g",
+        cuisine: "Asian",
       },
     ],
     Snack: [
@@ -252,6 +434,33 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 220,
         source: "mock" as const,
+        ingredients: [
+          { id: "i1", name: "Cucumber", quantity: 100, unit: "g" },
+          { id: "i2", name: "Cherry Tomatoes", quantity: 100, unit: "g" },
+          { id: "i3", name: "Feta Cheese", quantity: 50, unit: "g" },
+          { id: "i4", name: "Kalamata Olives", quantity: 30, unit: "g" },
+          { id: "i5", name: "Olive Oil", quantity: 1, unit: "tbsp" },
+        ],
+        instructions: [
+          {
+            stepNumber: 1,
+            instruction: "Chop cucumber and halve cherry tomatoes",
+          },
+          {
+            stepNumber: 2,
+            instruction: "Crumble feta cheese into bite-sized pieces",
+          },
+          { stepNumber: 3, instruction: "Combine all vegetables in a bowl" },
+          { stepNumber: 4, instruction: "Add olives and feta cheese" },
+          {
+            stepNumber: 5,
+            instruction: "Drizzle with olive oil and toss gently",
+          },
+        ],
+        mealType: "Snack",
+        portionSize: 280,
+        portionUnit: "g",
+        cuisine: "Mediterranean",
       },
       {
         id: "mock-582947",
@@ -263,6 +472,35 @@ export function getMockRecipesByMealType(mealType: string, count: number = 2) {
         servings: 1,
         calories: 235,
         source: "mock" as const,
+        ingredients: [
+          {
+            id: "i1",
+            name: "Whole Wheat Tortilla",
+            quantity: 1,
+            unit: "large",
+          },
+          { id: "i2", name: "Sliced Turkey", quantity: 100, unit: "g" },
+          { id: "i3", name: "Lettuce", quantity: 30, unit: "g" },
+          { id: "i4", name: "Tomato", quantity: 50, unit: "g" },
+          { id: "i5", name: "Mustard", quantity: 1, unit: "tbsp" },
+        ],
+        instructions: [
+          {
+            stepNumber: 1,
+            instruction: "Lay tortilla flat on a clean surface",
+          },
+          { stepNumber: 2, instruction: "Spread mustard evenly over tortilla" },
+          { stepNumber: 3, instruction: "Layer turkey slices in the center" },
+          { stepNumber: 4, instruction: "Add lettuce and sliced tomato" },
+          {
+            stepNumber: 5,
+            instruction: "Roll tightly and cut in half diagonally",
+          },
+        ],
+        mealType: "Snack",
+        portionSize: 200,
+        portionUnit: "g",
+        cuisine: "American",
       },
     ],
   };
