@@ -297,13 +297,22 @@ async function seedSpoonacularIngredients(): Promise<void> {
 
     console.log(`\n🥫 Pantry items: ${pantryCount.rows[0]?.count || 0}`);
     console.log(`⭐ Common ingredients: ${commonCount.rows[0]?.count || 0}`);
-
-    process.exit(0);
   } catch (error) {
     console.error("❌ Error seeding Spoonacular ingredients:", error);
-    process.exit(1);
+    throw error;
   }
 }
 
-// Run the seed function
-seedSpoonacularIngredients();
+// Export the function for use in other modules
+export { seedSpoonacularIngredients };
+
+// Only run if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedSpoonacularIngredients()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
