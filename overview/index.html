@@ -672,7 +672,7 @@
       <p class="tagline">
         AI-Powered Meal Planning & Nutrition Tracking Platform
       </p>
-      <span class="version">Version 1.0.0 | February 2026</span>
+      <span class="version">Version 1.1.0 | February 2026</span>
     </header>
 
     <div class="container">
@@ -680,6 +680,7 @@
         <ul>
           <li><a href="#overview">Overview</a></li>
           <li><a href="#features">Features</a></li>
+          <li><a href="#updates">Latest Updates</a></li>
           <li><a href="#database">Data</a></li>
           <li><a href="#tech-stack">Tech Stack</a></li>
           <li><a href="#deployment">Deployment</a></li>
@@ -813,6 +814,76 @@
               preferences anytime - we'll update your recommendations!
             </p>
           </div>
+        </div>
+      </section>
+
+<section id="updates">
+        <h2>🆕 Latest Updates - Version 1.1.0</h2>
+        
+        <div class="success">
+          <strong>📅 Released:</strong> February 23, 2026
+        </div>
+
+        <h3>🚀 Major Features</h3>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <span class="icon">🥘</span>
+            <h4>Spoonacular API Integration</h4>
+            <p>
+              Now powered by Spoonacular as our primary recipe API with access to 1,000+ 
+              standardized ingredients for better recipe matching and nutrition data.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="icon">🍳</span>
+            <h4>Cooking Method Filter</h4>
+            <p>
+              Select your preferred cooking method (baking, grilling, frying, etc.) to get 
+              recipes that match how you like to cook.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="icon"></span>
+            <h4>Health Monitoring</h4>
+            <p>
+              Backend health checks now visible on dashboard with real-time status 
+              monitoring and enhanced error handling.
+            </p>
+          </div>
+        </div>
+
+        <h3>🐛 Important Bug Fixes</h3>
+        <ul>
+          <li><strong>Recipe Display:</strong> Fixed blank recipe display screen issues</li>
+          <li><strong>Ingredient Selection:</strong> Corrected ingredient_id to id field mapping for proper selection</li>
+          <li><strong>Smart Pre-Selection:</strong> Changed default to pre-select only 3 common pantry items (salt, garlic, black pepper) instead of all items</li>
+          <li><strong>AI Rate Limiting:</strong> Improved handling with retry logic and better error messages</li>
+          <li><strong>Cross-Device Sync:</strong> Onboarding data now properly syncs across devices after sign-in</li>
+          <li><strong>Complete Recipe Data:</strong> All recipes now include full ingredients and cooking instructions</li>
+        </ul>
+
+        <h3>✨ UI/UX Improvements</h3>
+        <ul>
+          <li>Complete green branding overhaul with Portionist brand colors</li>
+          <li>Enhanced UI styling across all screens</li>
+          <li>Responsive overview page optimized for mobile devices</li>
+          <li>Scrollable recipe displays for longer recipes</li>
+          <li>More informative error messages throughout the app</li>
+        </ul>
+
+        <h3>🔧 Technical Enhancements</h3>
+        <ul>
+          <li><strong>API Priority System:</strong> Spoonacular (primary) → Google AI (fallback) → Mock recipes (last resort)</li>
+          <li><strong>Auto-Download:</strong> Automatic Spoonacular CSV data download in seed script</li>
+          <li><strong>Admin Endpoint:</strong> Added <code>/admin/seed</code> for easy database initialization</li>
+          <li><strong>Better Fallbacks:</strong> Spoonacular API automatically used when AI rate limits are reached</li>
+        </ul>
+
+        <div class="note">
+          <strong>📖 Full Changelog:</strong> For a complete list of all changes and technical details, 
+          see the <code>CHANGELOG.md</code> file in the project repository.
         </div>
       </section>
 
