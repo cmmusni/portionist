@@ -325,12 +325,18 @@ export default function RecipeInputScreen({
         );
         const result = await response.json();
         if (result.success && result.data?.ingredients) {
-          const ingredients = result.data.ingredients;
+          // Map API response to match Ingredient interface (ingredient_id -> id)
+          const ingredients = result.data.ingredients.map((ing: any) => ({
+            id: ing.ingredient_id,
+            name: ing.name,
+            category: ing.category,
+            isPantry: ing.is_pantry,
+          }));
           setAllIngredients(ingredients);
 
           // Pre-select ONLY garlic, salt, and ground black pepper
           const preSelectedIngredients = ingredients.filter(
-            (ing: any) =>
+            (ing: Ingredient) =>
               ing.name?.toLowerCase() === "salt" ||
               ing.name?.toLowerCase() === "garlic" ||
               ing.name?.toLowerCase() === "ground black pepper",
