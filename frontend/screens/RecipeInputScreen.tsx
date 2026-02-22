@@ -3,13 +3,13 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { BrandColors } from "../../constants/theme";
 import { apiUrl } from "../services/config";
@@ -26,6 +26,7 @@ interface RecipeInputValues {
   ingredients: Ingredient[];
   cuisine: string;
   mealType: string;
+  cookingMethod?: string;
 }
 
 interface RecipeInputScreenProps {
@@ -50,14 +51,24 @@ const FALLBACK_COMMON_INGREDIENTS: Ingredient[] = [
 const FALLBACK_PANTRY_INGREDIENTS: Ingredient[] = [
   { id: "salt", name: "Salt", isPantry: true },
   { id: "black_pepper", name: "Black Pepper", isPantry: true },
-  { id: "olive_oil", name: "Olive Oil", isPantry: true },
-  { id: "butter", name: "Butter", isPantry: true },
   { id: "garlic", name: "Garlic", isPantry: true },
-  { id: "onion", name: "Onion", isPantry: true },
 ];
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const CUISINE_OPTIONS = ["Filipino", "Italian", "Japanese", "Korean"];
+const COOKING_METHODS = [
+  "Any Method",
+  "Sautéed",
+  "Baked",
+  "Grilled",
+  "Roasted",
+  "Steamed",
+  "Fried",
+  "Boiled",
+  "Slow Cooked",
+  "Air Fried",
+  "Stir-Fried",
+];
 
 // Helper function to determine current meal type based on time of day
 const getCurrentMealType = (): string => {
@@ -296,6 +307,7 @@ export default function RecipeInputScreen({
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const [cuisine, setCuisine] = useState(defaultCuisine);
   const [mealType, setMealType] = useState(getCurrentMealType());
+  const [cookingMethod, setCookingMethod] = useState("Any Method");
   const [isLoading, setIsLoading] = useState(false);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>(
     FALLBACK_COMMON_INGREDIENTS,
@@ -312,12 +324,16 @@ export default function RecipeInputScreen({
         if (result.success && Array.isArray(result.data)) {
           setAllIngredients(result.data);
 
-          // Pre-select pantry ingredients
-          const pantryItems = result.data.filter(
-            (ing: any) => ing.isPantry === true,
+          // Pre-select only garlic, salt, and pepper
+          const preSelectedIngredients = result.data.filter(
+            (ing: any) => 
+              ing.name?.toLowerCase() === "salt" ||
+              ing.name?.toLowerCase() === "garlic" ||
+              ing.name?.toLowerCase() === "black pepper" ||
+              ing.name?.toLowerCase() === "pepper"
           );
-          if (pantryItems.length > 0) {
-            setSelectedIngredients(pantryItems);
+          if (preSelectedIngredients.length > 0) {
+            setSelectedIngredients(preSelectedIngredients);
           }
         } else {
           console.warn(
@@ -359,6 +375,8 @@ export default function RecipeInputScreen({
         ingredients: selectedIngredients,
         cuisine,
         mealType,
+        cookingMethod:
+          cookingMethod !== "Any Method" ? cookingMethod : undefined,
       };
 
       await handleGenerateRecipe(values);
@@ -442,6 +460,22 @@ export default function RecipeInputScreen({
                 </Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        {/* Cooking Method Selection */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Cooking Method (Optional)</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={cookingMethod}
+              onValueChange={(itemValue) => setCookingMethod(itemValue)}
+              enabled={!isLoading}
+            >
+              {COOKING_METHODS.map((method) => (
+                <Picker.Item key={method} label={method} value={method} />
+              ))}
+            </Picker>
           </View>
         </View>
 

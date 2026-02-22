@@ -15,6 +15,7 @@ interface AIRecipeGeneratorRequest {
   targetWeight: number;
   mealType?: string;
   cuisine: string;
+  cookingMethod?: string;
   count?: number; // Number of recipes to generate (default: 2)
 }
 
@@ -109,6 +110,7 @@ class AIRecipeController {
     portionSize: number,
     mealType: string,
     cuisine: string,
+    cookingMethod?: string,
     recipeIndex: number = 0,
     retryCount: number = 0,
   ): Promise<Recipe> {
@@ -127,11 +129,18 @@ class AIRecipeController {
       { style: "slowly braised", description: "tender and rich" },
     ];
 
-    const selectedStyle = cookingStyles[recipeIndex % cookingStyles.length];
+    // Use specified cooking method or rotate through styles for variety
+    const selectedStyle = cookingMethod
+      ? { style: cookingMethod.toLowerCase(), description: "flavorful" }
+      : cookingStyles[recipeIndex % cookingStyles.length];
+
+    const cookingMethodText = cookingMethod
+      ? `IMPORTANT: The recipe MUST use ${cookingMethod} as the primary cooking method.`
+      : `IMPORTANT: Create a unique ${selectedStyle?.style} version that is ${selectedStyle?.description}. Make this distinctly different from other versions.`;
 
     const prompt = `Generate a ${mealType} recipe in JSON format using these ingredients: ${ingredientsText}. 
       The recipe should be for ${cuisine} cuisine and should serve 1 person with approximately ${portionSize}g portion size.
-      IMPORTANT: Create a unique ${selectedStyle?.style} version that is ${selectedStyle?.description}. Make this distinctly different from other versions.
+      ${cookingMethodText}
       Use different preparation techniques, spices, and accompaniments than typical recipes.
       
       Return ONLY valid JSON in this exact format, no markdown or extra text:
@@ -228,6 +237,7 @@ class AIRecipeController {
           portionSize,
           mealType,
           cuisine,
+          cookingMethod,
           recipeIndex,
           retryCount + 1,
         );
@@ -247,6 +257,7 @@ class AIRecipeController {
         targetWeight,
         mealType,
         cuisine,
+        cookingMethod,
         count,
       } = req.body;
 
@@ -322,6 +333,7 @@ class AIRecipeController {
             portionSize,
             finalMealType,
             cuisine,
+            cookingMethod,
             i, // Pass index for unique variations
           );
           generatedRecipes.push(recipe);

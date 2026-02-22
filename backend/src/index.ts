@@ -11,6 +11,7 @@ import apiUsageRouter from "./routes/apiUsage.js";
 import authRouter from "./routes/auth.js";
 import favoritesRouter from "./routes/favorites.js";
 import foodRouter from "./routes/food.js";
+import ingredientsRouter from "./routes/ingredients.js";
 import motivationRouter from "./routes/motivation.js";
 import profileRouter from "./routes/profile.js";
 import recipeLogRouter from "./routes/recipeLog.js";
@@ -41,6 +42,7 @@ app.use("/profile", profileRouter);
 app.use("/recipe-log", recipeLogRouter);
 app.use("/motivation", motivationRouter);
 app.use("/api/food", foodRouter);
+app.use("/api/ingredients", ingredientsRouter); // Ingredients API endpoint
 app.use("/api/usage", apiUsageRouter); // API usage tracking endpoint
 
 // Health check endpoint
@@ -75,6 +77,9 @@ const start = async () => {
   }
 
   // One-time migration: re-seed ingredients with correct categories
+  // DISABLED: We now use Spoonacular ingredients instead
+  // To re-seed with Spoonacular ingredients, run: npx tsx src/seed/seedSpoonacularIngredients.ts
+  /*
   try {
     const { reseedIngredientsWithCategories } =
       await import("./migrations/reseed-ingredients.js");
@@ -83,6 +88,7 @@ const start = async () => {
     console.error("⚠️ Warning: Ingredient re-seed migration failed:", error);
     // Don't exit - this is a non-critical migration
   }
+  */
 
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT} and bound to 0.0.0.0`);

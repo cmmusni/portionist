@@ -17,6 +17,7 @@ interface GetRecipesRequest {
   targetWeight: number;
   mealType?: string;
   cuisine: string;
+  cookingMethod?: string;
 }
 
 interface Recipe {
@@ -206,6 +207,7 @@ class RecipeController {
     mealType: string,
     cuisine: string,
     limit: number = 10,
+    cookingMethod?: string,
   ): Promise<Recipe[]> {
     if (
       !process.env.GOOGLE_CUSTOM_SEARCH_API_KEY ||
@@ -216,7 +218,13 @@ class RecipeController {
     }
 
     try {
-      const searchQuery = `${ingredients.join(" ")} ${mealType} ${cuisine} recipe`;
+      // Build search query with cooking method if provided
+      const queryParts = [ingredients.join(" "), mealType, cuisine];
+      if (cookingMethod) {
+        queryParts.push(cookingMethod);
+      }
+      queryParts.push("recipe");
+      const searchQuery = queryParts.join(" ");
       const googleUrl = `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_CUSTOM_SEARCH_API_KEY}&cx=${process.env.GOOGLE_SEARCH_ENGINE_ID}&q=${encodeURIComponent(searchQuery)}&num=${Math.min(limit, 10)}`;
 
       console.log(`🔍 Calling Google Custom Search API...`);
@@ -326,13 +334,20 @@ class RecipeController {
     mainIngredient: string,
     mainIngredientId: string,
     cuisine: string,
+    cookingMethod?: string,
   ): Promise<Recipe[]> {
     if (!process.env.SPOONACULAR_API_KEY) {
       return [];
     }
 
     try {
-      const query = `${mainIngredient} ${cuisine}`.trim();
+      // Build search query with cooking method if provided
+      const queryParts = [mainIngredient, cuisine];
+      if (cookingMethod) {
+        queryParts.push(cookingMethod);
+      }
+      const query = queryParts.join(" ").trim();
+
       const response = await fetch(
         `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=5&addRecipeInformation=true&addRecipeInstructions=true&apiKey=${process.env.SPOONACULAR_API_KEY}`,
       );
@@ -460,8 +475,14 @@ class RecipeController {
     res: Response,
   ): Promise<void> {
     try {
-      const { ingredients, currentWeight, targetWeight, mealType, cuisine } =
-        req.body;
+      const {
+        ingredients,
+        currentWeight,
+        targetWeight,
+        mealType,
+        cuisine,
+        cookingMethod,
+      } = req.body;
 
       // Validate required fields
       if (
@@ -522,6 +543,7 @@ class RecipeController {
           searchIngredient.name,
           searchIngredient.id,
           cuisine,
+          cookingMethod,
         );
         console.log(
           `🍳 Got ${spoonacularRecipes.length} recipes from Spoonacular`,
@@ -539,6 +561,7 @@ class RecipeController {
           finalMealType,
           cuisine,
           10,
+          cookingMethod,
         );
         console.log(`🔍 Got ${googleRecipes.length} recipes from Google`);
         recipesToScore.push(...googleRecipes);
