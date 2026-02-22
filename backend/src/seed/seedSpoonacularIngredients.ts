@@ -1,4 +1,5 @@
 import fs from "fs";
+import https from "https";
 import path from "path";
 import { fileURLToPath } from "url";
 import { query } from "../db/connection.js";
@@ -169,17 +170,41 @@ function categorizeIngredient(name: string): string {
   return "Other";
 }
 
+// Helper function to download the CSV file
+async function downloadCSV(url: string, destPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(destPath);
+    https.get(url, (response) => {
+      if (response.statusCode !== 200) {
+        reject(new Error(`Failed to download: ${response.statusCode}`));
+        return;
+      }
+      response.pipe(file);
+      file.on("finish", () => {
+        file.close();
+        resolve();
+      });
+    }).on("error", (err) => {
+      fs.unlink(destPath, () => {});
+      reject(err);
+    });
+  });
+}
+
 async function seedSpoonacularIngredients(): Promise<void> {
   try {
     console.log("🌱 Starting Spoonacular ingredients seed...");
 
     // Download the CSV file if not already downloaded
     const csvPath = "/tmp/spoonacular-ingredients.csv";
+    const csvUrl = "https://spoonacular.com/application/frontend/downloads/ingredients-with-possible-units.csv";
 
     if (!fs.existsSync(csvPath)) {
-      console.log(
-        "📥 Downloading Spoonacular ingredients CSV (this may be already cached)...",
-      );
+      console.log("📥 Downloading Spoonacular ingredients CSV...");
+      await downloadCSV(csvUrl, csvPath);
+      console.log("✅ Download complete!");
+    } else {
+      console.log("📄 Using cached CSV file");
     }
 
     // Read and parse the CSV file
