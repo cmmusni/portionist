@@ -7,6 +7,7 @@ import type { Express, Request, Response } from "express";
 import express from "express";
 import { ensureConnection } from "./db/connection.js";
 import { initializeDatabase } from "./db/schema.js";
+import adminRouter from "./routes/admin.js";
 import apiUsageRouter from "./routes/apiUsage.js";
 import authRouter from "./routes/auth.js";
 import favoritesRouter from "./routes/favorites.js";
