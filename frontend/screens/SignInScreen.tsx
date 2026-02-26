@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   googleButtonText: {
-    color: BrandColors.dangerLight,
+    color: BrandColors.gray500,
     fontWeight: "600",
     fontSize: 16,
     marginLeft: 12,
@@ -389,10 +389,11 @@ export default function SignInScreen({
                   <ActivityIndicator color={BrandColors.primary} />
                 ) : (
                   <>
-                    <Text style={styles.googleIcon}>✉️</Text>
-                    <Text style={styles.googleButtonText}>
-                      Sign In with Gmail
-                    </Text>
+                    <Image
+                      source={require("../../assets/images/gmail-logo.png")}
+                      style={{ width: 24, height: 16 }}
+                    />
+                    <Text style={styles.googleButtonText}>Gmail</Text>
                   </>
                 )}
               </TouchableOpacity>
